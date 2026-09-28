@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slimit.dev/rules/schema-v1.json",
+  "title": "SlimIt rule (slimit.rules/v1)",
+  "type": "object",
+  "required": ["apiVersion", "id", "os", "paths", "semantics", "risk", "action", "refs"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": { "const": "slimit.rules/v1" },
+    "id": {
+      "type": "string",
+      "pattern": "^(macos|win|linux)-[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "全局唯一，平台前缀必须与 os 字段一致"
+    },
+    "os": { "enum": ["macos", "windows", "linux"] },
+    "scope": { "enum": ["user", "system", "app"], "default": "user" },
+    "paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "支持 ~ 展开、环境变量、glob；相对用户主目录写"
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "required": ["title", "what", "producer", "consequence"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "maxLength": 60 },
+        "what": { "type": "string", "description": "这是什么" },
+        "producer": { "type": "string", "description": "谁产生的" },
+        "safe_to_delete_because": { "type": "string" },
+        "consequence": { "type": "string", "description": "删了会怎样" },
+        "regenerate": { "type": "string", "description": "如何/何时重建" }
+      }
+    },
+    "risk": { "enum": ["green", "yellow", "red"] },
+    "red_flags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "risk=red 时必填：为什么不能代删"
+    },
+    "action": {
+      "type": "object",
+      "required": ["kind"],
+      "oneOf": [
+        {
+          "properties": {
+            "kind": { "const": "purge-dir" },
+            "delete_contents_only": { "type": "boolean", "default": true },
+            "min_age_days": { "type": "integer", "minimum": 0 },
+            "keep_newest": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": { "const": "command" },
+            "command": { "type": "string", "minLength": 1 },
+            "dry_run": { "type": "string", "minLength": 1 },
+            "irreversible": { "type": "boolean", "default": false },
+            "requires_root": { "type": "boolean", "default": false }
+          },
+          "required": ["command", "dry_run"],
+          "additionalProperties": false
+        },
+        {
+          "properties": { "kind": { "const": "advise" } },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typical_size": { "type": "string" },
+        "recovery": { "enum": ["full", "partial", "none"] }
+      }
+    },
+    "refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "format": "uri" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "risk": { "const": "red" } } },
+      "then": { "required": ["red_flags"] }
+    },
+    {
+      "if": { "properties": { "os": { "const": "macos" } } },
+      "then": { "properties": { "id": { "pattern": "^macos-" } } }
+    },
+    {
+      "if": { "properties": { "os": { "const": "windows" } } },
+      "then": { "properties": { "id": { "pattern": "^win-" } } }
+    },
+    {
+      "if": { "properties": { "os": { "const": "linux" } } },
+      "then": { "properties": { "id": { "pattern": "^linux-" } } }
+    }
+  ]
+}

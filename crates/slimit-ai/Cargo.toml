@@ -1,0 +1,14 @@
+[package]
+name = "slimit-ai"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "SlimIt 解释器：trait + 启发式降级实现（无模型）；模型版 W6 接入"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

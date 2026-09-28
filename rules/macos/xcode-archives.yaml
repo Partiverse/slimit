@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-xcode-archives
+os: macos
+scope: user
+paths:
+  - "~/Library/Developer/Xcode/Archives"
+semantics:
+  title: "Xcode 归档（Archives）"
+  what: "每次上传 App Store 前的 .xcarchive 归档，含 dSYM 符号文件，是对已发布版本做崩溃符号化与重新提交的唯一依据"
+  producer: "Xcode (Organizer)"
+  consequence: "删除后：对应已发布版本的崩溃日志无法符号化、无法从该归档重新提交；此损失不可逆"
+  regenerate: "不可重建（除非重新出相同版本号构建，通常不可能）"
+risk: red
+red_flags:
+  - "删的是发布记录与符号化依据，损失不可逆"
+  - "仅用户能判断哪些版本仍在维护；SlimIt 只做提示"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 至数十 GB"
+  recovery: none
+refs:
+  - https://developer.apple.com/documentation/xcode/archives

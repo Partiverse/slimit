@@ -1,0 +1,6 @@
+/target
+*.log
+.DS_Store
+.mimosa/
+.v2c/
+.video_agent/

@@ -1,0 +1,10 @@
+[package]
+name = "slimit-tauri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "SlimIt GUI 壳（Tauri 2）。W5 接入 Tauri 依赖与前端；当前仅占位保证 workspace 完整。"
+
+# W5 里程碑接入：tauri = "2"、tauri-build、前端 TS/React（见 docs/SPEC_MVP.md §7）。
+[dependencies]

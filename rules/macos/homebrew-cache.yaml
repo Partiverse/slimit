@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-homebrew-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Homebrew"
+semantics:
+  title: "Homebrew 下载缓存"
+  what: "brew 安装 formulae/casks 时下载的安装包与旧版本文件，安装完成后仅用于加速重装"
+  producer: "Homebrew"
+  safe_to_delete_because: "只影响下次安装/重装的速度，不影响已安装软件"
+  consequence: "下次 brew install/reinstall 需重新下载"
+  regenerate: "按需自动重新下载"
+risk: green
+action:
+  kind: command
+  command: "brew cleanup --prune=all"
+  dry_run: "brew cleanup -n"
+estimate:
+  typical_size: "数 GB 至 20+ GB"
+  recovery: full
+refs:
+  - https://docs.brew.sh/Manpage

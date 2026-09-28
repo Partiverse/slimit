@@ -1,0 +1,17 @@
+[package]
+name = "slimit-exec"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "SlimIt 执行器：清理计划、隔离区（rename 原子迁移 + manifest）、恢复、审计日志"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+slimit-rules = { path = "../slimit-rules" }
