@@ -2,7 +2,7 @@
 
 跨 macOS / Windows / Linux 的存储瘦身工具。核心差异化：**AI 语义化解释 + 机制级安全**——解释每个目录是什么、谁产生的、删了会怎样，并以隔离区可回滚方式清理。
 
-**状态**：立项已批准（2026-09-28），MVP（macOS）研发准备就绪，代码未开始。
+**状态**：MVP W1 完成（2026-09-28）——Rust workspace 五 crate 全部编译且 17 tests 全绿；CLI 真实扫描验证通过（Docker.raw 稀疏双值实测正确）；扫描器性能未达 SPEC 目标（热 416k files/23s，冷 366s），W2 优化，见 [docs/BENCH.md](./docs/BENCH.md)。仓库：https://github.com/Partiverse/slimit（私有）。
 
 ## 文档索引
 
