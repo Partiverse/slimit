@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-go-mod-cache
+os: macos
+scope: user
+paths:
+  - "~/go/pkg/mod/cache/download"
+semantics:
+  title: "Go 模块下载缓存"
+  what: "go 工具链的模块下载缓存（$GOMODCACHE/cache/download）：按 module@version 存放的源码压缩包、校验和文件及解包后的依赖源码，供构建时复用以免重复联网下载"
+  producer: "Go 工具链：执行 go build / go get / go mod download 拉取依赖时由 go 命令写入"
+  safe_to_delete_because: "纯下载缓存，内容完全由各项目 go.mod/go.sum 锁定的公开模块重新下载生成，不含用户代码；官方提供 go clean -modcache 专门清理（模块缓存带只读保护，直接 rm -rf 常因权限失败）。该命令会清理整个 GOMODCACHE（含本目录及解包源码），全部可再生"
+  consequence: "下次构建或拉取依赖时需重新下载模块；离线环境下在缓存重建前无法编译依赖未缓存的 Go 项目。不影响已写好的源码、go.mod/go.sum 或版本控制内容"
+  regenerate: "下次执行 go build / go mod download / go get 时按 go.mod 与 go.sum 自动重新下载并校验"
+risk: green
+action:
+  kind: command
+  command: "go clean -modcache"
+  dry_run: "go env GOMODCACHE"
+estimate:
+  typical_size: "数百 MB 至数 GB，重度 Go 开发可达 10 GB 以上"
+  recovery: full
+refs:
+  - https://pkg.go.dev/cmd/go

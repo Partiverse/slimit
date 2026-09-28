@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-spm-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/org.swift.swiftpm"
+semantics:
+  title: "Swift Package Manager 缓存"
+  what: "Swift Package Manager（swift package / Xcode 内置 SPM）的缓存目录，主要是已解析包的 Package.swift 清单缓存（manifests/）和 Swift Package Collection 索引数据库（package-collection.db），不含源码检出与编译产物"
+  producer: "Swift Package Manager（swift.org 官方工具链及 Xcode 内置集成）"
+  safe_to_delete_because: "纯缓存：包清单与包集合索引会在下次解析依赖时自动重算重下，不影响任何已下载的依赖源码（位于 ~/Library/org.swift.swiftpm）和已编译产物，也不影响项目文件本身"
+  consequence: "下次打开项目或执行 swift package resolve 时，SPM 需重新解析并缓存各依赖包的清单，首次解析略慢；此外包集合（Xcode 里的 Package Collections）索引会重新抓取"
+  regenerate: "运行 swift package resolve / swift build 或在 Xcode 中解析依赖时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "通常数十 MB，重度使用可达数百 MB"
+  recovery: full
+refs:
+  - https://www.swift.org/documentation/package-manager/

@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-jetbrains-caches
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/JetBrains"
+semantics:
+  title: "JetBrains IDE 系统缓存与索引（~/Library/Caches/JetBrains）"
+  what: "IntelliJ 平台 IDE（IntelliJ IDEA、PyCharm、WebStorm、GoLand、Rider、DataGrip 等，2020.1+）的 system 目录，按 <产品><版本> 分子目录（如 IntelliJIdea2026.2）：存放项目索引、虚拟文件系统缓存、编译输出缓存、VCS Log 索引等；官方文档明确该目录 'contains caches and local history files'，即其中的 LocalHistory 子目录保存本地修改历史"
+  producer: "各 JetBrains IDE：打开/索引项目、构建、运行 VCS 操作时自动写入；每个 IDE 版本各占一个子目录，旧版本卸载或升级后其目录会残留"
+  safe_to_delete_because: "缓存与索引可由 IDE 完全重建：官方 Invalidate Caches 机制删除的就是这些文件，'下次打开项目时重建'；升级后残留的旧版本子目录不再被任何现用 IDE 读写，删除零代价。该目录是缓存目录，不包含 IDE 设置与插件（那在 ~/Library/Application Support/JetBrains），不影响已安装的 IDE 本体"
+  consequence: "删除当前在用版本的子目录后，下次打开项目需完整重建索引，大项目可达数十分钟，期间代码补全/导航/检查不可用或明显变慢；其中的 LocalHistory（非版本控制的本地修改历史，默认仅保留 5 个工作日）会一并永久丢失、无法恢复——勾选前请确认不需要，或只勾选旧版本子目录"
+  regenerate: "下次启动对应 IDE 并打开项目时自动重建索引与缓存；LocalHistory 无法重建（丢失即永久）"
+risk: yellow
+red_flags: []
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "单 IDE 版本常 1–5 GB，装过多个 IDE 或多个版本时可累积 10 GB 以上"
+  recovery: partial
+refs:
+  - https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html
+  - https://www.jetbrains.com/help/idea/invalidate-caches.html

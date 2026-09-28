@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-cargo-registry-cache
+os: macos
+scope: user
+paths:
+  - "~/.cargo/registry/cache"
+semantics:
+  title: "Cargo crate 下载缓存"
+  what: "cargo 构建/安装时从 crates.io（或配置的镜像）下载的 .crate 压缩包，按 registry 源分子目录存放（如 index.crates.io-*/），仅作下载留档以加速重用"
+  producer: "Cargo（Rust 包管理器），在每次拉取依赖或 cargo install 时写入"
+  safe_to_delete_because: "只是网络下载产物的留档，不参与编译决策本身；已解压的源码在 ~/.cargo/registry/src，可执行文件与工具链在 ~/.cargo/bin，均不在本目录，清空本目录不影响现有构建产物与已安装工具"
+  consequence: "下次构建或 cargo install 用到已删的 crate 时需重新从 crates.io/镜像下载（耗时增加、占网络流量），编译结果不变；离线环境（--offline / 离线 CI）在缓存清空后将无法解析依赖直到联网"
+  regenerate: "cargo 在下次构建需要时按需自动重新下载对应版本的 .crate 文件"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 至数 GB（活跃 Rust 开发者常见 1–5 GB；本机实测 388 MB）"
+  recovery: full
+refs:
+  - https://doc.rust-lang.org/cargo/reference/registry.html
+  - https://doc.rust-lang.org/cargo/guide/dependencies.html

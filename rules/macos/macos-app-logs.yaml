@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-app-logs
+os: macos
+scope: user
+paths:
+  - "~/Library/Logs"
+semantics:
+  title: "应用日志（~/Library/Logs）"
+  what: "各应用程序与系统服务写入的运行日志文件，供开发者与用户通过「控制台（Console）」应用排查问题"
+  producer: "macOS 上运行的各类应用与系统服务，按 Apple 文件系统规范写入用户 Library 目录的 Logs 子目录"
+  safe_to_delete_because: "日志只记录已发生事件的诊断信息，不影响应用功能与用户数据；应用继续运行时会持续生成新日志，旧日志仅对事后排障有价值"
+  consequence: "历史日志被永久删除，无法再用于回溯之前的问题；正在运行的应用通常不受影响，继续正常写新日志"
+  regenerate: "应用每次运行都会产生新日志；但被删的历史日志内容（过去的事件记录）不会重现"
+risk: green
+red_flags: []
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 7
+estimate:
+  typical_size: "数百 MB 至数 GB（随安装应用数量与使用时长增长；全新系统通常仅数十 MB）"
+  recovery: none
+refs:
+  - https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html

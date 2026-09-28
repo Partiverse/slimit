@@ -1,0 +1,1258 @@
+[
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-homebrew-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Homebrew"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Homebrew 下载缓存",
+      "what": "brew 安装 formulae/casks 时下载的安装包与旧版本文件，安装完成后仅用于加速重装",
+      "producer": "Homebrew",
+      "safe_to_delete_because": "只影响下次安装/重装的速度，不影响已安装软件",
+      "consequence": "下次 brew install/reinstall 需重新下载",
+      "regenerate": "按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "brew cleanup --prune=all",
+      "dry_run": "brew cleanup -n",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 至 20+ GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.brew.sh/Manpage"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-android-avd",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.android/avd"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Android 模拟器虚拟设备（AVD）",
+      "what": "Android 模拟器的虚拟设备：每个 <名字>.avd 目录包含该虚拟机的磁盘镜像（userdata-qemu.img 等）、快照与硬件配置，同名 .ini 文件是索引；默认路径为 ~/.android/avd（可用 ANDROID_AVD_HOME 重定向）",
+      "producer": "Android Studio Device Manager 或 avdmanager 创建；模拟器每次运行时写入数据",
+      "safe_to_delete_because": "虚拟设备本身可随时重建，删除不影响真机调试、Android SDK 与系统镜像缓存（位于 ~/Library/Android/sdk）；但其中数据不可恢复，需用户逐项确认",
+      "consequence": "对应虚拟设备将消失：其中安装的 App、App 数据、模拟器快照与系统设置全部永久丢失，无法恢复；正在运行的模拟器会失效",
+      "regenerate": "在 Android Studio Device Manager 重新创建同名虚拟设备，或用 avdmanager create avd 命令；系统镜像复用 SDK 缓存，重建后是全新空白系统"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "单个 AVD 数百 MB 至数 GB（含磁盘镜像与快照），多模拟器用户常达 10 GB 以上",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://developer.android.com/studio/run/managing-avds",
+      "https://developer.android.com/studio/command-line/variables",
+      "https://developer.android.com/tools/avdmanager"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-android-sdk-system-images",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Android/sdk/system-images"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Android 模拟器系统镜像",
+      "what": "Android 模拟器（AVD）启动所需的 Android 系统镜像，按 <API 级别>/<变体>/<ABI> 分目录存放（如 android-35/default/arm64-v8a）。注意：AVD 实例的配置与用户数据存放在 ~/.android/avd，本条规则不涉及",
+      "producer": "Android Studio SDK Manager / 命令行工具 sdkmanager 下载安装",
+      "safe_to_delete_because": "镜像只是可重新下载的操作系统文件，不含任何用户数据；代价仅是重新下载的耗时与流量",
+      "consequence": "引用被删镜像的现有 AVD 将无法启动（Device Manager 提示缺系统镜像）；重新下载对应镜像后多数 AVD 可直接恢复，个别情况需在 Device Manager 重新选择镜像或重建 AVD",
+      "regenerate": "Android Studio → 设置 → Android SDK → SDK Platforms（勾选 Show Package Details）按需重新下载；或命令行 sdkmanager \"system-images;android-35;default;arm64-v8a\"（包路径与目录结构一一对应）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "单个镜像约 1–3 GB；安装多个 API 级别/变体时合计常见 5–20 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.android.com/studio/run/managing-avds",
+      "https://developer.android.com/studio/run/emulator"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-app-logs",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "应用日志（~/Library/Logs）",
+      "what": "各应用程序与系统服务写入的运行日志文件，供开发者与用户通过「控制台（Console）」应用排查问题",
+      "producer": "macOS 上运行的各类应用与系统服务，按 Apple 文件系统规范写入用户 Library 目录的 Logs 子目录",
+      "safe_to_delete_because": "日志只记录已发生事件的诊断信息，不影响应用功能与用户数据；应用继续运行时会持续生成新日志，旧日志仅对事后排障有价值",
+      "consequence": "历史日志被永久删除，无法再用于回溯之前的问题；正在运行的应用通常不受影响，继续正常写新日志",
+      "regenerate": "应用每次运行都会产生新日志；但被删的历史日志内容（过去的事件记录）不会重现"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 7,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（随安装应用数量与使用时长增长；全新系统通常仅数十 MB）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-cargo-registry-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.cargo/registry/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cargo crate 下载缓存",
+      "what": "cargo 构建/安装时从 crates.io（或配置的镜像）下载的 .crate 压缩包，按 registry 源分子目录存放（如 index.crates.io-*/），仅作下载留档以加速重用",
+      "producer": "Cargo（Rust 包管理器），在每次拉取依赖或 cargo install 时写入",
+      "safe_to_delete_because": "只是网络下载产物的留档，不参与编译决策本身；已解压的源码在 ~/.cargo/registry/src，可执行文件与工具链在 ~/.cargo/bin，均不在本目录，清空本目录不影响现有构建产物与已安装工具",
+      "consequence": "下次构建或 cargo install 用到已删的 crate 时需重新从 crates.io/镜像下载（耗时增加、占网络流量），编译结果不变；离线环境（--offline / 离线 CI）在缓存清空后将无法解析依赖直到联网",
+      "regenerate": "cargo 在下次构建需要时按需自动重新下载对应版本的 .crate 文件"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（活跃 Rust 开发者常见 1–5 GB；本机实测 388 MB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://doc.rust-lang.org/cargo/reference/registry.html",
+      "https://doc.rust-lang.org/cargo/guide/dependencies.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-chrome-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Google/Chrome"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Google Chrome 浏览器缓存",
+      "what": "Chrome 为加速网页加载而保存的派生数据：各 profile 的 HTTP 网页资源缓存（Cache/Cache_Data）、JavaScript 代码缓存（Code Cache）等。密码、书签、历史记录、Cookie 等用户数据存放在 ~/Library/Application Support/Google/Chrome，不在此目录",
+      "producer": "Google Chrome",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，仅用于加速页面重复加载；Chrome 官方自身提供『清除缓存的图片和文件』选项，并明确该操作不影响密码、书签与历史记录",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问各网站需重新下载资源，加载略慢，用得越多恢复越快。Chrome 正在运行时清理一般也能自动恢复，稳妥起见建议先退出 Chrome",
+      "regenerate": "无需手动操作，Chrome 运行中按需自动重建目录并重新缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用或多个 profile 可达 5 GB 以上）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://support.google.com/chrome/answer/2392709"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-cocoapods-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/CocoaPods"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "CocoaPods 下载缓存",
+      "what": "pod install / pod update 解析依赖时下载的 podspec 索引与第三方库源码压缩包（CocoaPods 版本管理器 CDN 缓存）",
+      "producer": "CocoaPods（pod 命令行工具），在执行 install/update 时自动写入",
+      "safe_to_delete_because": "只是下载缓存，工程内 Pods/ 目录与 Podfile.lock 不受影响，已集成的依赖不重新下载也能正常编译",
+      "consequence": "下次 pod install/update 需重新下载 podspec 与源码包，首次解析依赖变慢，其余无影响",
+      "regenerate": "下次执行 pod install/update 时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pod cache clean --all",
+      "dry_run": "pod cache list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（本机实测约 1GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-crash-reports",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Logs/DiagnosticReports"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "系统崩溃报告（DiagnosticReports）",
+      "what": "macOS 崩溃报告目录：应用或系统进程异常退出时自动生成的 .ips 文本报告，记录崩溃时间、进程信息与线程堆栈，供开发者与 Apple 排查问题（含 Retired 子目录中的旧报告）",
+      "producer": "macOS CrashReporter（ReportCrash 守护进程）——任何崩溃的应用或系统进程都会触发生成",
+      "safe_to_delete_because": "仅为崩溃发生之后的事后诊断记录，不参与系统或应用的任何运行时功能",
+      "consequence": "丢失排查历史崩溃的依据（向开发者反馈应用反复崩溃时将没有历史报告可附）；系统与应用运行不受任何影响，之后的新崩溃仍会照常生成新报告",
+      "regenerate": "历史报告无法重建（属一次性事件记录）；此后每次崩溃都会自动生成新的 .ips 报告"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "通常仅数 MB（单个 .ips 报告几十 KB）；应用反复崩溃或长期不清理可达数十 MB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode/diagnosing-issues-using-crash-reports-and-device-logs",
+      "https://support.apple.com/guide/console/cnsl1069/mac"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-docker-builder-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.docker.docker/Data/buildstore"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Docker 构建缓存（BuildKit，VM 内）",
+      "what": "docker build 构建镜像时由 BuildKit 产生的中间层缓存（基础镜像层提取、依赖安装、编译产物等步骤的复用数据）。在 Docker Desktop for Mac 上，这些缓存存放在其内置 Linux 虚拟机的虚拟磁盘内，宿主侧 Data/buildstore 只是辅助目录；因此清理必须通过 docker CLI 完成，本规则不触碰任何宿主文件。",
+      "producer": "docker build / docker buildx build（BuildKit 构建器，随 Docker Desktop 运行）",
+      "safe_to_delete_because": "缓存层只是构建过程的中间产物，删除不影响已有镜像、容器和数据卷，也不影响源代码",
+      "consequence": "下次构建镜像时无法复用缓存层，所有步骤需完整重跑，构建耗时和拉取/编译开销明显增加；已构建的镜像与运行中的容器均不受影响",
+      "regenerate": "下次执行 docker build 时按需自动重建对应缓存层（重建成本就是那次构建变慢的时间）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "docker builder prune -f",
+      "dry_run": "docker system df -v",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 至数十 GB（重度多阶段构建/CI 场景可更高；本机实测当前为 0B）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.docker.com/build/cache/",
+      "https://docs.docker.com/engine/manage-resources/pruning/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-go-build-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/go-build"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Go 构建缓存",
+      "what": "go build / go test / go run 等命令产生的编译中间产物缓存（按内容寻址的包编译结果），macOS 默认存放于 GOCACHE（~/Library/Caches/go-build）。注意：Go 模块源码缓存（GOMODCACHE，~/go/pkg/mod）在别处，本条规则不涉及",
+      "producer": "Go 工具链（go build / go test / go install / go run）",
+      "safe_to_delete_because": "内容全部是可再生的编译缓存，不含源码与用户数据；Go 官方提供 go clean -cache 命令随时清空，清空后仅影响下次编译速度",
+      "consequence": "下次构建/测试需要完整重新编译，首次构建耗时明显变长（大型项目可达数分钟）；功能与结果完全不受影响",
+      "regenerate": "无需手动操作，Go 在下次构建/测试时自动按需重新编译并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "go clean -cache",
+      "dry_run": "go env GOCACHE",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–5 GB（活跃 Go 开发常见量级，重度使用可超过 10 GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pkg.go.dev/cmd/go"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-go-mod-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/go/pkg/mod/cache/download"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Go 模块下载缓存",
+      "what": "go 工具链的模块下载缓存（$GOMODCACHE/cache/download）：按 module@version 存放的源码压缩包、校验和文件及解包后的依赖源码，供构建时复用以免重复联网下载",
+      "producer": "Go 工具链：执行 go build / go get / go mod download 拉取依赖时由 go 命令写入",
+      "safe_to_delete_because": "纯下载缓存，内容完全由各项目 go.mod/go.sum 锁定的公开模块重新下载生成，不含用户代码；官方提供 go clean -modcache 专门清理（模块缓存带只读保护，直接 rm -rf 常因权限失败）。该命令会清理整个 GOMODCACHE（含本目录及解包源码），全部可再生",
+      "consequence": "下次构建或拉取依赖时需重新下载模块；离线环境下在缓存重建前无法编译依赖未缓存的 Go 项目。不影响已写好的源码、go.mod/go.sum 或版本控制内容",
+      "regenerate": "下次执行 go build / go mod download / go get 时按 go.mod 与 go.sum 自动重新下载并校验"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "go clean -modcache",
+      "dry_run": "go env GOMODCACHE",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB，重度 Go 开发可达 10 GB 以上",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pkg.go.dev/cmd/go"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-gradle-caches",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/caches"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle 构建缓存与依赖缓存（~/.gradle/caches）",
+      "what": "Gradle User Home 下的全局缓存目录：按 Gradle 版本划分的版本级缓存（编译后的构建脚本、Kotlin DSL 访问器、生成的 Gradle JAR、artifact 转换产物，如 8.11.1/9.3.1 等目录）、下载依赖的构件缓存 modules-2、本地构建缓存 build-cache-1 及缓存索引 journal-1。仅清 caches 目录本身；~/.gradle 下的 gradle.properties、init.gradle、daemon 日志、jdks 等配置与其他内容不受影响",
+      "producer": "Gradle 构建工具（运行 gradle/gradlew 构建时自动写入；Android Studio 等 IDE 导入或构建 Gradle 项目时同样写入）",
+      "safe_to_delete_because": "官方文档说明这些缓存由 Gradle 自动创建与管理：版本级缓存会在对应版本首次使用时重建，依赖可从远程仓库按需重新下载，构建缓存条目失效后由构建过程重新生成；Gradle 自身也会按闲置时间自动清理旧缓存",
+      "consequence": "下次构建需重新联网下载全部依赖并重建版本缓存，首次构建明显变慢；已停止使用的旧版本 Gradle 缓存不会自动重建（属预期，不影响当前项目）；依赖若来自已下线的内网/私有仓库则无法重下，依赖此类仓库的旧项目构建会失败，请先确认仓库仍可访问",
+      "regenerate": "下次运行 gradle/gradlew 构建或在 IDE 中导入项目时，按所用 Gradle 版本自动重建，依赖按需重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB，多项目/多 Gradle 版本重度使用可超 10 GB（本机实测约 5.3 GB）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-huggingface-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.cache/huggingface"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Hugging Face 模型缓存",
+      "what": "huggingface_hub 下载的模型权重、数据集等文件缓存：hub/ 下按 models--* 目录组织（blobs/ 存文件本体，snapshots/ 存符号链接，refs/ 存修订指针），xet/ 为 Xet 存储的分块缓存；macOS 默认位于 HF_HOME（~/.cache/huggingface）",
+      "producer": "transformers / diffusers / datasets 等库及 hf（huggingface-cli）命令在下载模型或数据集时写入",
+      "safe_to_delete_because": "除登录令牌（token 文件）及个别第三方工具可能写入的杂项小文件外，均为从 Hugging Face Hub 可重新下载的缓存副本，不含源码、训练产物或用户文档；删除不影响已安装的库，只影响下次加载速度",
+      "consequence": "下次运行需要重新下载用到的模型/数据集（大模型动辄数十 GB，耗时与流量可观）；若曾执行 hf auth login，登录令牌（token 文件）也存放在此目录，清空后需重新登录；无网络时相关模型暂时不可用",
+      "regenerate": "无需手动操作，transformers/diffusers/datasets 在下次加载时按需自动重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 至数十 GB（重度 AI 开发者常超 50 GB；本机实测约 1.5 GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://huggingface.co/docs/huggingface_hub/en/guides/manage-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-imessage-attachments",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Messages/Attachments"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "iMessage 附件文件",
+      "what": "信息（Messages）App 收发的图片、视频、音频、贴纸、名片与文件附件，以哈希前缀的目录树存放（00–ff 两级目录 + UUID 命名），图片、视频、音频等各类附件混存其中，是对话里可点开查看的媒体本体",
+      "producer": "信息（Messages）App 在收发 iMessage/SMS 附件时写入",
+      "safe_to_delete_because": "不可代删：附件就是聊天数据本体，不属于任何可再生缓存，无法由工具安全清理",
+      "consequence": "不可代删：这些文件就是聊天数据本体，不属于可再生的缓存。删除后对话中的对应附件永久消失（显示为占位符/无法加载），无法通过重装或重建缓存找回；文字记录（chat.db）虽保留，但媒体缺失。开启「信息在 iCloud 中」的账号，附件状态可能多端同步，影响不限于本机",
+      "regenerate": "不可自动重建；只能由联系人重新发送，或从完整备份/iCloud 信息同步恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "附件是 iMessage 聊天数据本体：删除后对话中的照片、视频、文件永久无法查看，且无任何自动再生途径",
+      "附件可能含用户独有且无处备份的内容（证件照、合同、旧照片、语音留言），SlimIt 无法替用户判断哪些仍需要",
+      "开启「信息在 iCloud 中」的账号可能多端共享附件，代删影响超出本机；正确做法是在信息 App 内由用户逐项决定，或调整「保留信息」期限"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数十 GB（重度聊天用户常见 10 GB 以上）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://support.apple.com/guide/messages/delete-messages-and-conversations-icht1035/mac",
+      "https://support.apple.com/zh-cn/guide/messages/delete-messages-and-conversations-icht1035/mac"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-ios-device-backups",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Application Support/MobileSync/Backup"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "iOS 设备本地备份",
+      "what": "iPhone/iPad 通过 Finder（或旧版 iTunes）「立即备份」生成的整设备本地备份：每台设备一个以设备 UDID 命名的子目录，内含 App 数据、iMessage/SMS 记录、健康数据、设备设置，加密备份时还含钥匙串密码与 Wi-Fi 密码",
+      "producer": "Finder / iTunes 在用户连接 iOS/iPadOS 设备并执行备份时产生",
+      "safe_to_delete_because": "不可代删：备份内容是设备本地独有数据，无法从 iCloud、App Store 或任何其他来源再生",
+      "consequence": "删除后该设备的历史本地备份永久消失：健康数据、已存密码、iMessage 等无法恢复；本地备份与 iCloud 备份相互独立，无 iCloud 备份的用户将失去唯一副本。此损失不可逆",
+      "regenerate": "不可重建（历史备份无法再生）；仅可为设备重新创建一份新备份"
+    },
+    "risk": "red",
+    "red_flags": [
+      "含健康数据、钥匙串/Wi-Fi 密码（加密备份）、iMessage/SMS、App 数据等不可再生内容，删除即永久丢失",
+      "本地备份与 iCloud 备份相互独立，可能存在没有 iCloud 备份的用户，此处是其唯一副本",
+      "只有用户能判断某台旧设备的备份是否仍需保留（换机、回退系统、留档）；SlimIt 只提示，不代删"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台设备数 GB 至数十 GB，通常接近对应设备的已用空间",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://support.apple.com/108809",
+      "https://support.apple.com/zh-cn/108809"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-jetbrains-caches",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/JetBrains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 系统缓存与索引（~/Library/Caches/JetBrains）",
+      "what": "IntelliJ 平台 IDE（IntelliJ IDEA、PyCharm、WebStorm、GoLand、Rider、DataGrip 等，2020.1+）的 system 目录，按 <产品><版本> 分子目录（如 IntelliJIdea2026.2）：存放项目索引、虚拟文件系统缓存、编译输出缓存、VCS Log 索引等；官方文档明确该目录 'contains caches and local history files'，即其中的 LocalHistory 子目录保存本地修改历史",
+      "producer": "各 JetBrains IDE：打开/索引项目、构建、运行 VCS 操作时自动写入；每个 IDE 版本各占一个子目录，旧版本卸载或升级后其目录会残留",
+      "safe_to_delete_because": "缓存与索引可由 IDE 完全重建：官方 Invalidate Caches 机制删除的就是这些文件，'下次打开项目时重建'；升级后残留的旧版本子目录不再被任何现用 IDE 读写，删除零代价。该目录是缓存目录，不包含 IDE 设置与插件（那在 ~/Library/Application Support/JetBrains），不影响已安装的 IDE 本体",
+      "consequence": "删除当前在用版本的子目录后，下次打开项目需完整重建索引，大项目可达数十分钟，期间代码补全/导航/检查不可用或明显变慢；其中的 LocalHistory（非版本控制的本地修改历史，默认仅保留 5 个工作日）会一并永久丢失、无法恢复——勾选前请确认不需要，或只勾选旧版本子目录",
+      "regenerate": "下次启动对应 IDE 并打开项目时自动重建索引与缓存；LocalHistory 无法重建（丢失即永久）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "单 IDE 版本常 1–5 GB，装过多个 IDE 或多个版本时可累积 10 GB 以上",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html",
+      "https://www.jetbrains.com/help/idea/invalidate-caches.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-mail-downloads",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Mail 附件打开缓存",
+      "what": "在 Mail 中点开邮件附件时，Mail 在其沙盒容器内生成的附件副本缓存（区别于你手动「存储」到下载/文稿的副本）",
+      "producer": "Apple Mail（com.apple.mail 沙盒容器）",
+      "safe_to_delete_because": "只是附件的打开缓存；邮件正文与附件原件仍在邮箱（服务器或本地邮件库）中。注意：若对应邮件已被删除，这里可能是该附件仅存的副本，请逐项确认后再清理",
+      "consequence": "已打开过的附件副本被清掉；下次在 Mail 中点开同一附件时会重新下载或重新提取。若对应邮件已从邮箱删除且无备份，该附件副本无法找回",
+      "regenerate": "重新打开对应邮件的附件时，由 Mail 自动重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 30,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（随点开附件的频率与附件体积）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://support.apple.com/guide/mail/view-save-or-delete-email-attachments-mlhlp1123/16.0/mac/27",
+      "https://support.apple.com/guide/security/app-sandbox-sec15d9444b2/web"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-maven-repository-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.m2/repository"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Maven 本地仓库缓存（~/.m2/repository）",
+      "what": "Apache Maven 的本地构件仓库（默认路径 ~/.m2/repository）：构建时从远程仓库下载的依赖 jar、插件与 POM 的缓存，以及本机 mvn install 产生的构建产物。仅清空 repository 目录本身，~/.m2/settings.xml 配置不受影响",
+      "producer": "Apache Maven（mvn 构建、IDE 导入 Maven 项目时自动写入）",
+      "safe_to_delete_because": "主体是远程仓库的下载缓存，Maven 官方文档明确说明磁盘空间不足时可以清理甚至整个删除；目录本身会在下次构建时自动重建",
+      "consequence": "下次 mvn 构建 / IDE 依赖同步需重新联网下载全部依赖，首构建明显变慢，离线或仅内网仓库环境会构建失败；mvn install:install-file 手工安装的第三方构件与尚未发布到远程仓库的本机产物无法从远程重下，若有此类构件请先确认原始 jar 仍可取得",
+      "regenerate": "执行任意 mvn 构建或在 IDE（IntelliJ IDEA 等）中导入 Maven 项目时按需重新下载并重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB，活跃 Java 开发常见 5–10 GB+（本机实测约 628 MB）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://maven.apache.org/settings.html",
+      "https://maven.apache.org/guides/introduction/introduction-to-repositories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-npm-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.npm/_cacache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "npm 包缓存（_cacache）",
+      "what": "npm 安装/下载包时缓存的 tarball 与元数据内容寻址存储，仅用于加速重复安装",
+      "producer": "npm（Node.js 包管理器）在 install/update 时自动写入",
+      "safe_to_delete_because": "纯下载缓存，已安装的 node_modules 与全局包不受影响；包内容可随时从 registry 重新获取",
+      "consequence": "下次 npm install 需重新联网下载包，离线或网络受限时安装变慢；npm 本身与已装项目均正常工作",
+      "regenerate": "执行任意 npm install 时按需自动重新下载并重建缓存；npm cache verify 可手动校验与修复"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "npm cache clean --force",
+      "dry_run": "npm cache verify",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用者可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.npmjs.com/cli/commands/npm-cache",
+      "https://docs.npmjs.com/cli/v10/commands/npm-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-pip-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/pip"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pip 下载缓存",
+      "what": "pip 安装 Python 包时下载的 HTTP 响应（PyPI 页面与 wheel 文件）及本地构建的 wheel 缓存，仅用于加速重复安装",
+      "producer": "pip（Python 官方包管理器）",
+      "safe_to_delete_because": "纯下载缓存，只影响下次安装速度；已安装到虚拟环境/系统 site-packages 的包不受任何影响",
+      "consequence": "下次 pip install 曾缓存过的包需重新从 PyPI 下载，安装变慢、消耗流量，此外无任何损失",
+      "regenerate": "下次 pip install 时自动按需重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pip3 cache purge",
+      "dry_run": "pip3 cache list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 至数 GB（活跃 Python 开发常见数百 MB；本机实测约 9.5 MB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pip.pypa.io/en/stable/cli/pip_cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-playwright-browsers",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/ms-playwright"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Playwright 测试浏览器",
+      "what": "Playwright 运行端到端测试所需的浏览器二进制（Chromium、Firefox、WebKit 等），按浏览器与版本号分子目录存放，可被本机多个项目共享",
+      "producer": "Playwright（执行 npx playwright install 或首次运行测试时自动从官方 CDN 下载）",
+      "safe_to_delete_because": "内容全部是从 Playwright 官方 CDN 下载的可再生浏览器二进制，不含用户数据、测试结果或项目代码；重装只需一条命令",
+      "consequence": "下次运行 Playwright 测试前需重新下载浏览器（每个数百 MB、需联网），期间 e2e 测试无法运行；项目代码与 CI 配置不受影响",
+      "regenerate": "npx playwright install（可加浏览器名按需单个重装，如 npx playwright install chromium）"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "单版本三浏览器约 1–1.5 GB；多项目长期累积多版本时常达 2–5 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://playwright.dev/docs/browsers"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-pnpm-store",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/pnpm/store"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pnpm 全局包存储",
+      "what": "pnpm 的全局内容寻址存储（content-addressable store，位于 ~/Library/pnpm/store/v3、v10、v11 等版本目录），所有 pnpm 项目的依赖包文件按内容哈希去重存放于此，项目 node_modules 通过硬链接引用它以节省磁盘",
+      "producer": "pnpm（每次 pnpm install 拉取依赖时写入）",
+      "safe_to_delete_because": "存储内容全部是从 npm registry 下载的公开包文件，可再生；官方命令 pnpm store prune 只删除未被任何项目引用的孤儿包，被引用的包与各项目 node_modules 中的硬链接完全不受影响",
+      "consequence": "store 体积减小；下次安装未缓存的包版本需重新下载（速度变慢）；已有项目的 node_modules 不受影响、无需重装",
+      "regenerate": "pnpm 在后续 install 时按需自动重新下载并写回 store，无需手动操作"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pnpm store prune",
+      "dry_run": "pnpm store path",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB（本机实测 4.1 GB），重度多项目使用可达数十 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pnpm.io/cli/store"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-spm-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/org.swift.swiftpm"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Swift Package Manager 缓存",
+      "what": "Swift Package Manager（swift package / Xcode 内置 SPM）的缓存目录，主要是已解析包的 Package.swift 清单缓存（manifests/）和 Swift Package Collection 索引数据库（package-collection.db），不含源码检出与编译产物",
+      "producer": "Swift Package Manager（swift.org 官方工具链及 Xcode 内置集成）",
+      "safe_to_delete_because": "纯缓存：包清单与包集合索引会在下次解析依赖时自动重算重下，不影响任何已下载的依赖源码（位于 ~/Library/org.swift.swiftpm）和已编译产物，也不影响项目文件本身",
+      "consequence": "下次打开项目或执行 swift package resolve 时，SPM 需重新解析并缓存各依赖包的清单，首次解析略慢；此外包集合（Xcode 里的 Package Collections）索引会重新抓取",
+      "regenerate": "运行 swift package resolve / swift build 或在 Xcode 中解析依赖时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "通常数十 MB，重度使用可达数百 MB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://www.swift.org/documentation/package-manager/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-spotify-persistent-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Application Support/Spotify/PersistentCache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Spotify 流媒体缓存（PersistentCache）",
+      "what": "Spotify 桌面客户端把播放过的音乐/播客音频数据缓存在此目录，用于无卡顿回放与加快重复播放；据 Spotify 社区已采纳解答与清理工具文档，桌面端的离线下载歌曲也存放在同一存储区（PersistentCache/Storage）",
+      "producer": "Spotify macOS 桌面客户端",
+      "safe_to_delete_because": "内容是可再生成的音频缓存：所有曲目仍在线上，删除不影响账号、播放列表和已保存的音乐库。Spotify 设置里也有 Clear cache 按钮，但其清理范围可能与直接清空本目录不同，官方文档未说明两者是否等效",
+      "consequence": "已缓存的音频被清空，下次播放需重新从网络加载；桌面端若有离线下载的歌曲会一并丢失，需重新下载。建议先退出 Spotify 再清理",
+      "regenerate": "重新打开 Spotify 后按播放行为自动重建缓存；离线歌曲在设置中重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "通常 1–10 GB，长期重度使用可更大（Spotify 官方建议磁盘至少保留 1 GB 空闲）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.spotify.com/us/article/storage-information/",
+      "https://community.spotify.com/t5/Desktop-Mac/I-hit-the-download-button-on-my-iMac-where-did-it-download-to/td-p/4634644",
+      "https://macpaw.com/how-to/clear-spotify-cache-mac"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-time-machine-local-snapshots",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "/Volumes/com.apple.TimeMachine.localsnapshots"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Time Machine 本地快照",
+      "what": "Time Machine 每小时在内置磁盘（APFS 数据卷）上自动创建的时间点快照（命名形如 com.apple.TimeMachine.<日期>.local），即使备份盘未连接也能在 Time Machine 里回溯到最近约 24 小时内的文件版本；占用计入系统\"可清除\"空间",
+      "producer": "macOS 系统（Time Machine 自动，约每小时创建一个；备份盘断开时快照留存更久——最近一次成功备份对应的快照会保留到需要空间时才删除）",
+      "safe_to_delete_because": "快照只是过去时间点的只读磁盘副本，删除不影响当前任何文件、外接盘上的 Time Machine 备份，也不影响 Time Machine 之后的正常备份；macOS 本身也会在快照过期（约 24 小时）或空间需要时自动删除它们",
+      "consequence": "失去\"把文件恢复到这些时间点\"的能力（快照不可再生）；当前文件、外接备份盘数据均不受影响；系统重新计算可清除空间后占用即释放",
+      "regenerate": "过去时间点的快照无法重建；只要 Time Machine 保持开启，系统会按需继续自动创建新的每小时快照"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "tmutil deletelocalsnapshots /",
+      "dry_run": "tmutil listlocalsnapshots /",
+      "delete_contents_only": null,
+      "irreversible": true,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "几个 GB 至数十 GB（随备份盘断开时长累积，计入\"可清除\"空间）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://support.apple.com/en-us/102154",
+      "https://keith.github.io/xcode-man-pages/tmutil.8.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-trash",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.Trash"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "废纸篓（清倒可释放空间）",
+      "what": "macOS 废纸篓目录。在 Finder 中「移到废纸篓」的项目、部分应用删除文件时生成的「Recovered Files」文件夹都暂存在这里，清倒前文件仍占用磁盘。该目录受 TCC 保护，扫描与清理需要完全磁盘访问权限。",
+      "producer": "macOS Finder 的「移到废纸篓」操作，以及各应用执行删除时的中转（含应用自动生成的 Recovered Files）",
+      "safe_to_delete_because": "清倒废纸篓是 macOS 官方的清理方式；进入废纸篓通常已代表用户的删除意图，清倒只完成这个意图。但清倒不可逆，且无法区分「有意删除」与「刚误删」，故工具不代清，仅提示用户在访达中自行确认后清倒",
+      "consequence": "内容被永久删除，「放回原处」信息一并丢失，无法再从废纸篓恢复；近期误删且还想找回的文件会因此丢失。~/.Trash 目录本身保留，其他卷宗的 .Trash 不受影响",
+      "regenerate": "无法重建，属不可逆删除。~/.Trash 目录本身保留，之后新删除的文件会照常进入"
+    },
+    "risk": "red",
+    "red_flags": [
+      "清倒即不可逆：文件永久删除、无法「放回原处」，不能由工具代为执行",
+      "废纸篓内容是用户自行移入的任意个人文件（可能含文档/照片），刚移入的可能只是误删，清倒即永久丢失"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "0 至数十 GB，随近期删除内容波动（本机内容受 TCC 保护，未能实测）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://support.apple.com/zh-cn/guide/mac-help/mchlp1093/mac",
+      "https://support.apple.com/guide/mac-help/if-the-trash-contains-recovered-files-on-mac-mchlp2919/27/mac/27"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-user-caches",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "用户应用缓存（~/Library/Caches）",
+      "what": "macOS 约定的用户级缓存总目录：每个 App 与系统服务在此有自己的子目录（按应用名或 Bundle ID 命名），存放下载缓存、缩略图、数据库缓存等可再生数据",
+      "producer": "各个第三方 App 与 macOS 系统服务（如 CloudKit、GeoServices、Spotlight）",
+      "safe_to_delete_because": "Apple 文件系统文档规定该目录内容必须是应用可自行重建的缓存，且系统在磁盘紧张时也可能自行清除；按约定删除不影响应用功能与用户数据",
+      "consequence": "各 App 下次运行时按需重建缓存，短期内首次启动与浏览会变慢；个别应用把少量半持久状态（如缩略图索引、会话级缓存）也放在此处，会随之丢失并需重新生成，个别应用可能要求重新登录一次",
+      "regenerate": "各 App 与系统服务在运行时自动按需重建，无需手动操作"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "约 2–10 GB，重度开发/浏览器用户可达数十 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-vscode-cached-data",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Application Support/Code/CachedData"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "VS Code 启动缓存（V8 代码缓存）",
+      "what": "VS Code 自身 JavaScript 代码的 V8 编译缓存（CachedData），按版本 commit hash 分子目录存放，仅用于加速启动；不含扩展、设置与任何用户数据",
+      "producer": "VS Code（Electron/V8），在安装或更新版本后的启动过程中生成",
+      "safe_to_delete_because": "纯启动加速缓存，内容完全由本机 VS Code 二进制推导再生，与扩展、设置、工作区数据无关联",
+      "consequence": "下一次（或几次）启动 VS Code 略慢，缓存随即自动重建；无任何数据损失",
+      "regenerate": "删除后下次启动 VS Code 自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每个版本约 10–30 MB，多个版本累计可达 50–200 MB（本机实测 26 MB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://code.visualstudio.com/docs/setup/uninstall",
+      "https://code.visualstudio.com/docs/supporting/FAQ"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-device-support",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/Xcode/iOS DeviceSupport"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 真机调试符号缓存（iOS DeviceSupport）",
+      "what": "Xcode 首次连接某台 iOS 真机调试时，从设备系统镜像中提取的按 iOS 版本归档的调试符号文件（每个目录对应一个 iOS 版本，如 17.5 (21H101)）",
+      "producer": "Xcode（连接 iPhone/iPad 真机进行真机调试时自动生成）",
+      "safe_to_delete_because": "纯符号缓存，不含任何用户数据、照片或密钥；重新连接对应系统版本的真机后 Xcode 会自动重新提取。旧 iOS 版本的目录对应已升级的设备，通常永远不会再被用到",
+      "consequence": "下次连接同版本真机调试时，Xcode 需重新处理符号（设备上会显示『准备进行开发』，可能耗时数分钟至数十分钟），期间无法真机调试；对从未连接的设备无任何影响",
+      "regenerate": "重新连接对应系统版本的 iPhone/iPad 后由 Xcode 自动重建（需设备与当前 Xcode 版本兼容；设备已不在手或系统版本超出 Xcode 支持范围时无法重建，但此类符号也已无用）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每个 iOS 版本 1–5 GB，多版本累积常达数 GB 至数十 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device",
+      "https://developer.apple.com/support/xcode/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-simulators",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/CoreSimulator/Devices"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 模拟器设备",
+      "what": "每台 iOS/iPadOS/watchOS/tvOS/visionOS 模拟器设备的运行时数据目录，包含模拟器的系统状态、已安装的 App 及其数据",
+      "producer": "Xcode 与 CoreSimulator：新建模拟器设备、首次在模拟器上运行 App 时按需创建",
+      "safe_to_delete_because": "模拟器设备是可随时重建的开发资源；simctl delete unavailable 只删除对应运行时已卸载、Xcode 已无法使用的\"孤儿\"设备，不影响现有可用设备",
+      "consequence": "被删设备上已安装的 App、应用数据与设置随之丢失且不可恢复；运行时仍已安装的可用设备不受影响",
+      "regenerate": "在 Xcode 中新建模拟器（Device Hub，或旧版 Settings > Platforms / Devices and Simulators），或用 xcrun simctl create 手动创建；下次在模拟器上运行 App 时 Xcode 也会引导创建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "xcrun simctl delete unavailable",
+      "dry_run": "xcrun simctl list devices",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台设备 1–10 GB，常见合计数 GB 至 30+ GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub",
+      "https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-yarn-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Yarn"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Yarn 包缓存",
+      "what": "Yarn 1.x（classic）安装依赖时下载并解包的 npm 包缓存（v6 缓存格式），用于加速后续 install",
+      "producer": "Yarn 1.x 执行 yarn install / yarn add 时产生",
+      "safe_to_delete_because": "纯下载缓存，不影响项目 node_modules 与已安装依赖；也可用官方命令 yarn cache clean 清理",
+      "consequence": "下次 yarn install 对缓存未命中的包需重新从 registry 下载，首次安装变慢",
+      "regenerate": "执行 yarn install / yarn add 时按需自动重新下载并重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "yarn cache clean",
+      "dry_run": "yarn cache dir",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://classic.yarnpkg.com/en/docs/cli/cache",
+      "https://classic.yarnpkg.com/en/docs/cli/cache/clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-archives",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/Xcode/Archives"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 归档（Archives）",
+      "what": "每次上传 App Store 前的 .xcarchive 归档，含 dSYM 符号文件，是对已发布版本做崩溃符号化与重新提交的唯一依据",
+      "producer": "Xcode (Organizer)",
+      "safe_to_delete_because": null,
+      "consequence": "删除后：对应已发布版本的崩溃日志无法符号化、无法从该归档重新提交；此损失不可逆",
+      "regenerate": "不可重建（除非重新出相同版本号构建，通常不可能）"
+    },
+    "risk": "red",
+    "red_flags": [
+      "删的是发布记录与符号化依据，损失不可逆",
+      "仅用户能判断哪些版本仍在维护；SlimIt 只做提示"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 至数十 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode/archives"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-deriveddata",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/Xcode/DerivedData"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 构建产物（DerivedData）",
+      "what": "Xcode 为每个项目保存的增量构建产物、模块缓存与代码索引",
+      "producer": "Xcode",
+      "safe_to_delete_because": "下次打开项目/构建时自动重建，不含源码与任何用户数据",
+      "consequence": "首次重新构建明显变慢（全量重编译 + 重建索引），无数据丢失",
+      "regenerate": "自动"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "单项目 1–10 GB，累积可达数十 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode"
+    ]
+  }
+]

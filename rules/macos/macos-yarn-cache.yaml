@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-yarn-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Yarn"
+semantics:
+  title: "Yarn 包缓存"
+  what: "Yarn 1.x（classic）安装依赖时下载并解包的 npm 包缓存（v6 缓存格式），用于加速后续 install"
+  producer: "Yarn 1.x 执行 yarn install / yarn add 时产生"
+  safe_to_delete_because: "纯下载缓存，不影响项目 node_modules 与已安装依赖；也可用官方命令 yarn cache clean 清理"
+  consequence: "下次 yarn install 对缓存未命中的包需重新从 registry 下载，首次安装变慢"
+  regenerate: "执行 yarn install / yarn add 时按需自动重新下载并重建"
+risk: green
+action:
+  kind: command
+  command: "yarn cache clean"
+  dry_run: "yarn cache dir"
+estimate:
+  typical_size: "数百 MB 至数 GB"
+  recovery: full
+refs:
+  - https://classic.yarnpkg.com/en/docs/cli/cache
+  - https://classic.yarnpkg.com/en/docs/cli/cache/clean

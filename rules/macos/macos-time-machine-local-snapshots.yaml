@@ -1,0 +1,25 @@
+apiVersion: slimit.rules/v1
+id: macos-time-machine-local-snapshots
+os: macos
+scope: user
+paths:
+  - "/Volumes/com.apple.TimeMachine.localsnapshots"
+semantics:
+  title: "Time Machine 本地快照"
+  what: "Time Machine 每小时在内置磁盘（APFS 数据卷）上自动创建的时间点快照（命名形如 com.apple.TimeMachine.<日期>.local），即使备份盘未连接也能在 Time Machine 里回溯到最近约 24 小时内的文件版本；占用计入系统\"可清除\"空间"
+  producer: "macOS 系统（Time Machine 自动，约每小时创建一个；备份盘断开时快照留存更久——最近一次成功备份对应的快照会保留到需要空间时才删除）"
+  safe_to_delete_because: "快照只是过去时间点的只读磁盘副本，删除不影响当前任何文件、外接盘上的 Time Machine 备份，也不影响 Time Machine 之后的正常备份；macOS 本身也会在快照过期（约 24 小时）或空间需要时自动删除它们"
+  consequence: "失去\"把文件恢复到这些时间点\"的能力（快照不可再生）；当前文件、外接备份盘数据均不受影响；系统重新计算可清除空间后占用即释放"
+  regenerate: "过去时间点的快照无法重建；只要 Time Machine 保持开启，系统会按需继续自动创建新的每小时快照"
+risk: yellow
+action:
+  kind: command
+  command: "tmutil deletelocalsnapshots /"
+  dry_run: "tmutil listlocalsnapshots /"
+  irreversible: true
+estimate:
+  typical_size: "几个 GB 至数十 GB（随备份盘断开时长累积，计入\"可清除\"空间）"
+  recovery: none
+refs:
+  - https://support.apple.com/en-us/102154
+  - https://keith.github.io/xcode-man-pages/tmutil.8.html

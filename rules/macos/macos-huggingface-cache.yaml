@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-huggingface-cache
+os: macos
+scope: user
+paths:
+  - "~/.cache/huggingface"
+semantics:
+  title: "Hugging Face 模型缓存"
+  what: "huggingface_hub 下载的模型权重、数据集等文件缓存：hub/ 下按 models--* 目录组织（blobs/ 存文件本体，snapshots/ 存符号链接，refs/ 存修订指针），xet/ 为 Xet 存储的分块缓存；macOS 默认位于 HF_HOME（~/.cache/huggingface）"
+  producer: "transformers / diffusers / datasets 等库及 hf（huggingface-cli）命令在下载模型或数据集时写入"
+  safe_to_delete_because: "除登录令牌（token 文件）及个别第三方工具可能写入的杂项小文件外，均为从 Hugging Face Hub 可重新下载的缓存副本，不含源码、训练产物或用户文档；删除不影响已安装的库，只影响下次加载速度"
+  consequence: "下次运行需要重新下载用到的模型/数据集（大模型动辄数十 GB，耗时与流量可观）；若曾执行 hf auth login，登录令牌（token 文件）也存放在此目录，清空后需重新登录；无网络时相关模型暂时不可用"
+  regenerate: "无需手动操作，transformers/diffusers/datasets 在下次加载时按需自动重新下载并重建缓存"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 至数十 GB（重度 AI 开发者常超 50 GB；本机实测约 1.5 GB）"
+  recovery: full
+refs:
+  - https://huggingface.co/docs/huggingface_hub/en/guides/manage-cache

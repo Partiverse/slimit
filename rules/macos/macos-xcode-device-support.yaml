@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-xcode-device-support
+os: macos
+scope: user
+paths:
+  - "~/Library/Developer/Xcode/iOS DeviceSupport"
+semantics:
+  title: "Xcode 真机调试符号缓存（iOS DeviceSupport）"
+  what: "Xcode 首次连接某台 iOS 真机调试时，从设备系统镜像中提取的按 iOS 版本归档的调试符号文件（每个目录对应一个 iOS 版本，如 17.5 (21H101)）"
+  producer: "Xcode（连接 iPhone/iPad 真机进行真机调试时自动生成）"
+  safe_to_delete_because: "纯符号缓存，不含任何用户数据、照片或密钥；重新连接对应系统版本的真机后 Xcode 会自动重新提取。旧 iOS 版本的目录对应已升级的设备，通常永远不会再被用到"
+  consequence: "下次连接同版本真机调试时，Xcode 需重新处理符号（设备上会显示『准备进行开发』，可能耗时数分钟至数十分钟），期间无法真机调试；对从未连接的设备无任何影响"
+  regenerate: "重新连接对应系统版本的 iPhone/iPad 后由 Xcode 自动重建（需设备与当前 Xcode 版本兼容；设备已不在手或系统版本超出 Xcode 支持范围时无法重建，但此类符号也已无用）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "每个 iOS 版本 1–5 GB，多版本累积常达数 GB 至数十 GB"
+  recovery: partial
+refs:
+  - https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device
+  - https://developer.apple.com/support/xcode/

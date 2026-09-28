@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-spotify-persistent-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Application Support/Spotify/PersistentCache"
+semantics:
+  title: "Spotify 流媒体缓存（PersistentCache）"
+  what: "Spotify 桌面客户端把播放过的音乐/播客音频数据缓存在此目录，用于无卡顿回放与加快重复播放；据 Spotify 社区已采纳解答与清理工具文档，桌面端的离线下载歌曲也存放在同一存储区（PersistentCache/Storage）"
+  producer: "Spotify macOS 桌面客户端"
+  safe_to_delete_because: "内容是可再生成的音频缓存：所有曲目仍在线上，删除不影响账号、播放列表和已保存的音乐库。Spotify 设置里也有 Clear cache 按钮，但其清理范围可能与直接清空本目录不同，官方文档未说明两者是否等效"
+  consequence: "已缓存的音频被清空，下次播放需重新从网络加载；桌面端若有离线下载的歌曲会一并丢失，需重新下载。建议先退出 Spotify 再清理"
+  regenerate: "重新打开 Spotify 后按播放行为自动重建缓存；离线歌曲在设置中重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "通常 1–10 GB，长期重度使用可更大（Spotify 官方建议磁盘至少保留 1 GB 空闲）"
+  recovery: full
+refs:
+  - https://support.spotify.com/us/article/storage-information/
+  - https://community.spotify.com/t5/Desktop-Mac/I-hit-the-download-button-on-my-iMac-where-did-it-download-to/td-p/4634644
+  - https://macpaw.com/how-to/clear-spotify-cache-mac

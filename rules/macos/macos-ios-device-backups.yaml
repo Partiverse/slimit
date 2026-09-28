@@ -1,0 +1,26 @@
+apiVersion: slimit.rules/v1
+id: macos-ios-device-backups
+os: macos
+scope: user
+paths:
+  - "~/Library/Application Support/MobileSync/Backup"
+semantics:
+  title: "iOS 设备本地备份"
+  what: "iPhone/iPad 通过 Finder（或旧版 iTunes）「立即备份」生成的整设备本地备份：每台设备一个以设备 UDID 命名的子目录，内含 App 数据、iMessage/SMS 记录、健康数据、设备设置，加密备份时还含钥匙串密码与 Wi-Fi 密码"
+  producer: "Finder / iTunes 在用户连接 iOS/iPadOS 设备并执行备份时产生"
+  safe_to_delete_because: "不可代删：备份内容是设备本地独有数据，无法从 iCloud、App Store 或任何其他来源再生"
+  consequence: "删除后该设备的历史本地备份永久消失：健康数据、已存密码、iMessage 等无法恢复；本地备份与 iCloud 备份相互独立，无 iCloud 备份的用户将失去唯一副本。此损失不可逆"
+  regenerate: "不可重建（历史备份无法再生）；仅可为设备重新创建一份新备份"
+risk: red
+red_flags:
+  - "含健康数据、钥匙串/Wi-Fi 密码（加密备份）、iMessage/SMS、App 数据等不可再生内容，删除即永久丢失"
+  - "本地备份与 iCloud 备份相互独立，可能存在没有 iCloud 备份的用户，此处是其唯一副本"
+  - "只有用户能判断某台旧设备的备份是否仍需保留（换机、回退系统、留档）；SlimIt 只提示，不代删"
+action:
+  kind: advise
+estimate:
+  typical_size: "每台设备数 GB 至数十 GB，通常接近对应设备的已用空间"
+  recovery: none
+refs:
+  - https://support.apple.com/108809
+  - https://support.apple.com/zh-cn/108809

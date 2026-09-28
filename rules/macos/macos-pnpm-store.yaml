@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-pnpm-store
+os: macos
+scope: user
+paths:
+  - "~/Library/pnpm/store"
+semantics:
+  title: "pnpm 全局包存储"
+  what: "pnpm 的全局内容寻址存储（content-addressable store，位于 ~/Library/pnpm/store/v3、v10、v11 等版本目录），所有 pnpm 项目的依赖包文件按内容哈希去重存放于此，项目 node_modules 通过硬链接引用它以节省磁盘"
+  producer: "pnpm（每次 pnpm install 拉取依赖时写入）"
+  safe_to_delete_because: "存储内容全部是从 npm registry 下载的公开包文件，可再生；官方命令 pnpm store prune 只删除未被任何项目引用的孤儿包，被引用的包与各项目 node_modules 中的硬链接完全不受影响"
+  consequence: "store 体积减小；下次安装未缓存的包版本需重新下载（速度变慢）；已有项目的 node_modules 不受影响、无需重装"
+  regenerate: "pnpm 在后续 install 时按需自动重新下载并写回 store，无需手动操作"
+risk: green
+action:
+  kind: command
+  command: "pnpm store prune"
+  dry_run: "pnpm store path"
+estimate:
+  typical_size: "数 GB（本机实测 4.1 GB），重度多项目使用可达数十 GB"
+  recovery: full
+refs:
+  - https://pnpm.io/cli/store

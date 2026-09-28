@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 pub const API_VERSION: &str = "slimit.rules/v1";
 const PREFIXES: &[(&str, &str)] = &[("macos", "macos-"), ("windows", "win-"), ("linux", "linux-")];
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Rule {
     #[serde(rename = "apiVersion")]
@@ -27,7 +27,7 @@ pub struct Rule {
     pub refs: Vec<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct MatchCfg {
     #[serde(default)]
@@ -36,7 +36,7 @@ pub struct MatchCfg {
     pub exclude: Vec<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Semantics {
     pub title: String,
@@ -60,7 +60,7 @@ pub enum Risk {
     Red,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Action {
     pub kind: ActionKind,
@@ -80,7 +80,7 @@ pub struct Action {
     pub keep_newest: Option<u32>,
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum ActionKind {
     PurgeDir,
@@ -88,7 +88,7 @@ pub enum ActionKind {
     Advise,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Estimate {
     #[serde(default)]

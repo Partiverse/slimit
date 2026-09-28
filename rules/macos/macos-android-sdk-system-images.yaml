@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-android-sdk-system-images
+os: macos
+scope: user
+paths:
+  - "~/Library/Android/sdk/system-images"
+semantics:
+  title: "Android 模拟器系统镜像"
+  what: "Android 模拟器（AVD）启动所需的 Android 系统镜像，按 <API 级别>/<变体>/<ABI> 分目录存放（如 android-35/default/arm64-v8a）。注意：AVD 实例的配置与用户数据存放在 ~/.android/avd，本条规则不涉及"
+  producer: "Android Studio SDK Manager / 命令行工具 sdkmanager 下载安装"
+  safe_to_delete_because: "镜像只是可重新下载的操作系统文件，不含任何用户数据；代价仅是重新下载的耗时与流量"
+  consequence: "引用被删镜像的现有 AVD 将无法启动（Device Manager 提示缺系统镜像）；重新下载对应镜像后多数 AVD 可直接恢复，个别情况需在 Device Manager 重新选择镜像或重建 AVD"
+  regenerate: "Android Studio → 设置 → Android SDK → SDK Platforms（勾选 Show Package Details）按需重新下载；或命令行 sdkmanager \"system-images;android-35;default;arm64-v8a\"（包路径与目录结构一一对应）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "单个镜像约 1–3 GB；安装多个 API 级别/变体时合计常见 5–20 GB"
+  recovery: full
+refs:
+  - https://developer.android.com/studio/run/managing-avds
+  - https://developer.android.com/studio/run/emulator

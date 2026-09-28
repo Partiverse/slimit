@@ -1,0 +1,26 @@
+apiVersion: slimit.rules/v1
+id: macos-imessage-attachments
+os: macos
+scope: user
+paths:
+  - "~/Library/Messages/Attachments"
+semantics:
+  title: "iMessage 附件文件"
+  what: "信息（Messages）App 收发的图片、视频、音频、贴纸、名片与文件附件，以哈希前缀的目录树存放（00–ff 两级目录 + UUID 命名），图片、视频、音频等各类附件混存其中，是对话里可点开查看的媒体本体"
+  producer: "信息（Messages）App 在收发 iMessage/SMS 附件时写入"
+  safe_to_delete_because: "不可代删：附件就是聊天数据本体，不属于任何可再生缓存，无法由工具安全清理"
+  consequence: "不可代删：这些文件就是聊天数据本体，不属于可再生的缓存。删除后对话中的对应附件永久消失（显示为占位符/无法加载），无法通过重装或重建缓存找回；文字记录（chat.db）虽保留，但媒体缺失。开启「信息在 iCloud 中」的账号，附件状态可能多端同步，影响不限于本机"
+  regenerate: "不可自动重建；只能由联系人重新发送，或从完整备份/iCloud 信息同步恢复"
+risk: red
+red_flags:
+  - "附件是 iMessage 聊天数据本体：删除后对话中的照片、视频、文件永久无法查看，且无任何自动再生途径"
+  - "附件可能含用户独有且无处备份的内容（证件照、合同、旧照片、语音留言），SlimIt 无法替用户判断哪些仍需要"
+  - "开启「信息在 iCloud 中」的账号可能多端共享附件，代删影响超出本机；正确做法是在信息 App 内由用户逐项决定，或调整「保留信息」期限"
+action:
+  kind: advise
+estimate:
+  typical_size: "数百 MB 至数十 GB（重度聊天用户常见 10 GB 以上）"
+  recovery: none
+refs:
+  - https://support.apple.com/guide/messages/delete-messages-and-conversations-icht1035/mac
+  - https://support.apple.com/zh-cn/guide/messages/delete-messages-and-conversations-icht1035/mac

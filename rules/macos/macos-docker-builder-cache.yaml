@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-docker-builder-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.docker.docker/Data/buildstore"
+semantics:
+  title: "Docker 构建缓存（BuildKit，VM 内）"
+  what: "docker build 构建镜像时由 BuildKit 产生的中间层缓存（基础镜像层提取、依赖安装、编译产物等步骤的复用数据）。在 Docker Desktop for Mac 上，这些缓存存放在其内置 Linux 虚拟机的虚拟磁盘内，宿主侧 Data/buildstore 只是辅助目录；因此清理必须通过 docker CLI 完成，本规则不触碰任何宿主文件。"
+  producer: "docker build / docker buildx build（BuildKit 构建器，随 Docker Desktop 运行）"
+  safe_to_delete_because: "缓存层只是构建过程的中间产物，删除不影响已有镜像、容器和数据卷，也不影响源代码"
+  consequence: "下次构建镜像时无法复用缓存层，所有步骤需完整重跑，构建耗时和拉取/编译开销明显增加；已构建的镜像与运行中的容器均不受影响"
+  regenerate: "下次执行 docker build 时按需自动重建对应缓存层（重建成本就是那次构建变慢的时间）"
+risk: yellow
+action:
+  kind: command
+  command: "docker builder prune -f"
+  dry_run: "docker system df -v"
+estimate:
+  typical_size: "数 GB 至数十 GB（重度多阶段构建/CI 场景可更高；本机实测当前为 0B）"
+  recovery: full
+refs:
+  - https://docs.docker.com/build/cache/
+  - https://docs.docker.com/engine/manage-resources/pruning/

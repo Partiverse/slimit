@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-xcode-simulators
+os: macos
+scope: user
+paths:
+  - "~/Library/Developer/CoreSimulator/Devices"
+semantics:
+  title: "Xcode 模拟器设备"
+  what: "每台 iOS/iPadOS/watchOS/tvOS/visionOS 模拟器设备的运行时数据目录，包含模拟器的系统状态、已安装的 App 及其数据"
+  producer: "Xcode 与 CoreSimulator：新建模拟器设备、首次在模拟器上运行 App 时按需创建"
+  safe_to_delete_because: "模拟器设备是可随时重建的开发资源；simctl delete unavailable 只删除对应运行时已卸载、Xcode 已无法使用的\"孤儿\"设备，不影响现有可用设备"
+  consequence: "被删设备上已安装的 App、应用数据与设置随之丢失且不可恢复；运行时仍已安装的可用设备不受影响"
+  regenerate: "在 Xcode 中新建模拟器（Device Hub，或旧版 Settings > Platforms / Devices and Simulators），或用 xcrun simctl create 手动创建；下次在模拟器上运行 App 时 Xcode 也会引导创建"
+risk: yellow
+action:
+  kind: command
+  command: "xcrun simctl delete unavailable"
+  dry_run: "xcrun simctl list devices"
+estimate:
+  typical_size: "每台设备 1–10 GB，常见合计数 GB 至 30+ GB"
+  recovery: partial
+refs:
+  - https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub
+  - https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices

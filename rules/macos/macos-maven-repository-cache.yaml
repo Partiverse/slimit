@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-maven-repository-cache
+os: macos
+scope: user
+paths:
+  - "~/.m2/repository"
+semantics:
+  title: "Maven 本地仓库缓存（~/.m2/repository）"
+  what: "Apache Maven 的本地构件仓库（默认路径 ~/.m2/repository）：构建时从远程仓库下载的依赖 jar、插件与 POM 的缓存，以及本机 mvn install 产生的构建产物。仅清空 repository 目录本身，~/.m2/settings.xml 配置不受影响"
+  producer: "Apache Maven（mvn 构建、IDE 导入 Maven 项目时自动写入）"
+  safe_to_delete_because: "主体是远程仓库的下载缓存，Maven 官方文档明确说明磁盘空间不足时可以清理甚至整个删除；目录本身会在下次构建时自动重建"
+  consequence: "下次 mvn 构建 / IDE 依赖同步需重新联网下载全部依赖，首构建明显变慢，离线或仅内网仓库环境会构建失败；mvn install:install-file 手工安装的第三方构件与尚未发布到远程仓库的本机产物无法从远程重下，若有此类构件请先确认原始 jar 仍可取得"
+  regenerate: "执行任意 mvn 构建或在 IDE（IntelliJ IDEA 等）中导入 Maven 项目时按需重新下载并重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 至数 GB，活跃 Java 开发常见 5–10 GB+（本机实测约 628 MB）"
+  recovery: partial
+refs:
+  - https://maven.apache.org/settings.html
+  - https://maven.apache.org/guides/introduction/introduction-to-repositories.html

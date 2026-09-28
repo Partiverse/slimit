@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-gradle-caches
+os: macos
+scope: user
+paths:
+  - "~/.gradle/caches"
+semantics:
+  title: "Gradle 构建缓存与依赖缓存（~/.gradle/caches）"
+  what: "Gradle User Home 下的全局缓存目录：按 Gradle 版本划分的版本级缓存（编译后的构建脚本、Kotlin DSL 访问器、生成的 Gradle JAR、artifact 转换产物，如 8.11.1/9.3.1 等目录）、下载依赖的构件缓存 modules-2、本地构建缓存 build-cache-1 及缓存索引 journal-1。仅清 caches 目录本身；~/.gradle 下的 gradle.properties、init.gradle、daemon 日志、jdks 等配置与其他内容不受影响"
+  producer: "Gradle 构建工具（运行 gradle/gradlew 构建时自动写入；Android Studio 等 IDE 导入或构建 Gradle 项目时同样写入）"
+  safe_to_delete_because: "官方文档说明这些缓存由 Gradle 自动创建与管理：版本级缓存会在对应版本首次使用时重建，依赖可从远程仓库按需重新下载，构建缓存条目失效后由构建过程重新生成；Gradle 自身也会按闲置时间自动清理旧缓存"
+  consequence: "下次构建需重新联网下载全部依赖并重建版本缓存，首次构建明显变慢；已停止使用的旧版本 Gradle 缓存不会自动重建（属预期，不影响当前项目）；依赖若来自已下线的内网/私有仓库则无法重下，依赖此类仓库的旧项目构建会失败，请先确认仓库仍可访问"
+  regenerate: "下次运行 gradle/gradlew 构建或在 IDE 中导入项目时，按所用 Gradle 版本自动重建，依赖按需重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB，多项目/多 Gradle 版本重度使用可超 10 GB（本机实测约 5.3 GB）"
+  recovery: partial
+refs:
+  - https://docs.gradle.org/current/userguide/directory_layout.html

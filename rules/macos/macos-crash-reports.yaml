@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-crash-reports
+os: macos
+scope: user
+paths:
+  - "~/Library/Logs/DiagnosticReports"
+semantics:
+  title: "系统崩溃报告（DiagnosticReports）"
+  what: "macOS 崩溃报告目录：应用或系统进程异常退出时自动生成的 .ips 文本报告，记录崩溃时间、进程信息与线程堆栈，供开发者与 Apple 排查问题（含 Retired 子目录中的旧报告）"
+  producer: "macOS CrashReporter（ReportCrash 守护进程）——任何崩溃的应用或系统进程都会触发生成"
+  safe_to_delete_because: "仅为崩溃发生之后的事后诊断记录，不参与系统或应用的任何运行时功能"
+  consequence: "丢失排查历史崩溃的依据（向开发者反馈应用反复崩溃时将没有历史报告可附）；系统与应用运行不受任何影响，之后的新崩溃仍会照常生成新报告"
+  regenerate: "历史报告无法重建（属一次性事件记录）；此后每次崩溃都会自动生成新的 .ips 报告"
+risk: green
+red_flags: []
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "通常仅数 MB（单个 .ips 报告几十 KB）；应用反复崩溃或长期不清理可达数十 MB"
+  recovery: none
+refs:
+  - https://developer.apple.com/documentation/xcode/diagnosing-issues-using-crash-reports-and-device-logs
+  - https://support.apple.com/guide/console/cnsl1069/mac

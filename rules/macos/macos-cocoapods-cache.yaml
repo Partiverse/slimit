@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-cocoapods-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/CocoaPods"
+semantics:
+  title: "CocoaPods 下载缓存"
+  what: "pod install / pod update 解析依赖时下载的 podspec 索引与第三方库源码压缩包（CocoaPods 版本管理器 CDN 缓存）"
+  producer: "CocoaPods（pod 命令行工具），在执行 install/update 时自动写入"
+  safe_to_delete_because: "只是下载缓存，工程内 Pods/ 目录与 Podfile.lock 不受影响，已集成的依赖不重新下载也能正常编译"
+  consequence: "下次 pod install/update 需重新下载 podspec 与源码包，首次解析依赖变慢，其余无影响"
+  regenerate: "下次执行 pod install/update 时按需自动重新下载"
+risk: green
+action:
+  kind: command
+  command: "pod cache clean --all"
+  dry_run: "pod cache list"
+estimate:
+  typical_size: "数百 MB 至数 GB（本机实测约 1GB）"
+  recovery: full
+refs:
+  - https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean

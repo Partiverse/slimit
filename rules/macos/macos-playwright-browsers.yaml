@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-playwright-browsers
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/ms-playwright"
+semantics:
+  title: "Playwright 测试浏览器"
+  what: "Playwright 运行端到端测试所需的浏览器二进制（Chromium、Firefox、WebKit 等），按浏览器与版本号分子目录存放，可被本机多个项目共享"
+  producer: "Playwright（执行 npx playwright install 或首次运行测试时自动从官方 CDN 下载）"
+  safe_to_delete_because: "内容全部是从 Playwright 官方 CDN 下载的可再生浏览器二进制，不含用户数据、测试结果或项目代码；重装只需一条命令"
+  consequence: "下次运行 Playwright 测试前需重新下载浏览器（每个数百 MB、需联网），期间 e2e 测试无法运行；项目代码与 CI 配置不受影响"
+  regenerate: "npx playwright install（可加浏览器名按需单个重装，如 npx playwright install chromium）"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "单版本三浏览器约 1–1.5 GB；多项目长期累积多版本时常达 2–5 GB"
+  recovery: full
+refs:
+  - https://playwright.dev/docs/browsers

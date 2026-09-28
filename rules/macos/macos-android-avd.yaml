@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-android-avd
+os: macos
+scope: user
+paths:
+  - "~/.android/avd"
+semantics:
+  title: "Android 模拟器虚拟设备（AVD）"
+  what: "Android 模拟器的虚拟设备：每个 <名字>.avd 目录包含该虚拟机的磁盘镜像（userdata-qemu.img 等）、快照与硬件配置，同名 .ini 文件是索引；默认路径为 ~/.android/avd（可用 ANDROID_AVD_HOME 重定向）"
+  producer: "Android Studio Device Manager 或 avdmanager 创建；模拟器每次运行时写入数据"
+  safe_to_delete_because: "虚拟设备本身可随时重建，删除不影响真机调试、Android SDK 与系统镜像缓存（位于 ~/Library/Android/sdk）；但其中数据不可恢复，需用户逐项确认"
+  consequence: "对应虚拟设备将消失：其中安装的 App、App 数据、模拟器快照与系统设置全部永久丢失，无法恢复；正在运行的模拟器会失效"
+  regenerate: "在 Android Studio Device Manager 重新创建同名虚拟设备，或用 avdmanager create avd 命令；系统镜像复用 SDK 缓存，重建后是全新空白系统"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "单个 AVD 数百 MB 至数 GB（含磁盘镜像与快照），多模拟器用户常达 10 GB 以上"
+  recovery: partial
+refs:
+  - https://developer.android.com/studio/run/managing-avds
+  - https://developer.android.com/studio/command-line/variables
+  - https://developer.android.com/tools/avdmanager

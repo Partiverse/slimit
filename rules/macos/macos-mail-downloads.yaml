@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-mail-downloads
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads"
+semantics:
+  title: "Mail 附件打开缓存"
+  what: "在 Mail 中点开邮件附件时，Mail 在其沙盒容器内生成的附件副本缓存（区别于你手动「存储」到下载/文稿的副本）"
+  producer: "Apple Mail（com.apple.mail 沙盒容器）"
+  safe_to_delete_because: "只是附件的打开缓存；邮件正文与附件原件仍在邮箱（服务器或本地邮件库）中。注意：若对应邮件已被删除，这里可能是该附件仅存的副本，请逐项确认后再清理"
+  consequence: "已打开过的附件副本被清掉；下次在 Mail 中点开同一附件时会重新下载或重新提取。若对应邮件已从邮箱删除且无备份，该附件副本无法找回"
+  regenerate: "重新打开对应邮件的附件时，由 Mail 自动重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB 至数 GB（随点开附件的频率与附件体积）"
+  recovery: partial
+refs:
+  - https://support.apple.com/guide/mail/view-save-or-delete-email-attachments-mlhlp1123/16.0/mac/27
+  - https://support.apple.com/guide/security/app-sandbox-sec15d9444b2/web

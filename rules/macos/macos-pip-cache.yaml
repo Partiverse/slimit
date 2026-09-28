@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-pip-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/pip"
+semantics:
+  title: "pip 下载缓存"
+  what: "pip 安装 Python 包时下载的 HTTP 响应（PyPI 页面与 wheel 文件）及本地构建的 wheel 缓存，仅用于加速重复安装"
+  producer: "pip（Python 官方包管理器）"
+  safe_to_delete_because: "纯下载缓存，只影响下次安装速度；已安装到虚拟环境/系统 site-packages 的包不受任何影响"
+  consequence: "下次 pip install 曾缓存过的包需重新从 PyPI 下载，安装变慢、消耗流量，此外无任何损失"
+  regenerate: "下次 pip install 时自动按需重新下载并重建缓存"
+risk: green
+action:
+  kind: command
+  command: "pip3 cache purge"
+  dry_run: "pip3 cache list"
+estimate:
+  typical_size: "数十 MB 至数 GB（活跃 Python 开发常见数百 MB；本机实测约 9.5 MB）"
+  recovery: full
+refs:
+  - https://pip.pypa.io/en/stable/cli/pip_cache/

@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-user-caches
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches"
+semantics:
+  title: "用户应用缓存（~/Library/Caches）"
+  what: "macOS 约定的用户级缓存总目录：每个 App 与系统服务在此有自己的子目录（按应用名或 Bundle ID 命名），存放下载缓存、缩略图、数据库缓存等可再生数据"
+  producer: "各个第三方 App 与 macOS 系统服务（如 CloudKit、GeoServices、Spotlight）"
+  safe_to_delete_because: "Apple 文件系统文档规定该目录内容必须是应用可自行重建的缓存，且系统在磁盘紧张时也可能自行清除；按约定删除不影响应用功能与用户数据"
+  consequence: "各 App 下次运行时按需重建缓存，短期内首次启动与浏览会变慢；个别应用把少量半持久状态（如缩略图索引、会话级缓存）也放在此处，会随之丢失并需重新生成，个别应用可能要求重新登录一次"
+  regenerate: "各 App 与系统服务在运行时自动按需重建，无需手动操作"
+risk: yellow
+red_flags: []
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "约 2–10 GB，重度开发/浏览器用户可达数十 GB"
+  recovery: partial
+refs:
+  - https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
