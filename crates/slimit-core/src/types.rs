@@ -7,7 +7,6 @@ pub struct FileEntry {
     pub path: PathBuf,
     pub dev: u64,
     pub ino: u64,
-    pub nlink: u64,
     /// 表观大小（st_size）。
     pub apparent: u64,
     /// 真实占用（st_blocks * 512）。

@@ -1,9 +1,7 @@
 use crate::types::{DirStat, FileEntry, ScanError, ScanResult};
-use ignore::{WalkBuilder, WalkState};
 use std::collections::{HashMap, HashSet};
-use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+#[cfg(not(target_os = "macos"))]
 use std::time::Instant;
 
 /// 扫描 `root`，返回真实占用统计。
@@ -14,10 +12,25 @@ use std::time::Instant;
 /// - 硬链接按 `(dev, ino)` 去重：表观与真实大小都只在首次出现处计入聚合，
 ///   后续路径标 `shared = true`。
 /// - 稀疏文件：`actual = blocks * 512`，`apparent = size`，两者分离呈现。
+/// - 包含隐藏文件与 dotfile（清理场景不做 ignore 过滤）。
 pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
     if !root.exists() {
         return Err(ScanError::RootMissing(root.to_path_buf()));
     }
+
+    #[cfg(target_os = "macos")]
+    return crate::bulk::scan(root);
+
+    #[cfg(not(target_os = "macos"))]
+    return walk_ignore(root);
+}
+
+/// 非 macOS 回退：`ignore` 并行遍历 + 逐条 lstat。
+/// 关闭全部标准过滤（hidden/gitignore 等），保证与 macOS 快路径同语义。
+#[cfg(not(target_os = "macos"))]
+fn walk_ignore(root: &Path) -> Result<ScanResult, ScanError> {
+    use ignore::{WalkBuilder, WalkState};
+    use std::sync::Mutex;
 
     let files: Mutex<Vec<FileEntry>> = Mutex::new(Vec::new());
     let walk_errors: Mutex<Vec<String>> = Mutex::new(Vec::new());
@@ -26,6 +39,7 @@ pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
     WalkBuilder::new(root)
         .follow_links(false)
         .same_file_system(true)
+        .standard_filters(false)
         .build_parallel()
         .run(|| {
             let files = &files;
@@ -42,7 +56,6 @@ pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
                             path: e.path().to_path_buf(),
                             dev: md.dev(),
                             ino: md.ino(),
-                            nlink: md.nlink(),
                             apparent: md.len(),
                             actual: md.blocks() * 512,
                             shared: false,
@@ -56,10 +69,24 @@ pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
                 }
             })
         });
-    let walk_elapsed = started.elapsed();
 
-    let mut files = files.into_inner().unwrap();
+    if std::env::var_os("SLIMIT_DEBUG").is_some() {
+        eprintln!("walk elapsed: {:?}", started.elapsed());
+    }
+
+    let files = files.into_inner().unwrap();
     let walk_errors = walk_errors.into_inner().unwrap();
+    finish(root, files, walk_errors, started.elapsed())
+}
+
+/// 公共收尾：硬链接去重 + 目录聚合。
+pub(crate) fn finish(
+    root: &Path,
+    mut files: Vec<FileEntry>,
+    walk_errors: Vec<String>,
+    elapsed: std::time::Duration,
+) -> Result<ScanResult, ScanError> {
+    let _ = elapsed;
     if !walk_errors.is_empty() && files.is_empty() {
         return Err(ScanError::Walk(walk_errors.join("; ")));
     }
@@ -72,10 +99,6 @@ pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
     }
 
     let dirs = aggregate(root, &files);
-
-    if std::env::var_os("SLIMIT_DEBUG").is_some() {
-        eprintln!("walk elapsed: {walk_elapsed:?}");
-    }
 
     Ok(ScanResult {
         root: root.to_path_buf(),
@@ -98,6 +121,22 @@ fn aggregate(root: &Path, files: &[FileEntry]) -> Vec<DirStat> {
             e.0 += f.apparent;
             e.1 += f.actual;
             e.2 += 1;
+        }
+    }
+
+    // 只含子目录（无直属文件）的中间目录与根也要有条目，否则聚合链断裂、
+    // 这些目录的统计整体丢失（W2 前 du 对照发现的 bug）。
+    let existing: Vec<PathBuf> = own.keys().cloned().collect();
+    for path in existing {
+        let mut anc = path.as_path();
+        while let Some(parent) = anc.parent() {
+            if !own.contains_key(parent) {
+                own.insert(parent.to_path_buf(), (0, 0, 0));
+            }
+            if parent == root {
+                break;
+            }
+            anc = parent;
         }
     }
 
@@ -211,5 +250,48 @@ mod tests {
             scan(Path::new("/definitely/not/here/slimit")),
             Err(ScanError::RootMissing(_))
         ));
+    }
+
+    #[test]
+    fn aggregate_covers_fileless_dirs() {
+        let tmp = tempfile::tempdir().unwrap();
+        let deep = tmp.path().join("a").join("b");
+        fs::create_dir_all(&deep).unwrap();
+        fs::write(deep.join("f.bin"), vec![0u8; 1000]).unwrap();
+
+        let res = scan(tmp.path()).unwrap();
+        let root_stat = res.dirs.iter().find(|d| d.path == tmp.path()).unwrap();
+        assert_eq!(root_stat.apparent, 1000);
+        assert_eq!(root_stat.file_count, 1);
+        // 无直属文件的中间目录也要有聚合条目。
+        let a = res.dirs.iter().find(|d| d.path == tmp.path().join("a")).unwrap();
+        assert_eq!(a.apparent, 1000);
+        let b = res.dirs.iter().find(|d| d.path == deep).unwrap();
+        assert_eq!(b.apparent, 1000);
+    }
+
+    #[test]
+    fn hidden_files_included() {
+        let tmp = tempfile::tempdir().unwrap();
+        fs::write(tmp.path().join(".DS_Store"), b"x").unwrap();
+        fs::write(tmp.path().join("normal.txt"), b"y").unwrap();
+
+        let res = scan(tmp.path()).unwrap();
+        assert_eq!(res.file_count, 2, "dotfiles must be scanned, not filtered");
+    }
+
+    #[test]
+    fn regular_file_sizes_match_std_metadata() {
+        let tmp = tempfile::tempdir().unwrap();
+        let f = tmp.path().join("f.bin");
+        fs::write(&f, vec![0u8; 5000]).unwrap();
+
+        let res = scan(tmp.path()).unwrap();
+        let e = res.files.iter().find(|x| x.path == f).unwrap();
+        let md = fs::metadata(&f).unwrap();
+        assert_eq!(e.apparent, md.len());
+        assert_eq!(e.actual, md.blocks() * 512);
+        assert_eq!(e.dev, md.dev());
+        assert_eq!(e.ino, md.ino());
     }
 }

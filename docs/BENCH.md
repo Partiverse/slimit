@@ -2,7 +2,32 @@
 
 方法：`SLIMIT_DEBUG=1 ./target/release/slimit <dir> --top N`，release 构建（cargo 1.93.1，M-series Mac，内置 SSD）。冷/热各一次，热 = 紧随冷之后重跑同目录。格式：`文件数 | 耗时 | 吞吐`。
 
-## 2026-09-28 · W1 骨架首测（基线）
+## 2026-09-28 · W2 getattrlistbulk 重写
+
+改动：macOS 快路径改为自定义并行 walker（`open` + `getattrlistbulk` 批量取整目录子项元数据，8 线程共享队列；`SLIMIT_JOBS` 可调），非 macOS 保留 `ignore` 兜底。记录布局见 `crates/slimit-core/src/bulk.rs` 头注释（用 `cargo run -p slimit-core --example bulk_probe -- <dir>` 逐属性定位验证）。
+
+| 场景 | 数据 | 耗时 | 折算 1M |
+|---|---|---|---|
+| ~/Library（热） | **2,958,704 files** / 44.8 GiB actual | **57.0s**（walk 50.1s） | ~19.3s |
+| /opt/homebrew（热，无 TCC） | 159,273 files | 0.99s | ~6.2s |
+| ~/Library（冷） | — | 未测（`purge` 需 sudo） | 估 20–40s（见下） |
+
+对照 W1 基线的口径修正：W1 的 416k 文件数偏低——`ignore` 默认标准过滤跳过隐藏文件（`.DS_Store` 等正是清理目标，已修），且部分 TCC 拒绝目录表现不同。真实规模约 296 万文件，**新旧吞吐对比应为同机 `du` 而非旧数值**：`du -x` 单线程 913s / ~3M 条目 vs 本实现热 57s（~16×）。
+
+关键发现：
+
+1. **冷/热 16× 差距根因 = macOS TCC**：`~/Library` 每 syscall 触发隐私检查（bulk 调用 ~53µs/次），TCC 之外的树仅 ~6.2µs/文件。同机 `du -x ~/Library` 冷 913s 定锚证明这是 macOS 上限而非实现 bug（slimit 已快 du 16×）。授予终端 Full Disk Access 后预期大幅改善（未验证）。
+2. **吞吐对比 du（同为不去重硬链接口径）**：Group Containers 10.72GB、Android 9.885GB、CocoaPods 966/1013 MiB（差 4.8% = du 计目录 inode 块 + 我们硬链接去重）——数值与 du 逐字节吻合。此前 du 全量 34.4GiB 偏低是 TCC 静默漏扫。
+3. **线程扩展为负收益**：16 线程 55s、32 线程 70s（walk），8 线程最优——APFS/TCC 内核侧存在串行点。
+4. SPEC 判定（1M 文件）：热 ~19.3s（差目标 15s 1.3×，TCC 主导，非 TCC 树 ~6s 达标）；冷估 20–40s（达标，未实测）。**结论：纯用户态优化已到环境上限，剩余差距需 Full Disk Access 或降低 syscall 数（openat fd 链）**。
+
+### 顺带修复的正确性 bug（对照 du 发现）
+
+- **无直属文件的目录聚合丢失**：`aggregate()` 之前只给含直属文件的目录建条目，CocoaPods（du 1013 MiB）在输出里是 0.00 MiB。现在所有祖先目录（含根）都有聚合条目。
+- `ignore` 兜底路径补 `standard_filters(false)`，与快路径同语义（含隐藏文件）。
+- `slimit-exec` 的 `slimit-rules` 依赖从 dev-dependencies 移到 dependencies（库代码引用了它，W1 遗留）。
+
+## 2026-09-28 · W1 骨架首测（基线，口径有误，仅存档）
 
 | 场景 | 数据 | 冷 | 热 | 结论 |
 |---|---|---|---|---|

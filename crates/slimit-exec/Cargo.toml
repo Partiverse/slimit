@@ -9,9 +9,9 @@ description = "SlimIt 执行器：清理计划、隔离区（rename 原子迁移
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+slimit-rules = { path = "../slimit-rules" }
 thiserror = { workspace = true }
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-slimit-rules = { path = "../slimit-rules" }
