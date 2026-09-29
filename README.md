@@ -10,6 +10,9 @@
 |---|---|
 | [docs/PRODUCT_PLAN.md](./docs/PRODUCT_PLAN.md) | 产品方案（已批准）：市场、竞品、五层架构、商业模式、风险、路线图、三平台目标清单（附录 A） |
 | [docs/SPEC_MVP.md](./docs/SPEC_MVP.md) | MVP 技术规格：crate 划分、扫描器/规则引擎/执行器/AI 规格、CI、8 周计划 |
+| [docs/BENCH.md](./docs/BENCH.md) | 扫描器基准日志与回归基线（合成树 50k 基准） |
+| [docs/BRIDGE.md](./docs/BRIDGE.md) | Tauri 桥接协议：命令/事件/数据结构契约 |
+| [docs/SECURITY.md](./docs/SECURITY.md) | 安全状态：扫描结果、覆盖缺口、设计级安全不变量 |
 | [rules/README.md](./rules/README.md) | 规则库编写规范与执行语义 |
 | [rules/schema-v1.json](./rules/schema-v1.json) | 规则 schema（`slimit.rules/v1`），CI 强制校验 |
 | [rules/macos/](./rules/macos/) | macOS 规则（已建 3 条样例：homebrew-cache / xcode-deriveddata / xcode-archives） |
