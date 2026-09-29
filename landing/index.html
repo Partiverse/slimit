@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlimIt — 给 macOS 瘦身：解释每个目录是什么，删了会怎样</title>
+<meta name="description" content="SlimIt 用 AI 语义解释 macOS 磁盘上每个目录是什么、谁产生的、删了会怎样，并以可完整恢复的隔离区方式清理。296 万文件 57 秒扫完。">
+<style>
+  :root {
+    --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --card: #ffffff;
+    --brand: #2f9e8f; --brand-weak: rgba(47, 158, 143, 0.12);
+    --border: #e7e5e4; --red: #c0392b; --yellow: #b45309; --green: #15803d;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0a09; --fg: #fafaf9; --muted: #a8a29e; --card: #1c1917;
+      --border: #292524; --brand-weak: rgba(47, 158, 143, 0.18);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    font-size: 16px; line-height: 1.7;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 0 24px 64px; }
+  header { padding: 40px 0 8px; }
+  .logo { font-size: 15px; font-weight: 600; color: var(--brand); letter-spacing: 0.04em; }
+  h1 { font-size: 34px; line-height: 1.25; margin: 18px 0 10px; }
+  .sub { font-size: 18px; color: var(--muted); margin: 0 0 24px; }
+  .cta-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 28px; border-radius: 10px;
+    background: var(--brand); color: #fff; text-decoration: none; font-weight: 600;
+  }
+  .btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+  .beta-note { font-size: 13px; color: var(--muted); }
+  h2 { font-size: 22px; margin: 48px 0 16px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 16px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+  .card .ico { font-size: 24px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  td.path { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; word-break: break-all; }
+  .risk-green { color: var(--green); font-weight: 600; }
+  .risk-yellow { color: var(--yellow); font-weight: 600; }
+  .risk-red { color: var(--red); font-weight: 600; }
+  .stat-row { display: flex; gap: 32px; flex-wrap: wrap; margin: 8px 0; }
+  .stat b { font-size: 26px; color: var(--brand); display: block; }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .price-grid { grid-template-columns: 1fr; } }
+  .price { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .price .num { font-size: 30px; font-weight: 700; }
+  .price ul { padding-left: 18px; margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+  .privacy {
+    background: var(--brand-weak); border-radius: 14px; padding: 20px 24px; font-size: 14px;
+  }
+  footer { border-top: 1px solid var(--border); margin-top: 56px; padding-top: 20px;
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  a { color: var(--brand); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo">SLIMIT</div>
+    <h1>给 macOS 瘦身，<br>先解释，后动手。</h1>
+    <p class="sub">SlimIt 说明每个目录是什么、谁产生的、删了会怎样——然后以可完整恢复的方式清理。</p>
+    <div class="cta-row">
+      <!-- v0.1 发布后：href 指向 DMG 直链；内测期指引见 docs/BETA.md -->
+      <a class="btn" href="#">下载 v0.1 内测（Apple Silicon）</a>
+      <a class="btn ghost" href="#clean">看看它怎么工作</a>
+    </div>
+    <p class="beta-note">内测版未做公证：首次打开需右键 → 打开（见下载页说明）。macOS 26 / Apple Silicon 实测。</p>
+  </header>
+
+  <h2>三个不一样</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="ico">🧠</div>
+      <h3>解释，而不是吓唬你</h3>
+      <p>81 条可审计的规则库 + AI 语义说明：这个目录是什么、谁产生的、删了会怎样、怎么重建。看懂了再决定。</p>
+    </div>
+    <div class="card">
+      <div class="ico">🛡</div>
+      <h3>机制级安全</h3>
+      <p>清理只做「迁入隔离区」，一键完整恢复；高危目标（微信聊天数据、虚拟机磁盘）只提示、永不代删；AI 永远没有删除权；每次操作留审计日志。</p>
+    </div>
+    <div class="card">
+      <div class="ico">📏</div>
+      <h3>真实占用，不是表观大小</h3>
+      <p>稀疏文件、硬链接、APFS 容器口径分开呈现。Docker.raw 显示 494 GB？真实占用 5.6 GB，别被其他工具吓到。</p>
+    </div>
+  </div>
+
+  <h2 id="clean">它会这样对待你的磁盘</h2>
+  <table>
+    <thead>
+      <tr><th>扫描到的目标</th><th>风险</th><th>SlimIt 的做法</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="path">~/Library/Caches/Homebrew</td>
+        <td class="risk-green">🟢 低风险</td>
+        <td>迁入隔离区，下次 brew 自动重建，可随时恢复</td>
+      </tr>
+      <tr>
+        <td class="path">~/Library/Developer/Xcode/DerivedData</td>
+        <td class="risk-green">🟢 低风险</td>
+        <td>迁入隔离区，下次构建全量重编译，无数据丢失</td>
+      </tr>
+      <tr>
+        <td class="path">~/.rustup/toolchains</td>
+        <td class="risk-yellow">🟡 注意</td>
+        <td>提示官方命令（rustup toolchain uninstall），不自动动</td>
+      </tr>
+      <tr>
+        <td class="path">~/Library/Containers/com.tencent.xinWeChat/…</td>
+        <td class="risk-red">🔴 谨慎</td>
+        <td>这是聊天记录本体——只解释、只提醒备份，永不代删</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>快，是因为读得聪明</h2>
+  <div class="stat-row">
+    <div class="stat"><b>57s</b><span>扫描 296 万文件（~/Library 实测热）</span></div>
+    <div class="stat"><b>16×</b><span>快过同机 du -x（913s）</span></div>
+    <div class="stat"><b>81 条</b><span>内置规则，全部开源可审计</span></div>
+  </div>
+  <p class="beta-note" style="margin-top:0">getattrlistbulk 批量枚举 + 并行 walker；测试环境 M 系列 + 内置 SSD，详见仓库 BENCH.md。</p>
+
+  <h2>定价</h2>
+  <div class="price-grid">
+    <div class="price">
+      <div class="num">免费</div>
+      <p style="color:var(--muted);font-size:14px;margin:4px 0 0">v0.1 内测期</p>
+      <ul>
+        <li>完整扫描与规则解释</li>
+        <li>隔离区清理与恢复</li>
+        <li>APFS 快照 / 卷容量视图</li>
+      </ul>
+    </div>
+    <div class="price">
+      <div class="num">¥98 <span style="font-size:14px;color:var(--muted);font-weight:400">买断（规划中）</span></div>
+      <p style="color:var(--muted);font-size:14px;margin:4px 0 0">正式版</p>
+      <ul>
+        <li>永久使用，含小版本更新</li>
+        <li>AI 模型版解释（本地推理）</li>
+        <li>买断制，不做订阅</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>隐私</h2>
+  <div class="privacy">
+    SlimIt 扫描只读取文件的<b>元数据</b>（大小、块数、inode），不读取文件内容；没有遥测，不上传任何数据；AI 解释按规则库在本地完成。你的磁盘内容只留在你的磁盘上。
+  </div>
+
+  <footer>
+    <span>© 2026 SlimIt · macOS v0.1 内测</span>
+    <span><a href="#">反馈问题</a>（GitHub Issues）· <a href="#">更新日志</a></span>
+  </footer>
+</main>
+</body>
+</html>

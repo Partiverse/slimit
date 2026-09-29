@@ -2,10 +2,14 @@
 
 > 2026-09-29 制定。前置：W1–W7 已完成（81 条规则、GUI 清理链经手测、内测包就绪、性能基线达标）。
 > W7 收尾核对结论附在文末。
+>
+> **用户决策（2026-09-29）**：暂不注册 Apple Developer Program。v0.1 以未签名构建按 BETA.md
+> 方案（右键打开）软启动内测；**公开发布/收费前必须补 notarization**（本文件 §1 整段顺延）。
+> 签名+公证的可执行骨架已备好：`scripts/release/sign-notarize.sh`（全部凭据走环境变量）。
 
-## 1. Notarization（公证与签名）
+## 1. Notarization（公证与签名）——暂缓，证书到位后执行
 
-**前置决策（用户待办）**：加入 Apple Developer Program（$99/年），获得 Developer ID Application 证书的签发权。没有账号则无法公证，`xattr` 右键方案（BETA.md）是唯一替代，不适合公开发布。
+**前置决策（用户待办，已暂缓）**：加入 Apple Developer Program（$99/年），获得 Developer ID Application 证书的签发权。没有账号则无法公证，`xattr` 右键方案（BETA.md）是唯一替代，不适合公开发布。
 
 | 步骤 | 内容 | 产出/验证 |
 |---|---|---|
@@ -19,19 +23,22 @@
 
 ## 2. 落地页
 
-- 域名与托管（用户待办：域名选购；托管建议 Cloudflare Pages/Vercel 免费档）。
-- 单页结构（素材直接取自产品）：首屏一句话定位「给 macOS 瘦身：解释每个目录是什么，删了会怎样，可完整恢复」→ 三卖点（AI 语义解释 / 机制级安全隔离区 / 真实占用 vs 表观大小）→ 旗舰场景截图（System Data 解剖、微信数据 red 提示）→ 下载按钮（直发 DMG）→ 定价（免费 / ¥98 买断）→ 隐私声明（扫描只读元数据、不上传）。
+**初稿已完成**：`landing/index.html`（单文件、无依赖、深浅色自适应），部署说明见 `landing/README.md`。
+
+- **域名非必须**：Cloudflare Pages 免费子域（如 `slimit.pages.dev`）足够内测与软启动；正式收费/投放前再选购绑定，几分钟生效，不阻塞任何事。（2026-09-29 结论）
+- 单页结构（已按此实现）：首屏一句话定位「给 macOS 瘦身：解释每个目录是什么，删了会怎样，可完整恢复」→ 三卖点（AI 语义解释 / 机制级安全隔离区 / 真实占用 vs 表观大小）→ 规则行为示例表（green/yellow/red 各一）→ 性能数据（标注测试环境）→ 定价（免费 / ¥98 买断预告）→ 隐私声明（只读元数据、不上传）。
 - 内容遵守广告法与竞品对比合规：不点名贬低竞品，性能数据标注测试环境。
 - MVP 先中文单页；英文版 v0.2。
 
 ## 3. 发布 checklist（v0.1）
 
-- [ ] 公证通过的全量验收（8.5）在另一台未开 FD 的机器重跑
+- [ ] 干净机器全量验收：下载 → 挂载 → 安装（右键打开）→ 扫描 → 隔离 → 恢复，结果记入 BETA.md
 - [ ] `SECURITY.md`：重跑 Mimosa 确认 completeness: complete（partial 则人工审计 Tauri command 层与 executor 作为替代证据）
 - [ ] GitHub Release：tag `v0.1.0`，附 DMG + SHA256 校验和 + Release Notes（取自 BETA.md 功能清单）
+- [ ] 落地页部署（免费子域即可，见 landing/README.md），替换占位链接
 - [ ] README 状态段更新为「v0.1 已发布」
 - [ ] 崩溃/反馈渠道落地（GitHub Issues 即可，落地页放链接）
-- [ ] 定价与购买（买断 ¥98）：MVP 可先「免费下载 + 打赏/预售」软启动，正式收费依赖 License 机制（v0.2，避免为发布延期强做）
+- [ ] 定价与购买（买断 ¥98）：v0.1 先「免费下载 + 打赏/预售」软启动，正式收费前补 notarization 与 License 机制（v0.2，避免为收费延期发布）
 
 **明确不做**（沿用 SPEC §8）：自动更新器（v0.2 手动下载更新）、Windows/Linux、License 强校验。
 
