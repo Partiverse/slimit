@@ -1,21 +1,21 @@
 # 种子用户内测包（分发材料）
 
-> 2026-09-29 备好。分发动作由用户执行；本文件是随附文案与操作清单。
+> 2026-09-29 更新至 rc2（含首批反馈修复：云端 AI / 进度条 / 多任务 / 规则 90）。分发动作由用户执行；本文件是随附文案与操作清单。
 
 ## 分发物
 
 | 物料 | 位置 |
 |---|---|
-| 安装包 | GitHub Release `v0.1.0-rc1`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc1 |
-| SHA256 | `6f39393cb22a7704878c5e2bccdba991eb5460cffac96172ed1563ccefc3fc50` |
+| 安装包 | GitHub Release `v0.1.0-rc2`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc2 |
+| SHA256 | `c7c79cdc9ddd4b346f401be7eda25fd02d25eb543e82092062f8dabae3755a6e` |
 | 详细说明 | 仓库 `docs/BETA.md`（安装/已知限制/回报渠道） |
-| 产品介绍 | https://slimit.pages.dev （部署后） |
+| 产品介绍 | https://slimit.pages.dev |
 
 **分发前提**：种子用户需要能访问私有仓的 Release——两种方式任选：① 在仓库 Settings → Collaborators 添加对方 GitHub 账号（顺带可用 Issues 收反馈）；② 直接把 DMG 文件发给他（AirDrop/网盘），反馈走微信/邮件。
 
 ## 邀请文案（三句话，微信/邮件可直接发）
 
-> 我在做一款 macOS 磁盘清理工具 SlimIt，特点是删任何东西之前先用 AI 解释清楚「这是什么、删了会怎样」，而且只做可一键恢复的隔离式清理，绝不直接删。想请你帮忙内测：装上后扫一扫你自己的用户目录，看看它对磁盘的解释准不准、清理体验顺不顺。安装包在这里（约 3MB）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc1 ，首次打开记得右键 → 打开，有任何问题直接跟我说。
+> 我在做一款 macOS 磁盘清理工具 SlimIt，特点是删任何东西之前先解释清楚「这是什么、删了会怎样」——规则库 + AI 双重解释，清理只做可一键恢复的隔离，绝不直接删。上一轮内测反馈的问题（AI 感知弱、扫描没进度、不能多任务、规则少）刚全部修完，新包在：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc2 （首次打开记得右键 → 打开）。想请你再试试：设置里可以填自己的 API Key 开启云端 AI 解释，扫大目录时能看到实时进度，也可以同时扫多个目录。
 
 **短版（群发/朋友圈）**：
 
