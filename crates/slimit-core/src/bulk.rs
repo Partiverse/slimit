@@ -123,8 +123,8 @@ struct Local {
 
 pub(crate) fn scan(root: &Path) -> Result<ScanResult, ScanError> {
     let started = Instant::now();
-    let root_md = std::fs::symlink_metadata(root)
-        .map_err(|_| ScanError::RootMissing(root.to_path_buf()))?;
+    let root_md =
+        std::fs::symlink_metadata(root).map_err(|_| ScanError::RootMissing(root.to_path_buf()))?;
     let root_dev = root_md.dev();
 
     let mut files = Vec::new();
@@ -233,10 +233,18 @@ fn worker(root_dev: u64, shared: &Shared) {
     }
 }
 
-fn process_dir(dir: &Path, root_dev: u64, counters: &Counters, local: &mut Local, buf: &mut Vec<u8>) {
+fn process_dir(
+    dir: &Path,
+    root_dev: u64,
+    counters: &Counters,
+    local: &mut Local,
+    buf: &mut Vec<u8>,
+) {
     counters.dirs.fetch_add(1, Ordering::Relaxed);
     let Ok(cpath) = CString::new(dir.as_os_str().as_bytes()) else {
-        local.errors.push(format!("invalid path: {}", dir.display()));
+        local
+            .errors
+            .push(format!("invalid path: {}", dir.display()));
         return;
     };
     // SAFETY: cpath 是合法 NUL 结尾字符串；fd 在所有路径上恰好关闭一次。
@@ -247,9 +255,11 @@ fn process_dir(dir: &Path, root_dev: u64, counters: &Counters, local: &mut Local
         )
     };
     if fd < 0 {
-        local
-            .errors
-            .push(format!("open {}: {errno_str}", dir.display(), errno_str = errno_str()));
+        local.errors.push(format!(
+            "open {}: {errno_str}",
+            dir.display(),
+            errno_str = errno_str()
+        ));
         return;
     }
 

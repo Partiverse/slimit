@@ -148,7 +148,9 @@ fn aggregate(root: &Path, files: &[FileEntry]) -> Vec<DirStat> {
         if *path == root {
             continue;
         }
-        let Some(parent) = path.parent() else { continue };
+        let Some(parent) = path.parent() else {
+            continue;
+        };
         // 先取出 child 避免同 map 同时可变/不可变借用。
         let child = match own.get(path) {
             Some(c) => (c.0, c.1, c.2),
@@ -225,8 +227,15 @@ mod tests {
             vec![tmp.path().join("link"), real.join("big.bin")],
             "symlink target contents must not be walked"
         );
-        let link = res.files.iter().find(|f| f.path == tmp.path().join("link")).unwrap();
-        assert!(link.apparent < 2048, "symlink entry should be tiny, not target size");
+        let link = res
+            .files
+            .iter()
+            .find(|f| f.path == tmp.path().join("link"))
+            .unwrap();
+        assert!(
+            link.apparent < 2048,
+            "symlink entry should be tiny, not target size"
+        );
     }
 
     #[test]
@@ -241,7 +250,10 @@ mod tests {
         assert_eq!(e.apparent, 1 << 20);
         let md = fs::metadata(&f).unwrap();
         assert_eq!(e.actual, md.blocks() * 512);
-        assert!(e.actual < e.apparent, "sparse file should have actual << apparent");
+        assert!(
+            e.actual < e.apparent,
+            "sparse file should have actual << apparent"
+        );
     }
 
     #[test]
@@ -264,7 +276,11 @@ mod tests {
         assert_eq!(root_stat.apparent, 1000);
         assert_eq!(root_stat.file_count, 1);
         // 无直属文件的中间目录也要有聚合条目。
-        let a = res.dirs.iter().find(|d| d.path == tmp.path().join("a")).unwrap();
+        let a = res
+            .dirs
+            .iter()
+            .find(|d| d.path == tmp.path().join("a"))
+            .unwrap();
         assert_eq!(a.apparent, 1000);
         let b = res.dirs.iter().find(|d| d.path == deep).unwrap();
         assert_eq!(b.apparent, 1000);

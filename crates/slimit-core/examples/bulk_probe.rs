@@ -37,7 +37,10 @@ fn run(dir: &str, common: u32, file: u32) {
         )
     };
     if n <= 0 {
-        eprintln!("common=0x{common:08x} file=0x{file:08x}: n={n}, errno={}", std::io::Error::last_os_error());
+        eprintln!(
+            "common=0x{common:08x} file=0x{file:08x}: n={n}, errno={}",
+            std::io::Error::last_os_error()
+        );
         return;
     }
     // 只 dump 第一条 record
@@ -47,12 +50,18 @@ fn run(dir: &str, common: u32, file: u32) {
         let end = (j + 4).min(len);
         let bytes = &buf[j..end];
         if bytes.len() == 4 {
-            words.push(format!("+{j:02}:0x{:08x}", u32::from_ne_bytes(bytes.try_into().unwrap())));
+            words.push(format!(
+                "+{j:02}:0x{:08x}",
+                u32::from_ne_bytes(bytes.try_into().unwrap())
+            ));
         } else {
             words.push(format!("+{j:02}:{}", String::from_utf8_lossy(bytes)));
         }
     }
-    eprintln!("common=0x{common:08x} file=0x{file:08x} len={len}: {}", words.join(" "));
+    eprintln!(
+        "common=0x{common:08x} file=0x{file:08x} len={len}: {}",
+        words.join(" ")
+    );
     unsafe { libc::close(fd) };
 }
 
