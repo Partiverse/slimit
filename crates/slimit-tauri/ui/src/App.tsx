@@ -3,11 +3,14 @@ import { listen } from "@tauri-apps/api/event";
 import {
   applyPlan,
   explain,
+  getSettings,
   listQuarantine,
   listSnapshots,
   restoreItem,
   scanAndPlan,
+  setSettings,
   volumeSummary,
+  type AiSettings,
   type ApplyReport,
   type Explanation,
   type Manifest,
@@ -31,52 +34,110 @@ const RISK_LABEL: Record<PlanItem["risk"], string> = {
   red: "🔴 谨慎",
 };
 
+const SOURCE_LABEL: Record<string, string> = {
+  rules: "规则库",
+  cloud: "云端 AI",
+  heuristic: "本地启发式",
+};
+
+type TaskStatus = "running" | "done" | "error";
+
+interface ScanTask {
+  id: number;
+  path: string;
+  status: TaskStatus;
+  startedAt: number;
+  filesDone: number;
+  currentDir: string;
+  result?: ScanPlanResponse;
+  error?: string;
+}
+
+/** 当前秒级时钟（驱动"已用时"刷新）。 */
+function useTick(active: boolean) {
+  const [, setN] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const t = setInterval(() => setN((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [active]);
+}
+
 /**
- * 清理面板：扫描 → 规则计划 → 用户勾选 → 隔离执行 → 可恢复。
- * 红线：AI 解释仅为提示层；red/非 executable 项永不进入执行列表
- * （Rust 侧 apply 也有一致校验，双重保险）。
+ * 清理面板：多任务并发扫描（任务列表 + 实时进度）→ 选中任务查看计划 →
+ * 勾选 → 两段式确认隔离执行 → 可恢复。
+ * 红线：AI 解释仅为提示层；red/非 executable 项永不进入执行列表。
  */
 function CleanPanel() {
   const [root, setRoot] = useState("");
-  const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [err, setErr] = useState("");
-  const [progress, setProgress] = useState(0);
-  const [data, setData] = useState<ScanPlanResponse | null>(null);
+  const [tasks, setTasks] = useState<ScanTask[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reports, setReports] = useState<ApplyReport[] | null>(null);
   const [tips, setTips] = useState<Record<string, Explanation>>({});
   const seqRef = useRef(0);
 
+  const anyRunning = tasks.some((t) => t.status === "running");
+  useTick(anyRunning);
+
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId && t.status === "done") ?? null;
+
   useEffect(() => {
     const un = listen<ScanProgress>("scan-progress", (e) => {
-      if (e.payload.seq === seqRef.current) setProgress(e.payload.files_done);
+      const p = e.payload;
+      setTasks((ts) =>
+        ts.map((t) =>
+          t.id === p.seq
+            ? { ...t, filesDone: p.files_done, currentDir: p.current_dir }
+            : t,
+        ),
+      );
     });
     return () => {
       un.then((f) => f());
     };
   }, []);
 
-  const scan = async () => {
-    if (!root.trim() || busy) return;
-    setBusy(true);
-    setErr("");
+  const startScan = () => {
+    const path = root.trim();
+    if (!path || tasks.some((t) => t.status === "running" && t.path === path)) return;
+    const id = ++seqRef.current;
+    setTasks((ts) => [
+      { id, path, status: "running", startedAt: Date.now(), filesDone: 0, currentDir: path },
+      ...ts,
+    ]);
+    setSelectedTaskId(id);
+    setSelected(new Set());
     setReports(null);
     setTips({});
     setConfirming(false);
-    setProgress(0);
-    seqRef.current += 1;
-    try {
-      const res = await scanAndPlan(root.trim(), 20);
-      setData(res);
-      // 默认只勾选可执行项（executable=false 的 red/advise 永不入选）。
-      setSelected(new Set(res.plan.filter((p) => p.executable).map((p) => p.path)));
-    } catch (e) {
-      setErr(String(e));
-    } finally {
-      setBusy(false);
-    }
+    scanAndPlan(path, 20)
+      .then((result) => {
+        setTasks((ts) =>
+          ts.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  status: "done",
+                  result,
+                  filesDone: result.summary.file_count,
+                  currentDir: "",
+                }
+              : t,
+          ),
+        );
+        setSelected(
+          new Set(result.plan.filter((p) => p.executable).map((p) => p.path)),
+        );
+      })
+      .catch((e) =>
+        setTasks((ts) =>
+          ts.map((t) => (t.id === id ? { ...t, status: "error", error: String(e) } : t)),
+        ),
+      );
   };
 
   const toggle = (path: string, executable: boolean) => {
@@ -90,14 +151,14 @@ function CleanPanel() {
   };
 
   const runApply = async (confirmed: boolean) => {
-    if (!data || applying) return;
-    const items = data.plan.filter((p) => p.executable && selected.has(p.path));
+    if (!selectedTask?.result || applying) return;
+    const items = selectedTask.result.plan.filter(
+      (p) => p.executable && selected.has(p.path),
+    );
     if (items.length === 0) {
       setConfirming(false);
       return;
     }
-    // 确认必须走应用内两段式按钮：Tauri/WKWebView 的 window.confirm
-    // 不可靠（可能静默返回），原生对话框在本环境实测未弹出。
     if (!confirmed) {
       setConfirming(true);
       return;
@@ -131,8 +192,8 @@ function CleanPanel() {
     }
   };
 
-  const planBytes = data
-    ? data.plan
+  const planBytes = selectedTask?.result
+    ? selectedTask.result.plan
         .filter((p) => p.executable && selected.has(p.path))
         .reduce((a, p) => a + p.estimated_bytes, 0)
     : 0;
@@ -144,21 +205,69 @@ function CleanPanel() {
         <input
           value={root}
           onChange={(e) => setRoot(e.target.value)}
-          placeholder="绝对路径，如 /Users/you/Library"
-          disabled={busy || applying}
+          placeholder="绝对路径，可先后提交多个扫描任务并发执行"
+          disabled={anyRunning && false}
         />
-        <button onClick={scan} disabled={busy || applying || !root.trim()}>
-          {busy ? `扫描中… ${progress.toLocaleString()} 个条目` : "扫描并生成计划"}
+        <button onClick={startScan} disabled={!root.trim()}>
+          开始扫描
         </button>
       </div>
       {err && <p className="error">{err}</p>}
-      {data && (
+      {tasks.length > 0 && (
+        <table className="tasks">
+          <thead>
+            <tr>
+              <th>扫描任务</th>
+              <th>状态 / 进度</th>
+              <th>已用时</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((t) => {
+              const elapsed = ((Date.now() - t.startedAt) / 1000).toFixed(0);
+              const rate =
+                t.status === "running" && elapsed !== "0"
+                  ? ` · ${(t.filesDone / Number(elapsed) / 1000).toFixed(1)} 万条/秒`
+                  : "";
+              const dirName = t.currentDir.split("/").filter(Boolean).pop() ?? "";
+              return (
+                <tr
+                  key={t.id}
+                  className={t.id === selectedTaskId ? "task-selected" : ""}
+                  onClick={() => t.status === "done" && setSelectedTaskId(t.id)}
+                >
+                  <td className="path">{t.path}</td>
+                  <td>
+                    {t.status === "running" && (
+                      <span className="progress">
+                        ⏳ {t.filesDone.toLocaleString()} 条 · 正在扫 {dirName}
+                        {rate}
+                      </span>
+                    )}
+                    {t.status === "done" && (
+                      <span className="ok">
+                        ✅ {t.result?.summary.file_count.toLocaleString()} 文件 ·
+                        命中 {t.result?.plan.length} 项（点击查看）
+                      </span>
+                    )}
+                    {t.status === "error" && <span className="error">❌ {t.error}</span>}
+                  </td>
+                  <td>{t.status === "running" ? `${elapsed}s` : "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      {selectedTask?.result && (
         <>
           <p className="totals">
-            {data.summary.root} — {data.summary.file_count.toLocaleString()} 个文件 ·
-            实际占用 {fmtSize(data.summary.actual)} · 规则命中 {data.plan.length} 项
+            {selectedTask.result.summary.root} —{" "}
+            {selectedTask.result.summary.file_count.toLocaleString()} 个文件 · 实际
+            占用 {fmtSize(selectedTask.result.summary.actual)} · 规则命中{" "}
+            {selectedTask.result.plan.length} 项
           </p>
-          {data.plan.length > 0 && (
+          {selectedTask.result.plan.length > 0 && (
             <>
               <table>
                 <thead>
@@ -172,7 +281,7 @@ function CleanPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.plan.map((p) => (
+                  {selectedTask.result.plan.map((p) => (
                     <PlanRow
                       key={p.rule_id + p.path}
                       item={p}
@@ -238,7 +347,7 @@ function PlanRow(props: {
         <td className="path">{p.path}</td>
         <td>
           <button className="ghost" onClick={onExplain} disabled={!!tip}>
-            {tip ? "已解释" : "解释"}
+            {tip ? SOURCE_LABEL[tip.source] ?? "已解释" : "解释"}
           </button>
         </td>
       </tr>
@@ -249,7 +358,8 @@ function PlanRow(props: {
             {tip.what}
             <br />
             <b>产生者：</b>
-            {tip.producer}（置信度 {(tip.confidence * 100).toFixed(0)}%）
+            {tip.producer}（置信度 {(tip.confidence * 100).toFixed(0)}% · 来源{" "}
+            {SOURCE_LABEL[tip.source] ?? tip.source}）
             <br />
             <b>删除后果：</b>
             {tip.consequence}
@@ -275,6 +385,81 @@ function ApplyReports({ reports }: { reports: ApplyReport[] }) {
         </p>
       ))}
     </div>
+  );
+}
+
+function AiSettingsPanel() {
+  const [s, setS] = useState<AiSettings | null>(null);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    getSettings()
+      .then(setS)
+      .catch((e) => setMsg(String(e)));
+  }, []);
+
+  if (!s) return null;
+  const save = async () => {
+    setMsg("");
+    try {
+      await setSettings(s);
+      setMsg("已保存");
+    } catch (e) {
+      setMsg(String(e));
+    }
+  };
+
+  return (
+    <section>
+      <h2>AI 设置</h2>
+      <p className="hint">
+        默认全部离线（规则库 + 本地启发式）。开启云端后，解释请求中的路径与大小会
+        发往你配置的端点；执行授权仍然只来自规则库，AI 永无删除权。
+      </p>
+      <div className="row">
+        <label>
+          <input
+            type="checkbox"
+            checked={s.enabled}
+            onChange={(e) => setS({ ...s, enabled: e.target.checked })}
+          />{" "}
+          启用云端 AI 解释（OpenAI 兼容接口，使用你自己的 Key）
+        </label>
+      </div>
+      {s.enabled && (
+        <>
+          <div className="row">
+            <input
+              value={s.base_url}
+              onChange={(e) => setS({ ...s, base_url: e.target.value })}
+              placeholder="Base URL，如 https://open.bigmodel.cn/api/paas/v4"
+            />
+            <input
+              value={s.model}
+              onChange={(e) => setS({ ...s, model: e.target.value })}
+              placeholder="模型名，如 glm-4-flash"
+              style={{ maxWidth: 200 }}
+            />
+          </div>
+          <div className="row">
+            <input
+              type="password"
+              value={s.api_key}
+              onChange={(e) => setS({ ...s, api_key: e.target.value })}
+              placeholder="API Key（仅存本机 config.json）"
+            />
+            <button onClick={save}>保存</button>
+            {msg && <span className="hint">{msg}</span>}
+          </div>
+        </>
+      )}
+      {!s.enabled && (
+        <div className="row">
+          <button onClick={save}>保存</button>
+          {msg && <span className="hint">{msg}</span>}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -448,6 +633,7 @@ export default function App() {
       <QuarantinePanel />
       <VolumePanel />
       <SnapshotsPanel />
+      <AiSettingsPanel />
     </main>
   );
 }

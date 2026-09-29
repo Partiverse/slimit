@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-jetbrains-logs
+os: macos
+scope: user
+paths:
+  - "~/Library/Logs/JetBrains"
+semantics:
+  title: "JetBrains IDE 日志（~/Library/Logs/JetBrains）"
+  what: "IntelliJ IDEA/PyCharm/WebStorm 等 JetBrains IDE 的运行日志与线程转储（idea.log、heap dumps），按版本分目录，排障用"
+  producer: "JetBrains 系列 IDE"
+  safe_to_delete_because: "纯诊断日志：删除不影响项目、插件与配置（配置在 Application Support 与偏好设置）；正在排障时保留为好"
+  consequence: "历史日志丢失；IDE 功能与项目不受任何影响"
+  regenerate: "IDE 运行时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（长期使用含崩溃转储时更大）"
+  recovery: full
+refs:
+  - https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html

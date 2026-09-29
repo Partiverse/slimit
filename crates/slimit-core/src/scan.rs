@@ -17,12 +17,12 @@ pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
     scan_with_progress(root, &|_| {})
 }
 
-/// 同 [`scan`]，遍历过程中回调 `progress(已发现条目数)`（相对根的累计值，
-/// 总量未知——这正是进度而非百分比）。回调在工作线程调用，须自行保证
-/// 线程安全且轻量（GUI 场景只做事件投递）。
+/// 同 [`scan`]，遍历过程中回调 `progress(ScanProgress)`（累计条目数 +
+/// 最近处理的目录；总量未知——这正是进度而非百分比）。回调在工作线程
+/// 调用，须自行保证线程安全且轻量（GUI 场景只做事件投递）。
 pub fn scan_with_progress(
     root: &Path,
-    progress: &(dyn Fn(u64) + Send + Sync),
+    progress: &(dyn Fn(crate::types::ScanProgress) + Send + Sync),
 ) -> Result<ScanResult, ScanError> {
     if !root.exists() {
         return Err(ScanError::RootMissing(root.to_path_buf()));
@@ -40,7 +40,7 @@ pub fn scan_with_progress(
 #[cfg(not(target_os = "macos"))]
 fn walk_ignore(
     root: &Path,
-    progress: Option<&(dyn Fn(u64) + Send + Sync)>,
+    progress: Option<&(dyn Fn(crate::types::ScanProgress) + Send + Sync)>,
 ) -> Result<ScanResult, ScanError> {
     use ignore::{WalkBuilder, WalkState};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -80,7 +80,11 @@ fn walk_ignore(
                     if let Some(p) = progress {
                         let n = seen.fetch_add(1, Ordering::Relaxed) + 1;
                         if n % 4096 == 0 {
-                            p(files.lock().unwrap().len() as u64);
+                            let dir = e.path().parent().unwrap_or(root).to_path_buf();
+                            p(crate::types::ScanProgress {
+                                files_done: files.lock().unwrap().len() as u64,
+                                current_dir: dir,
+                            });
                         }
                     }
                     WalkState::Continue
@@ -353,16 +357,41 @@ mod tests {
         fs::write(tmp.path().join("root.bin"), vec![0u8; 16]).unwrap();
 
         let last = std::sync::Mutex::new(0u64);
-        scan_with_progress(tmp.path(), &|n| {
+        scan_with_progress(tmp.path(), &|p| {
             let mut l = last.lock().unwrap();
-            assert!(*l <= n, "progress must be monotonic: {l} -> {n}");
-            *l = n;
+            assert!(
+                *l <= p.files_done,
+                "progress must be monotonic: {l} -> {}",
+                p.files_done
+            );
+            *l = p.files_done;
         })
         .unwrap();
         assert_eq!(
             *last.lock().unwrap(),
             65,
             "final callback must equal file count"
+        );
+    }
+
+    #[test]
+    fn progress_reports_current_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("sub");
+        fs::create_dir(&sub).unwrap();
+        fs::write(sub.join("f.bin"), vec![0u8; 16]).unwrap();
+
+        let seen = std::sync::Mutex::new(false);
+        scan_with_progress(tmp.path(), &|p| {
+            assert!(p.current_dir.starts_with(tmp.path()));
+            if p.current_dir == sub {
+                *seen.lock().unwrap() = true;
+            }
+        })
+        .unwrap();
+        assert!(
+            *seen.lock().unwrap(),
+            "sub dir must appear in progress events"
         );
     }
 

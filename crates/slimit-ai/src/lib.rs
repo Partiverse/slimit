@@ -20,6 +20,8 @@ pub struct ExplanationRequest {
 }
 
 /// 解释输出。`suggested_risk` 仅作 UI 提示；执行器永不读取本结构。
+/// `source` 标注解释来源：`rules`（规则库语义）/ `cloud`（云端模型）/
+/// `heuristic`（本地启发式降级）。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Explanation {
     pub what: String,
@@ -27,6 +29,8 @@ pub struct Explanation {
     pub consequence: String,
     pub suggested_risk: RiskHint,
     pub confidence: f32,
+    #[serde(default)]
+    pub source: String,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -58,6 +62,7 @@ impl Explainer for HeuristicExplainer {
             consequence: c.consequence,
             suggested_risk: c.risk_hint,
             confidence: c.confidence,
+            source: "heuristic".into(),
         })
     }
 }
@@ -215,6 +220,106 @@ fn classify(path: &str, apparent: u64, actual: u64) -> Classification {
         risk_hint: RiskHint::Red,
         confidence: 0.3,
     }
+}
+
+/// 云端 AI 设置（用户自备 OpenAI 兼容端点）。显式开关，默认关闭；
+/// 关闭时所有解释离线完成（规则库 + 启发式），绝不外发任何数据。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiSettings {
+    pub enabled: bool,
+    /// OpenAI 兼容 base url，如 `https://open.bigmodel.cn/api/paas/v4`。
+    pub base_url: String,
+    /// 用户自己的 API key，明文存本机 `<app_data>/config.json`（本机应用惯例）。
+    pub api_key: String,
+    /// 模型名，如 `glm-4-flash`。
+    pub model: String,
+}
+
+impl Default for AiSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            base_url: "https://open.bigmodel.cn/api/paas/v4".into(),
+            api_key: String::new(),
+            model: "glm-4-flash".into(),
+        }
+    }
+}
+
+/// 云端模型解释（OpenAI 兼容 chat/completions，blocking 调用）。
+///
+/// 红线不变：输出只作为 UI 提示层；调用失败一律返回 Err，由上层降级到
+/// 规则库/启发式，绝不因 AI 失败阻塞清理流程。仅当用户显式启用后，
+/// 路径与大小信息才会发往用户配置的端点。
+pub fn explain_cloud(req: &ExplanationRequest, s: &AiSettings) -> Result<Explanation, String> {
+    if !s.enabled || s.api_key.trim().is_empty() {
+        return Err("云端 AI 未启用".into());
+    }
+    let system = "你是 macOS 存储清理助手。根据用户给出的目录路径与占用信息，判断该目录是什么、由谁产生、删除后的后果。\
+严格输出 JSON（无代码围栏、无多余文字），字段：\
+what(string，是什么，40字内)、producer(string，产生者)、\
+consequence(string，删除后果，含是否可重建)、\
+risk(\"green\"|\"yellow\"|\"red\"，green=可再生缓存，yellow=有代价需判断，red=不可逆数据)、\
+confidence(number 0-1)。\
+拿不准时 risk 取更保守值。这是只读分析，你没有执行能力。";
+    let user = format!(
+        "路径：{}\n实际占用：{} 字节\n表观大小：{} 字节\n应用 bundle：{}",
+        req.path,
+        req.actual_bytes,
+        req.apparent_bytes,
+        req.owner_bundle.as_deref().unwrap_or("未知")
+    );
+
+    let body = serde_json::json!({
+        "model": s.model,
+        "temperature": 0.2,
+        "messages": [
+            { "role": "system", "content": system },
+            { "role": "user", "content": user }
+        ]
+    });
+    let url = format!("{}/chat/completions", s.base_url.trim_end_matches('/'));
+    let resp = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| e.to_string())?
+        .post(&url)
+        .bearer_auth(&s.api_key)
+        .json(&body)
+        .send()
+        .map_err(|e| format!("请求失败: {e}"))?;
+    if !resp.status().is_success() {
+        return Err(format!("端点返回 {}", resp.status()));
+    }
+    let v: serde_json::Value = resp.json().map_err(|e| e.to_string())?;
+    let content = v["choices"][0]["message"]["content"]
+        .as_str()
+        .ok_or("响应缺少 choices[0].message.content")?;
+    // 容错：剥掉可能的 ```json 围栏后解析。
+    let stripped = content
+        .trim()
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+    let j: serde_json::Value =
+        serde_json::from_str(stripped).map_err(|e| format!("模型输出非 JSON: {e}"))?;
+    let risk = match j["risk"].as_str().unwrap_or("red") {
+        "green" => RiskHint::Green,
+        "yellow" => RiskHint::Yellow,
+        _ => RiskHint::Red,
+    };
+    Ok(Explanation {
+        what: j["what"].as_str().ok_or("缺 what")?.to_string(),
+        producer: j["producer"].as_str().ok_or("缺 producer")?.to_string(),
+        consequence: j["consequence"]
+            .as_str()
+            .ok_or("缺 consequence")?
+            .to_string(),
+        suggested_risk: risk,
+        confidence: j["confidence"].as_f64().unwrap_or(0.6) as f32,
+        source: "cloud".into(),
+    })
 }
 
 #[cfg(test)]

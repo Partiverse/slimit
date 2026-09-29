@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-quicklook-thumbnails
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/com.apple.QuickLook.thumbnailcache"
+semantics:
+  title: "访达快速预览缩略图缓存（QuickLook.thumbnailcache）"
+  what: "macOS QuickLook 为图片/PDF/视频等文件生成的缩略图数据库（thumbnails.data 等），Finder 空格预览与图标视图使用"
+  producer: "macOS QuickLook 系统服务"
+  safe_to_delete_because: "系统标准缓存：Apple 设计其内容可随时重建，Finder 浏览到文件时按需重新生成缩略图"
+  consequence: "首次浏览文件时缩略图需重新生成，Finder 图标视图短暂显示通用图标后恢复；文件本身不受任何影响"
+  regenerate: "Finder 浏览时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（图片/视频多的用户）"
+  recovery: full
+refs:
+  - https://developer.apple.com/documentation/quartz/qlpreviewview

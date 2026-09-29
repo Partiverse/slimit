@@ -110,7 +110,7 @@ struct Shared<'a> {
     files: Mutex<Vec<FileEntry>>,
     errors: Mutex<Vec<String>>,
     counters: Counters,
-    progress: Option<&'a (dyn Fn(u64) + Send + Sync)>,
+    progress: Option<&'a (dyn Fn(crate::types::ScanProgress) + Send + Sync)>,
 }
 
 struct QueueState {
@@ -127,7 +127,7 @@ struct Local {
 
 pub(crate) fn scan(
     root: &Path,
-    progress: Option<&(dyn Fn(u64) + Send + Sync)>,
+    progress: Option<&(dyn Fn(crate::types::ScanProgress) + Send + Sync)>,
 ) -> Result<ScanResult, ScanError> {
     let started = Instant::now();
     let root_md =
@@ -227,7 +227,10 @@ fn worker(root_dev: u64, shared: &Shared) {
             .fetch_add((local.files.len() - before) as u64, Ordering::Relaxed)
             + (local.files.len() - before) as u64;
         if let Some(p) = shared.progress {
-            p(done);
+            p(crate::types::ScanProgress {
+                files_done: done,
+                current_dir: dir,
+            });
         }
 
         let children = std::mem::take(&mut local.children);

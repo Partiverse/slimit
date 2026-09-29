@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-xcode-device-logs
+os: macos
+scope: user
+paths:
+  - "~/Library/Developer/Xcode/iOS Device Logs"
+semantics:
+  title: "Xcode 真机设备日志（iOS Device Logs）"
+  what: "Xcode 从已连接 iPhone/iPad 收集的设备系统日志与应用崩溃日志存档，供 Devices 窗口查看，按设备与时间累积"
+  producer: "Xcode 设备监视服务"
+  safe_to_delete_because: "纯诊断日志存档：删除不影响真机调试、证书、工程与设备本身；设备会重新上传新日志"
+  consequence: "历史设备日志丢失（如需回溯旧崩溃需重新复现收集）；调试功能不受影响"
+  regenerate: "连接设备后自动收集重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多设备长期开发）"
+  recovery: full
+refs:
+  - https://developer.apple.com/documentation/xcode/run-your-app-on-simulators-and-real-devices

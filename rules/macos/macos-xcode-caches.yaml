@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-xcode-caches
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/com.apple.dt.Xcode"
+semantics:
+  title: "Xcode 索引与模块缓存（~/Library/Caches/com.apple.dt.Xcode）"
+  what: "Xcode 的缓存目录：源码索引、模块缓存（ModuleCache）、调试符号处理缓存等派生数据。与 DerivedData（构建产物）互补不重叠"
+  producer: "Xcode"
+  safe_to_delete_because: "纯派生缓存：删除后 Xcode 重新索引工作区并重建模块缓存，不影响项目源码、签名证书与模拟器内容"
+  consequence: "下次打开工程需重新索引（大工程索引期间代码跳转补全暂时变慢），首次构建稍慢"
+  regenerate: "Xcode 打开工程时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–10 GB（多工程 iOS 开发者）"
+  recovery: full
+refs:
+  - https://developer.apple.com/documentation/xcode

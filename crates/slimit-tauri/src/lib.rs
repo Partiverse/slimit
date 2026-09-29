@@ -40,11 +40,15 @@ fn scan_and_plan(
     let root = PathBuf::from(&root);
     let result = {
         let app = app.clone();
-        slimit_core::scan_with_progress(&root, &move |files_done| {
-            // 进度事件：只带 files_done，总量未知（这正是进度而非百分比）。
+        slimit_core::scan_with_progress(&root, &move |p| {
+            // 进度事件：累计条目数 + 当前目录（总量未知，是进度而非百分比）。
             let _ = app.emit(
                 "scan-progress",
-                serde_json::json!({ "seq": seq, "files_done": files_done }),
+                serde_json::json!({
+                    "seq": seq,
+                    "files_done": p.files_done,
+                    "current_dir": p.current_dir.to_string_lossy(),
+                }),
             );
         })
     }
@@ -61,41 +65,82 @@ fn scan_and_plan(
     Ok(ScanPlanResponse { summary, plan })
 }
 
+/// 应用设置：目前仅云端 AI。持久化在 `<app_data_dir>/config.json`。
+fn load_settings(app: &AppHandle) -> Result<slimit_ai::AiSettings, String> {
+    let data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("resolve app data dir: {e}"))?;
+    let path = data.join("config.json");
+    if !path.exists() {
+        return Ok(slimit_ai::AiSettings::default());
+    }
+    let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&text).map_err(|e| format!("config.json 解析失败: {e}"))
+}
+
 #[tauri::command]
-fn explain(req: ExplanationRequest) -> Result<Explanation, String> {
-    // 规则命中时，语义解释以规则库为准（SPEC §5：规则命中时 AI 仅补充
-    // 语气）；启发式解释器仅作未命中时的降级兜底。
-    if let Some(rule_id) = req.nearest_rule_hits.first() {
-        if let Some(rule) = slimit_rules::embedded_rules()
-            .map_err(|e| e.to_string())?
-            .into_iter()
-            .find(|r| &r.id == rule_id)
-        {
-            let Some(s) = &rule.semantics else {
-                return HeuristicExplainer.explain(&req);
-            };
-            return Ok(Explanation {
-                what: format!(
-                    "{}（规则库 {}）",
-                    s.what.clone().unwrap_or_default(),
-                    rule.id
-                ),
-                producer: s.producer.clone().unwrap_or_else(|| "未知".to_string()),
-                consequence: s
-                    .consequence
-                    .clone()
-                    .or_else(|| s.safe_to_delete_because.clone())
-                    .unwrap_or_else(|| "规则库未描述删除后果".to_string()),
-                suggested_risk: match rule.risk {
-                    slimit_rules::Risk::Green => slimit_ai::RiskHint::Green,
-                    slimit_rules::Risk::Yellow => slimit_ai::RiskHint::Yellow,
-                    slimit_rules::Risk::Red => slimit_ai::RiskHint::Red,
-                },
-                confidence: 0.95,
-            });
+fn get_settings(app: AppHandle) -> Result<slimit_ai::AiSettings, String> {
+    load_settings(&app)
+}
+
+#[tauri::command]
+fn set_settings(app: AppHandle, settings: slimit_ai::AiSettings) -> Result<(), String> {
+    let data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("resolve app data dir: {e}"))?;
+    std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
+    let text = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    std::fs::write(data.join("config.json"), text).map_err(|e| e.to_string())
+}
+
+/// 规则库语义兜底解释（离线，可信来源）。
+fn rules_explanation(req: &ExplanationRequest) -> Option<Explanation> {
+    let rule_id = req.nearest_rule_hits.first()?;
+    let rule = slimit_rules::embedded_rules()
+        .ok()?
+        .into_iter()
+        .find(|r| &r.id == rule_id)?;
+    let s = rule.semantics.as_ref()?;
+    Some(Explanation {
+        what: format!(
+            "{}（规则库 {}）",
+            s.what.clone().unwrap_or_default(),
+            rule.id
+        ),
+        producer: s.producer.clone().unwrap_or_else(|| "未知".to_string()),
+        consequence: s
+            .consequence
+            .clone()
+            .or_else(|| s.safe_to_delete_because.clone())
+            .unwrap_or_else(|| "规则库未描述删除后果".to_string()),
+        suggested_risk: match rule.risk {
+            slimit_rules::Risk::Green => slimit_ai::RiskHint::Green,
+            slimit_rules::Risk::Yellow => slimit_ai::RiskHint::Yellow,
+            slimit_rules::Risk::Red => slimit_ai::RiskHint::Red,
+        },
+        confidence: 0.95,
+        source: "rules".into(),
+    })
+}
+
+#[tauri::command]
+fn explain(app: AppHandle, req: ExplanationRequest) -> Result<Explanation, String> {
+    // 优先级：云端 AI（显式启用时，把规则库语义作为上下文）→ 规则库语义
+    // → 启发式降级。任何 AI 失败都静默回落，永不阻塞、永不影响执行授权。
+    let base = rules_explanation(&req).unwrap_or_else(|| {
+        HeuristicExplainer
+            .explain(&req)
+            .expect("heuristic explainer is infallible")
+    });
+    let settings = load_settings(&app).unwrap_or_default();
+    if settings.enabled {
+        if let Ok(cloud) = slimit_ai::explain_cloud(&req, &settings) {
+            return Ok(cloud);
         }
     }
-    HeuristicExplainer.explain(&req)
+    Ok(base)
 }
 
 /// 隔离区根：`<app_data_dir>/quarantine/`；审计日志 `<app_data_dir>/audit/`。
@@ -144,6 +189,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan_and_plan,
             explain,
+            get_settings,
+            set_settings,
             apply_plan,
             restore_item,
             list_quarantine,

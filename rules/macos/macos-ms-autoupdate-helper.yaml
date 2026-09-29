@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-ms-autoupdate-helper
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/com.microsoft.autoupdate.helper"
+semantics:
+  title: "Microsoft AutoUpdate 特权辅助工具缓存"
+  what: "Microsoft AutoUpdate 的特权安装辅助（Privileged Helper）相关缓存目录，与 macos-ms-autoupdate-cache（com.microsoft.autoupdate2 更新包缓存）互补"
+  producer: "Microsoft AutoUpdate"
+  safe_to_delete_because: "位于 macOS 约定的 Caches 目录，内容为辅助工具可重建的派生数据；不影响 Office 应用与更新功能本身"
+  consequence: "下次更新检查时按需重建；Office 应用不受影响"
+  regenerate: "AutoUpdate 运行时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数百 MB"
+  recovery: full
+refs:
+  - https://learn.microsoft.com/en-us/microsoft-365-apps/mac/update-office-for-mac-using-msupdate

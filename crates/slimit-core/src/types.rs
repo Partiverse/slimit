@@ -45,6 +45,16 @@ pub struct ScanSummary {
     pub top_dirs: Vec<DirStat>,
 }
 
+/// 扫描进度事件。总量未知——这是进度而非百分比；`current_dir` 是
+/// 最近被遍历的目录，UI 可据此展示"正在扫哪里"。
+#[derive(Debug, Clone)]
+pub struct ScanProgress {
+    /// 已发现文件/符号链接条目累计数。
+    pub files_done: u64,
+    /// 最近处理的目录路径。
+    pub current_dir: PathBuf,
+}
+
 impl ScanResult {
     /// 从完整扫描结果生成前端聚合视图；`top` 截断 top_dirs。
     pub fn summarize(&self, top: usize) -> ScanSummary {

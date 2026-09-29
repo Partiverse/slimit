@@ -9,6 +9,7 @@ description = "SlimIt 解释器：trait + 启发式降级实现（无模型）�
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }

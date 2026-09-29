@@ -4,8 +4,9 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 
 | 命令 | 参数 | 返回 | 说明 |
 |---|---|---|---|
-| `scan_and_plan` | `root: string`, `top?: number`（默认 20） | `ScanPlanResponse { summary, plan }` | 扫描 + 嵌入规则匹配一次完成；进度经 `scan-progress` 事件推送 |
-| `explain` | `req: ExplanationRequest` | `Explanation` | AI 提示层（启发式降级实现）；**永不影响执行授权** |
+| `scan_and_plan` | `root: string`, `top?: number`（默认 20） | `ScanPlanResponse { summary, plan }` | 扫描 + 嵌入规则匹配一次完成；进度经 `scan-progress` 事件推送；可多任务并发（事件带 seq 区分） |
+| `explain` | `req: ExplanationRequest` | `Explanation` | 解释优先级：云端 AI（显式启用）→ 规则库语义（source=rules）→ 启发式降级（source=heuristic）；**永不影响执行授权** |
+| `get_settings` / `set_settings` | `AiSettings` | `AiSettings` | 云端 AI 设置（enabled/base_url/api_key/model），持久化 `<app_data>/config.json`；enabled=false 时全部离线 |
 | `apply_plan` | `items: PlanItem[]` | `ApplyReport[]` | 仅 `executable` 项迁入隔离区（app data 目录），逐项报告 |
 | `restore_item` | `id: string` | `string`（恢复路径） | 按 manifest 完整恢复，绝不覆盖已存在路径 |
 | `list_quarantine` | — | `Manifest[]` | 按迁入时间升序；manifest 损坏条目跳过 |
@@ -18,7 +19,7 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 
 | 事件 | 负载 | 说明 |
 |---|---|---|
-| `scan-progress` | `{ seq: number, files_done: number }` | 遍历中周期回调；`files_done` 为已发现条目累计值（总量未知，是进度而非百分比）；`seq` 用于丢弃过期扫描的事件 |
+| `scan-progress` | `{ seq: number, files_done: number, current_dir: string }` | 遍历中周期回调；`files_done` 为已发现条目累计值，`current_dir` 为最近处理的目录（总量未知，是进度而非百分比）；`seq` 用于多任务并发时区分任务 |
 
 ## 数据结构
 

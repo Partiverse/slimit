@@ -13,4 +13,4 @@ pub use apfs::{
     VolumeSummary,
 };
 pub use scan::{scan, scan_with_progress};
-pub use types::{DirStat, FileEntry, ScanError, ScanResult, ScanSummary};
+pub use types::{DirStat, FileEntry, ScanError, ScanProgress, ScanResult, ScanSummary};

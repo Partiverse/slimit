@@ -1515,6 +1515,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-jetbrains-logs",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Logs/JetBrains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 日志（~/Library/Logs/JetBrains）",
+      "what": "IntelliJ IDEA/PyCharm/WebStorm 等 JetBrains IDE 的运行日志与线程转储（idea.log、heap dumps），按版本分目录，排障用",
+      "producer": "JetBrains 系列 IDE",
+      "safe_to_delete_because": "纯诊断日志：删除不影响项目、插件与配置（配置在 Application Support 与偏好设置）；正在排障时保留为好",
+      "consequence": "历史日志丢失；IDE 功能与项目不受任何影响",
+      "regenerate": "IDE 运行时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（长期使用含崩溃转储时更大）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-lima-vms",
     "os": "macos",
     "scope": "user",
@@ -1697,6 +1734,43 @@
     },
     "estimate": {
       "typical_size": "数百 MB 到数 GB（更新频繁的 Office 用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoft-365-apps/mac/update-office-for-mac-using-msupdate"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-ms-autoupdate-helper",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.microsoft.autoupdate.helper"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft AutoUpdate 特权辅助工具缓存",
+      "what": "Microsoft AutoUpdate 的特权安装辅助（Privileged Helper）相关缓存目录，与 macos-ms-autoupdate-cache（com.microsoft.autoupdate2 更新包缓存）互补",
+      "producer": "Microsoft AutoUpdate",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录，内容为辅助工具可重建的派生数据；不影响 Office 应用与更新功能本身",
+      "consequence": "下次更新检查时按需重建；Office 应用不受影响",
+      "regenerate": "AutoUpdate 运行时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB",
       "recovery": "full"
     },
     "refs": [
@@ -2241,6 +2315,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-quicklook-thumbnails",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.apple.QuickLook.thumbnailcache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "访达快速预览缩略图缓存（QuickLook.thumbnailcache）",
+      "what": "macOS QuickLook 为图片/PDF/视频等文件生成的缩略图数据库（thumbnails.data 等），Finder 空格预览与图标视图使用",
+      "producer": "macOS QuickLook 系统服务",
+      "safe_to_delete_because": "系统标准缓存：Apple 设计其内容可随时重建，Finder 浏览到文件时按需重新生成缩略图",
+      "consequence": "首次浏览文件时缩略图需重新生成，Finder 图标视图短暂显示通用图标后恢复；文件本身不受任何影响",
+      "regenerate": "Finder 浏览时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（图片/视频多的用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/quartz/qlpreviewview"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-rustup-downloads",
     "os": "macos",
     "scope": "user",
@@ -2312,6 +2423,43 @@
     "refs": [
       "https://rust-lang.github.io/rustup/concepts/toolchains.html",
       "https://rust-lang.github.io/rustup/installation/other.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-slack-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.tinyspeck.slackmacgap"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Slack 桌面客户端缓存",
+      "what": "Slack macOS 客户端（Electron 架构）的缓存目录：工作区界面资源、图片与网页资源缓存。消息存于云端，登录凭据在 Keychain 与 Application Support，不在此处",
+      "producer": "Slack（com.tinyspeck.slackmacgap）",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录；消息存于云端，缓存可完全重建",
+      "consequence": "下次启动各工作区需重新加载资源，首启略慢；登录态与消息不受影响",
+      "regenerate": "客户端运行时按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多工作区用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://slack.com/help/articles/115004071768"
     ]
   },
   {
@@ -2388,6 +2536,80 @@
       "https://support.spotify.com/us/article/storage-information/",
       "https://community.spotify.com/t5/Desktop-Mac/I-hit-the-download-button-on-my-iMac-where-did-it-download-to/td-p/4634644",
       "https://macpaw.com/how-to/clear-spotify-cache-mac"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-steam-appcache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Application Support/Steam/appcache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Steam 客户端缓存（appcache）",
+      "what": "Steam 桌面客户端的本地缓存：商店/社区网页资源缓存、缩略图包与配置缓存。游戏本体（steamapps）、存档与登录凭据不在此处",
+      "producer": "Steam 客户端",
+      "safe_to_delete_because": "纯客户端缓存：删除后 Steam 重建网页与资源缓存；游戏文件（steamapps）与存档（userdata/远程存档）不受影响",
+      "consequence": "下次启动 Steam 需重建缓存，商店页面首次加载略慢；游戏与存档不受影响",
+      "regenerate": "客户端运行时按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://help.steampowered.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-teams-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.microsoft.teams2"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Teams（新版）缓存",
+      "what": "新版 Teams（Teams 2.x，Electron 架构）的缓存目录：界面资源、网页资源与媒体缓存。聊天记录存于云端，本地配置在 Application Support 下，不在此处",
+      "producer": "Microsoft Teams（com.microsoft.teams2）",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录；Teams 聊天记录存于云端，本地缓存可完全重建",
+      "consequence": "下次启动需重新下载界面与资源缓存，首启略慢；账号与消息不受影响",
+      "regenerate": "客户端运行时按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoftteams/new-teams-faq"
     ]
   },
   {
@@ -2893,6 +3115,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-caches",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.apple.dt.Xcode"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 索引与模块缓存（~/Library/Caches/com.apple.dt.Xcode）",
+      "what": "Xcode 的缓存目录：源码索引、模块缓存（ModuleCache）、调试符号处理缓存等派生数据。与 DerivedData（构建产物）互补不重叠",
+      "producer": "Xcode",
+      "safe_to_delete_because": "纯派生缓存：删除后 Xcode 重新索引工作区并重建模块缓存，不影响项目源码、签名证书与模拟器内容",
+      "consequence": "下次打开工程需重新索引（大工程索引期间代码跳转补全暂时变慢），首次构建稍慢",
+      "regenerate": "Xcode 打开工程时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多工程 iOS 开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-xcode-device-logs",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/Xcode/iOS Device Logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 真机设备日志（iOS Device Logs）",
+      "what": "Xcode 从已连接 iPhone/iPad 收集的设备系统日志与应用崩溃日志存档，供 Devices 窗口查看，按设备与时间累积",
+      "producer": "Xcode 设备监视服务",
+      "safe_to_delete_because": "纯诊断日志存档：删除不影响真机调试、证书、工程与设备本身；设备会重新上传新日志",
+      "consequence": "历史设备日志丢失（如需回溯旧崩溃需重新复现收集）；调试功能不受影响",
+      "regenerate": "连接设备后自动收集重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多设备长期开发）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode/run-your-app-on-simulators-and-real-devices"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-xcode-device-support",
     "os": "macos",
     "scope": "user",
@@ -3003,6 +3299,43 @@
     "refs": [
       "https://classic.yarnpkg.com/en/docs/cli/cache",
       "https://classic.yarnpkg.com/en/docs/cli/cache/clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-zoom-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/us.zoom.xos"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Zoom 会议客户端缓存",
+      "what": "Zoom 桌面客户端的缓存目录：会议音视频数据缓存、界面资源缓存、日志索引等派生数据。会议录制文件与账号配置不在此处",
+      "producer": "Zoom（us.zoom.xos）",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录，内容为客户端可自行重建的派生数据；删除不影响账号、会议记录与本地录制文件",
+      "consequence": "下次启动 Zoom 需重建缓存，首启略慢；登录态一般保留（如要求重新登录一次属正常）",
+      "regenerate": "客户端运行时按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（重度会议用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
     ]
   },
   {

@@ -44,6 +44,16 @@ export interface Explanation {
   consequence: string;
   suggested_risk: "green" | "yellow" | "red";
   confidence: number;
+  /** 解释来源：rules=规则库 / cloud=云端 AI / heuristic=本地启发式 */
+  source: string;
+}
+
+/** 云端 AI 设置（OpenAI 兼容端点；enabled=false 时全部离线）。 */
+export interface AiSettings {
+  enabled: boolean;
+  base_url: string;
+  api_key: string;
+  model: string;
 }
 
 export interface ApplyReport {
@@ -82,6 +92,14 @@ export function scanAndPlan(root: string, top = 20): Promise<ScanPlanResponse> {
   return invoke("scan_and_plan", { root, top });
 }
 
+export function getSettings(): Promise<AiSettings> {
+  return invoke("get_settings");
+}
+
+export function setSettings(settings: AiSettings): Promise<void> {
+  return invoke("set_settings", { settings });
+}
+
 export function explain(req: ExplanationRequest): Promise<Explanation> {
   return invoke("explain", { req });
 }
@@ -110,4 +128,5 @@ export function volumeSummary(mount: string): Promise<VolumeSummary> {
 export interface ScanProgress {
   seq: number;
   files_done: number;
+  current_dir: string;
 }

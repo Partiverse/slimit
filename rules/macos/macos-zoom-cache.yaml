@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-zoom-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/us.zoom.xos"
+semantics:
+  title: "Zoom 会议客户端缓存"
+  what: "Zoom 桌面客户端的缓存目录：会议音视频数据缓存、界面资源缓存、日志索引等派生数据。会议录制文件与账号配置不在此处"
+  producer: "Zoom（us.zoom.xos）"
+  safe_to_delete_because: "位于 macOS 约定的 Caches 目录，内容为客户端可自行重建的派生数据；删除不影响账号、会议记录与本地录制文件"
+  consequence: "下次启动 Zoom 需重建缓存，首启略慢；登录态一般保留（如要求重新登录一次属正常）"
+  regenerate: "客户端运行时按需自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（重度会议用户）"
+  recovery: full
+refs:
+  - https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
