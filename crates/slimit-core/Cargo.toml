@@ -9,6 +9,7 @@ description = "SlimIt 扫描器：并行遍历、真实占用（硬链接去重/
 [dependencies]
 ignore = "0.4"
 libc = "0.2"
+plist = { workspace = true }
 rayon = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -20,3 +21,7 @@ tempfile = { workspace = true }
 [[bin]]
 name = "slimit"
 path = "src/main.rs"
+
+[[test]]
+name = "apfs"
+path = "tests/apfs.rs"

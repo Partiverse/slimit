@@ -40,4 +40,8 @@ pub enum ScanError {
     RootMissing(PathBuf),
     #[error("walk error: {0}")]
     Walk(String),
+    #[error("diskutil error: {0}")]
+    DiskUtil(String),
+    #[error("plist parse error: {0}")]
+    Plist(String),
 }
