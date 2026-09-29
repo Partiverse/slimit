@@ -18,6 +18,8 @@ npx wrangler pages deploy landing --project-name slimit
 
 ## 发布前必改
 
-- [ ] 下载按钮 `href="#"` → DMG 直链（公证完成后替换；未签名期链接到 BETA 说明页）
-- [ ] footer 的「反馈问题」「更新日志」占位链接 → 实际 GitHub Issues / Releases 地址（仓库转公开后）
+- [x] ~~下载按钮占位~~ → 已指向 GitHub Releases（仓库私有，种子用户持协作权限可访问；转公开后可直接换 DMG 直链）
+- [x] ~~footer 占位链接~~ → 已指向 Issues / Releases
 - [ ] 定价「规划中」字样按发布策略保留或移除
+
+**已部署**：https://slimit.pages.dev（2026-09-29）。更新方式：改完 `index.html` 后重跑 `npx wrangler pages deploy landing --project-name slimit`。

@@ -35,7 +35,8 @@
 - [ ] 干净机器全量验收：下载 → 挂载 → 安装（右键打开）→ 扫描 → 隔离 → 恢复，结果记入 BETA.md
 - [ ] `SECURITY.md`：重跑 Mimosa 确认 completeness: complete（partial 则人工审计 Tauri command 层与 executor 作为替代证据）
 - [ ] GitHub Release：tag `v0.1.0`，附 DMG + SHA256 校验和 + Release Notes（取自 BETA.md 功能清单）
-- [ ] 落地页部署（免费子域即可，见 landing/README.md），替换占位链接
+- [x] 落地页部署：**已上线 https://slimit.pages.dev**（2026-09-29，Cloudflare Pages 免费子域，wrangler 部署；占位链接已替换为 Releases/Issues 实际地址）
+- [x] GitHub Release 流程演练通过（v0.1.0-rc1：上传→下载 SHA256 往返一致）；rc1 已重建为常驻 pre-release 供种子分发，分发材料见 `docs/SEED-INVITE.md`
 - [ ] README 状态段更新为「v0.1 已发布」
 - [ ] 崩溃/反馈渠道落地（GitHub Issues 即可，落地页放链接）
 - [ ] 定价与购买（买断 ¥98）：v0.1 先「免费下载 + 打赏/预售」软启动，正式收费前补 notarization 与 License 机制（v0.2，避免为收费延期发布）
