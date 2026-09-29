@@ -2,7 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 pub const API_VERSION: &str = "slimit.rules/v1";
-const PREFIXES: &[(&str, &str)] = &[("macos", "macos-"), ("windows", "win-"), ("linux", "linux-")];
+const PREFIXES: &[(&str, &str)] = &[
+    ("macos", "macos-"),
+    ("windows", "win-"),
+    ("linux", "linux-"),
+];
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -116,14 +120,20 @@ pub fn load_rules(rules_dir: &Path) -> Result<Vec<Rule>, LoadError> {
         .flat_map(|p| {
             if p.is_dir() {
                 match std::fs::read_dir(&p) {
-                    Ok(rd) => rd.filter_map(|e| e.ok().map(|e| e.path())).collect::<Vec<_>>(),
+                    Ok(rd) => rd
+                        .filter_map(|e| e.ok().map(|e| e.path()))
+                        .collect::<Vec<_>>(),
                     Err(_) => Vec::new(),
                 }
             } else {
                 vec![p]
             }
         })
-        .filter(|p| p.extension().map(|x| x == "yaml" || x == "yml").unwrap_or(false))
+        .filter(|p| {
+            p.extension()
+                .map(|x| x == "yaml" || x == "yml")
+                .unwrap_or(false)
+        })
         .filter(|p| {
             !p.file_name()
                 .map(|n| n.to_string_lossy().starts_with('_'))
@@ -142,7 +152,28 @@ pub fn load_rules(rules_dir: &Path) -> Result<Vec<Rule>, LoadError> {
     }
 
     let ids: Vec<String> = rules.iter().map(|r| r.id.clone()).collect();
-    crate::lint::lint_unique(&ids).map_err(|msg| LoadError::Invalid(rules_dir.to_path_buf(), msg))?;
+    crate::lint::lint_unique(&ids)
+        .map_err(|msg| LoadError::Invalid(rules_dir.to_path_buf(), msg))?;
+
+    Ok(rules)
+}
+
+/// 编译期嵌入的规则（build.rs 快照，见 `crate::embedded_rules_gen`）。
+/// 与 [`load_rules`] 相同的 lint + 查重管线；规则库是可信输入，任何
+/// 失败即整体报错。GUI/单二进制场景免运行时文件路径。
+pub fn embedded_rules() -> Result<Vec<Rule>, LoadError> {
+    let mut rules = Vec::new();
+    for (name, text) in crate::embedded_rules_gen::EMBEDDED_RULES {
+        let name = PathBuf::from(name);
+        let rule: Rule =
+            serde_yaml::from_str(text).map_err(|e| LoadError::Yaml(name.clone(), e))?;
+        crate::lint::lint(&rule).map_err(|msg| LoadError::Invalid(name.clone(), msg))?;
+        rules.push(rule);
+    }
+
+    let ids: Vec<String> = rules.iter().map(|r| r.id.clone()).collect();
+    crate::lint::lint_unique(&ids)
+        .map_err(|msg| LoadError::Invalid(PathBuf::from("embedded"), msg))?;
 
     Ok(rules)
 }

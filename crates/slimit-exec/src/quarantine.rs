@@ -22,15 +22,22 @@ pub struct Manifest {
 
 impl Quarantine {
     pub fn new(base: &Path) -> Self {
-        Self { base: base.join("quarantine") }
+        Self {
+            base: base.join("quarantine"),
+        }
     }
 
     pub fn base(&self) -> &Path {
         &self.base
     }
 
+    /// 全部隔离条目的父目录：`<base>/quarantine/`（base 已含 quarantine 段）。
+    fn entry_root(&self) -> PathBuf {
+        self.base.clone()
+    }
+
     pub fn entry_dir(&self, id: &str) -> PathBuf {
-        self.base.join("quarantine").join(id)
+        self.entry_root().join(id)
     }
 
     pub fn manifest_path(&self, id: &str) -> PathBuf {
@@ -40,7 +47,10 @@ impl Quarantine {
     pub fn read_manifest(&self, id: &str) -> std::io::Result<Manifest> {
         let text = std::fs::read_to_string(self.manifest_path(id))?;
         serde_json::from_str(&text).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("bad manifest: {e}"))
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("bad manifest: {e}"),
+            )
         })
     }
 
@@ -63,13 +73,14 @@ impl Quarantine {
         (id, manifest)
     }
 
-    /// 列出全部隔离条目 id（按迁入时间升序）。
+    /// 列出全部隔离条目 id（按迁入时间升序）。manifest 缺失或损坏的条目
+    /// 跳过不报错：隔离区读取永不阻断主流程。
     pub fn list(&self) -> std::io::Result<Vec<Manifest>> {
         let mut out = Vec::new();
-        if !self.base.exists() {
+        if !self.entry_root().exists() {
             return Ok(out);
         }
-        for entry in std::fs::read_dir(self.base.join("quarantine"))? {
+        for entry in std::fs::read_dir(self.entry_root())? {
             let entry = entry?;
             let id = entry.file_name().to_string_lossy().to_string();
             if let Ok(m) = self.read_manifest(&id) {
@@ -101,5 +112,26 @@ mod tests {
         let (id, m) = q.build_manifest(Path::new("/tmp/x"), "macos-test", 123);
         assert!(!id.is_empty());
         assert_eq!(m.original_path, Path::new("/tmp/x"));
+    }
+
+    #[test]
+    fn list_matches_layout_single_quarantine_level() {
+        // 布局契约（结构体注释）：`<base>/quarantine/<id>/`，仅一层
+        // quarantine。list 必须与 entry_dir 指向同一棵树。
+        let dir = tempfile::tempdir().unwrap();
+        let q = Quarantine::new(dir.path());
+        let (id, mut m) = q.build_manifest(Path::new("/tmp/a"), "macos-test", 1);
+        std::fs::create_dir_all(q.entry_dir(&id)).unwrap();
+        // executor 的写入路径：manifest.id 与目录名一致。
+        m.id = id.clone();
+        std::fs::write(q.manifest_path(&id), serde_json::to_string(&m).unwrap()).unwrap();
+
+        let items = q.list().unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].original_path, Path::new("/tmp/a"));
+        assert!(q.entry_dir(&items[0].id).join("manifest.json").exists());
+        // 空隔离区/目录不存在也要返回 Ok(空)。
+        let empty = Quarantine::new(&dir.path().join("elsewhere"));
+        assert!(empty.list().unwrap().is_empty());
     }
 }

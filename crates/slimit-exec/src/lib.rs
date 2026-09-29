@@ -9,6 +9,7 @@ pub mod executor;
 pub mod plan;
 pub mod quarantine;
 
+pub use audit::AuditLog;
 pub use executor::{apply, restore, ApplyError, ApplyReport};
-pub use plan::{plan, PlanItem};
-pub use quarantine::Quarantine;
+pub use plan::{plan, plan_from_snapshots, PlanItem};
+pub use quarantine::{Manifest, Quarantine};

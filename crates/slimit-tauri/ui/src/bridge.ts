@@ -17,6 +17,49 @@ export interface ScanSummary {
   top_dirs: DirStat[];
 }
 
+export interface PlanItem {
+  rule_id: string;
+  path: string;
+  estimated_bytes: number;
+  risk: "green" | "yellow" | "red";
+  executable: boolean;
+}
+
+export interface ScanPlanResponse {
+  summary: ScanSummary;
+  plan: PlanItem[];
+}
+
+export interface ExplanationRequest {
+  path: string;
+  actual_bytes: number;
+  apparent_bytes: number;
+  owner_bundle: string | null;
+  nearest_rule_hits: string[];
+}
+
+export interface Explanation {
+  what: string;
+  producer: string;
+  consequence: string;
+  suggested_risk: "green" | "yellow" | "red";
+  confidence: number;
+}
+
+export interface ApplyReport {
+  item: PlanItem;
+  quarantine_id: string | null;
+  error: string | null;
+}
+
+export interface Manifest {
+  id: string;
+  original_path: string;
+  rule_id: string;
+  quarantined_at: string;
+  actual_bytes: number;
+}
+
 export interface SnapshotInfo {
   name: string;
   uuid: string;
@@ -35,8 +78,24 @@ export interface VolumeSummary {
   system_snapshot_name: string | null;
 }
 
-export function scanDir(root: string, top = 20): Promise<ScanSummary> {
-  return invoke("scan_dir", { root, top });
+export function scanAndPlan(root: string, top = 20): Promise<ScanPlanResponse> {
+  return invoke("scan_and_plan", { root, top });
+}
+
+export function explain(req: ExplanationRequest): Promise<Explanation> {
+  return invoke("explain", { req });
+}
+
+export function applyPlan(items: PlanItem[]): Promise<ApplyReport[]> {
+  return invoke("apply_plan", { items });
+}
+
+export function restoreItem(id: string): Promise<string> {
+  return invoke("restore_item", { id });
+}
+
+export function listQuarantine(): Promise<Manifest[]> {
+  return invoke("list_quarantine");
 }
 
 export function listSnapshots(volume: string): Promise<SnapshotInfo[]> {
@@ -45,4 +104,10 @@ export function listSnapshots(volume: string): Promise<SnapshotInfo[]> {
 
 export function volumeSummary(mount: string): Promise<VolumeSummary> {
   return invoke("volume_summary_cmd", { mount });
+}
+
+/** `scan-progress` 事件负载（lib.rs 的 scan_and_plan emit）。 */
+export interface ScanProgress {
+  seq: number;
+  files_done: number;
 }

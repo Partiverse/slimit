@@ -95,3 +95,25 @@ ul {
   padding-left: 20px;
   line-height: 1.7;
 }
+
+button.ghost {
+  background: transparent;
+  color: #2f9e8f;
+  border: 1px solid rgba(47, 158, 143, 0.5);
+  padding: 2px 10px;
+}
+
+td.tip {
+  background: rgba(128, 128, 128, 0.08);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ok {
+  color: #2f9e8f;
+}
+
+.reports {
+  margin-top: 10px;
+}
+

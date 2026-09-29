@@ -1,8 +1,8 @@
-use slimit_rules::matcher::{Match, DirSnapshot};
+use slimit_rules::matcher::{DirSnapshot, Match};
 use slimit_rules::{ActionKind, Risk, Rule};
 
 /// 清理计划单项。确认前不产生任何副作用。
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct PlanItem {
     pub rule_id: String,
     pub path: std::path::PathBuf,
@@ -22,7 +22,9 @@ pub struct PlanItem {
 pub fn plan(rules: &[Rule], matches: &[Match]) -> Vec<PlanItem> {
     let mut items = Vec::new();
     for m in matches {
-        let Some(rule) = rules.iter().find(|r| r.id == m.rule_id) else { continue };
+        let Some(rule) = rules.iter().find(|r| r.id == m.rule_id) else {
+            continue;
+        };
         let executable = match (rule.risk, rule.action.kind) {
             (Risk::Red, _) => false,
             (Risk::Green | Risk::Yellow, ActionKind::PurgeDir) => true,
@@ -41,10 +43,7 @@ pub fn plan(rules: &[Rule], matches: &[Match]) -> Vec<PlanItem> {
 }
 
 /// 便捷转换：目录快照 + 规则 → 计划（matcher → planner 的一步封装）。
-pub fn plan_from_snapshots(
-    rules: &[Rule],
-    dirs: &[DirSnapshot],
-) -> Vec<PlanItem> {
+pub fn plan_from_snapshots(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<PlanItem> {
     let matches = slimit_rules::match_rules(rules, dirs);
     plan(rules, &matches)
 }

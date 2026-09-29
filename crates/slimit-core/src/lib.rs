@@ -12,5 +12,5 @@ pub use apfs::{
     list_snapshots, parse_snapshots_plist, parse_volume_info_plist, volume_summary, SnapshotInfo,
     VolumeSummary,
 };
-pub use scan::scan;
+pub use scan::{scan, scan_with_progress};
 pub use types::{DirStat, FileEntry, ScanError, ScanResult, ScanSummary};

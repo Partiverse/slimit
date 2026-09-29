@@ -14,26 +14,41 @@ use std::time::Instant;
 /// - 稀疏文件：`actual = blocks * 512`，`apparent = size`，两者分离呈现。
 /// - 包含隐藏文件与 dotfile（清理场景不做 ignore 过滤）。
 pub fn scan(root: &Path) -> Result<ScanResult, ScanError> {
+    scan_with_progress(root, &|_| {})
+}
+
+/// 同 [`scan`]，遍历过程中回调 `progress(已发现条目数)`（相对根的累计值，
+/// 总量未知——这正是进度而非百分比）。回调在工作线程调用，须自行保证
+/// 线程安全且轻量（GUI 场景只做事件投递）。
+pub fn scan_with_progress(
+    root: &Path,
+    progress: &(dyn Fn(u64) + Send + Sync),
+) -> Result<ScanResult, ScanError> {
     if !root.exists() {
         return Err(ScanError::RootMissing(root.to_path_buf()));
     }
 
     #[cfg(target_os = "macos")]
-    return crate::bulk::scan(root);
+    return crate::bulk::scan(root, Some(progress));
 
     #[cfg(not(target_os = "macos"))]
-    return walk_ignore(root);
+    return walk_ignore(root, Some(progress));
 }
 
 /// 非 macOS 回退：`ignore` 并行遍历 + 逐条 lstat。
 /// 关闭全部标准过滤（hidden/gitignore 等），保证与 macOS 快路径同语义。
 #[cfg(not(target_os = "macos"))]
-fn walk_ignore(root: &Path) -> Result<ScanResult, ScanError> {
+fn walk_ignore(
+    root: &Path,
+    progress: Option<&(dyn Fn(u64) + Send + Sync)>,
+) -> Result<ScanResult, ScanError> {
     use ignore::{WalkBuilder, WalkState};
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
     let files: Mutex<Vec<FileEntry>> = Mutex::new(Vec::new());
     let walk_errors: Mutex<Vec<String>> = Mutex::new(Vec::new());
+    let seen = AtomicU64::new(0);
 
     let started = Instant::now();
     WalkBuilder::new(root)
@@ -60,6 +75,13 @@ fn walk_ignore(root: &Path) -> Result<ScanResult, ScanError> {
                             actual: md.blocks() * 512,
                             shared: false,
                         });
+                    }
+                    // 4096 条回调一次，控制事件频率。
+                    if let Some(p) = progress {
+                        let n = seen.fetch_add(1, Ordering::Relaxed) + 1;
+                        if n % 4096 == 0 {
+                            p(files.lock().unwrap().len() as u64);
+                        }
                     }
                     WalkState::Continue
                 }
@@ -309,5 +331,29 @@ mod tests {
         assert_eq!(e.actual, md.blocks() * 512);
         assert_eq!(e.dev, md.dev());
         assert_eq!(e.ino, md.ino());
+    }
+
+    #[test]
+    fn progress_callback_reports_monotonic() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("sub");
+        fs::create_dir(&sub).unwrap();
+        for i in 0..64 {
+            fs::write(sub.join(format!("f{i:02}.bin")), vec![0u8; 16]).unwrap();
+        }
+        fs::write(tmp.path().join("root.bin"), vec![0u8; 16]).unwrap();
+
+        let last = std::sync::Mutex::new(0u64);
+        scan_with_progress(tmp.path(), &|n| {
+            let mut l = last.lock().unwrap();
+            assert!(*l <= n, "progress must be monotonic: {l} -> {n}");
+            *l = n;
+        })
+        .unwrap();
+        assert_eq!(
+            *last.lock().unwrap(),
+            65,
+            "final callback must equal file count"
+        );
     }
 }

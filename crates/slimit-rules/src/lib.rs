@@ -8,5 +8,10 @@ pub mod lint;
 pub mod loader;
 pub mod matcher;
 
-pub use loader::{load_rules, Action, ActionKind, Risk, Rule};
-pub use matcher::match_rules;
+/// build.rs 生成的嵌入快照（仓库 `rules/` 的编译期引用）。
+mod embedded_rules_gen {
+    include!(concat!(env!("OUT_DIR"), "/embedded_rules.rs"));
+}
+
+pub use loader::{embedded_rules, load_rules, Action, ActionKind, Risk, Rule};
+pub use matcher::{match_rules, DirSnapshot, Match};

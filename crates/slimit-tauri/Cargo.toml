@@ -11,6 +11,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 slimit-core = { path = "../slimit-core" }
+slimit-rules = { path = "../slimit-rules" }
+slimit-exec = { path = "../slimit-exec" }
+slimit-ai = { path = "../slimit-ai" }
 tauri = { version = "2", features = [] }
 serde = { workspace = true }
 serde_json = { workspace = true }

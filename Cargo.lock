@@ -2980,7 +2980,10 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "slimit-ai",
  "slimit-core",
+ "slimit-exec",
+ "slimit-rules",
  "tauri",
  "tauri-build",
 ]

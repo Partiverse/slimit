@@ -89,6 +89,8 @@ struct Counters {
     dirs: AtomicU64,
     bulk_calls: AtomicU64,
     fallback_dirs: AtomicU64,
+    /// 已发现的文件/符号链接条目数（进度事件用）。
+    files_done: AtomicU64,
 }
 
 impl Counters {
@@ -97,16 +99,18 @@ impl Counters {
             dirs: AtomicU64::new(0),
             bulk_calls: AtomicU64::new(0),
             fallback_dirs: AtomicU64::new(0),
+            files_done: AtomicU64::new(0),
         }
     }
 }
 
-struct Shared {
+struct Shared<'a> {
     queue: Mutex<QueueState>,
     cv: Condvar,
     files: Mutex<Vec<FileEntry>>,
     errors: Mutex<Vec<String>>,
     counters: Counters,
+    progress: Option<&'a (dyn Fn(u64) + Send + Sync)>,
 }
 
 struct QueueState {
@@ -121,7 +125,10 @@ struct Local {
     children: Vec<PathBuf>,
 }
 
-pub(crate) fn scan(root: &Path) -> Result<ScanResult, ScanError> {
+pub(crate) fn scan(
+    root: &Path,
+    progress: Option<&(dyn Fn(u64) + Send + Sync)>,
+) -> Result<ScanResult, ScanError> {
     let started = Instant::now();
     let root_md =
         std::fs::symlink_metadata(root).map_err(|_| ScanError::RootMissing(root.to_path_buf()))?;
@@ -147,6 +154,7 @@ pub(crate) fn scan(root: &Path) -> Result<ScanResult, ScanError> {
         files: Mutex::new(Vec::new()),
         errors: Mutex::new(Vec::new()),
         counters: Counters::new(),
+        progress,
     };
 
     let workers = std::env::var("SLIMIT_JOBS")
@@ -211,7 +219,16 @@ fn worker(root_dev: u64, shared: &Shared) {
             }
         };
 
+        let before = local.files.len();
         process_dir(&dir, root_dev, &shared.counters, &mut local, &mut buf);
+        let done = shared
+            .counters
+            .files_done
+            .fetch_add((local.files.len() - before) as u64, Ordering::Relaxed)
+            + (local.files.len() - before) as u64;
+        if let Some(p) = shared.progress {
+            p(done);
+        }
 
         let children = std::mem::take(&mut local.children);
         let mut q = shared.queue.lock().unwrap();
