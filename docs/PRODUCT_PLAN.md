@@ -174,6 +174,8 @@
 
 ## 8. 路线图
 
+> **当前进度（2026-09-29）**：MVP 八周计划的 W1–W7 已完成（macOS，规则库 81 条；性能回归基线达标；内测包就绪待分发）。与计划的偏差：扫描结果"语义地图"暂以聚合表格呈现（解剖视图后续版本）；AI 模型版解释延后至 v0.2（降级版 + 规则库语义已上线）。W8（notarization、落地页、发布 v0.1）计划见 `docs/W8-PLAN.md`。
+
 - **M1–M2 · MVP（macOS）**：L2 扫描器（含 purgeable/快照/稀疏感知）+ L1 规则库 150 条 + L4 隔离区执行 + L3 本地 AI 解释（规则库兜底）。旗舰场景 1（System Data 解剖）完整可用。
 - **M3–M4 · Windows 版**：MFT 扫描 + WinSxS DISM 集成 + hiberfil/vhdx/微信场景 + 中文市场官网首发。
 - **M5–M6 · Linux 版（开源）**：CLI 优先 + GUI；GitHub 开源规则库与核心；服务器场景（docker/journald/K8s 节点）差异化。
