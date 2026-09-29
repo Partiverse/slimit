@@ -2,6 +2,25 @@
 
 方法：`SLIMIT_DEBUG=1 ./target/release/slimit <dir> --top N`，release 构建（cargo 1.93.1，M-series Mac，内置 SSD）。冷/热各一次，热 = 紧随冷之后重跑同目录。格式：`文件数 | 耗时 | 吞吐`。
 
+**长期回归基线（W7 起）**：`cargo run --release -p slimit-core --example bench -- --synth 3`。合成树固定 50,000 文件 / 5,300+ 目录（200×25×10，200 B/文件），确定性布局跨日可比。W7 基线：**50k 文件热 ~0.5–0.9s（折算 1M ≈ 10–18s，达 SPEC 热 <15s 目标线）**。真实目录（如 /opt/homebrew）内容随时间漂移，只做参考不可直接比历史数字。
+
+## 2026-09-29 · W7 回归基线建立（合成树 + 同日双版本对照）
+
+改动：新增 `examples/bench.rs`（`--synth` 合成树模式 + 真实目录模式）；验证 W6 进度回调无性能回退。
+
+方法学修正：W2 的 0.99s（/opt/homebrew 159k 文件）与今日同目录实测 4.3–7.2s（树已长到 172k 文件）不可直比——树内容漂移 + 当日环境负载差异都会被误读为"回归"。回归判断必须在**同一天、同一棵树**上对照两个代码版本。
+
+同日双版本对照（release，同机）：
+
+| 树 | 代码版本 | run1→run3 | 结论 |
+|---|---|---|---|
+| /opt/homebrew（172,602 files，漂移中） | W5 (e0d3410) | 5.50 / 7.17 / 6.31s | 参考 |
+| 同上 | W6 (4bebf29) | 4.57 / 4.29s | 无回退 |
+| 合成树（50,000 files 固定） | W5 (e0d3410) | 0.54 / 0.62 / 0.90s | 基线 |
+| 同上 | W6 (4bebf29) | 0.88 / 0.79 / 0.65s | 噪音内交叠，进度回调开销不可测 |
+
+**结论：W6 `scan_with_progress`（worker 每目录一次 `fetch_add` + 可选回调）无性能影响；合成树成为后续每周回归的标准判据。**
+
 ## 2026-09-28 · W2 getattrlistbulk 重写
 
 改动：macOS 快路径改为自定义并行 walker（`open` + `getattrlistbulk` 批量取整目录子项元数据，8 线程共享队列；`SLIMIT_JOBS` 可调），非 macOS 保留 `ignore` 兜底。记录布局见 `crates/slimit-core/src/bulk.rs` 头注释（用 `cargo run -p slimit-core --example bulk_probe -- <dir>` 逐属性定位验证）。
