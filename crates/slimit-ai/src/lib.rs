@@ -86,19 +86,111 @@ fn classify(path: &str, apparent: u64, actual: u64) -> Classification {
 
     // 模式表：顺序即优先级。新场景在此加行（规则库命中优先于本表）。
     // 列：路径子串、是什么、谁产生（可空）、删了会怎样、风险提示、置信度。
-    const TABLE: &[(&str, &str, Option<&str>, &str, RiskHint, f32)] = &[
-        ("deriveddata", "Xcode 增量构建产物与索引", Some("Xcode"), "下次构建全量重编译，无数据丢失", RiskHint::Green, 0.9),
-        ("node_modules", "npm/yarn 依赖目录", Some("npm 等 JS 包管理器"), "npm install 可完整重建", RiskHint::Green, 0.9),
-        (".cache", "应用/工具缓存", None, "应用按需重建，短期性能略降", RiskHint::Green, 0.7),
-        ("caches", "应用/工具缓存", None, "应用按需重建，短期性能略降", RiskHint::Green, 0.7),
-        ("logs", "应用日志", None, "旧日志删除一般安全，正在写入的除外", RiskHint::Green, 0.6),
-        ("backups", "设备/应用备份", None, "删除后对应历史备份不可恢复", RiskHint::Yellow, 0.6),
-        ("mobilesync", "iPhone/iPad Finder 整机备份", Some("Finder"), "对应设备的备份永久丢失", RiskHint::Yellow, 0.8),
-        ("docker.raw", "Docker Desktop 虚拟磁盘", Some("Docker Desktop"), "所有镜像/容器/卷数据，绝不可直接删文件", RiskHint::Red, 0.85),
-        ("ext4.vhdx", "WSL 发行版虚拟磁盘", Some("WSL"), "整个 Linux 发行版文件系统，绝不可直接删", RiskHint::Red, 0.85),
-        ("archives", "应用归档（可能含符号化依据）", None, "可能不可逆丢失发布记录", RiskHint::Yellow, 0.5),
-        ("wechat_files", "微信聊天数据目录", Some("微信"), "聊天记录与文件永久丢失", RiskHint::Red, 0.9),
-        ("tencent files", "QQ 聊天数据目录", Some("QQ"), "聊天记录与文件永久丢失", RiskHint::Red, 0.9),
+    type Row = (
+        &'static str,
+        &'static str,
+        Option<&'static str>,
+        &'static str,
+        RiskHint,
+        f32,
+    );
+    const TABLE: &[Row] = &[
+        (
+            "deriveddata",
+            "Xcode 增量构建产物与索引",
+            Some("Xcode"),
+            "下次构建全量重编译，无数据丢失",
+            RiskHint::Green,
+            0.9,
+        ),
+        (
+            "node_modules",
+            "npm/yarn 依赖目录",
+            Some("npm 等 JS 包管理器"),
+            "npm install 可完整重建",
+            RiskHint::Green,
+            0.9,
+        ),
+        (
+            ".cache",
+            "应用/工具缓存",
+            None,
+            "应用按需重建，短期性能略降",
+            RiskHint::Green,
+            0.7,
+        ),
+        (
+            "caches",
+            "应用/工具缓存",
+            None,
+            "应用按需重建，短期性能略降",
+            RiskHint::Green,
+            0.7,
+        ),
+        (
+            "logs",
+            "应用日志",
+            None,
+            "旧日志删除一般安全，正在写入的除外",
+            RiskHint::Green,
+            0.6,
+        ),
+        (
+            "backups",
+            "设备/应用备份",
+            None,
+            "删除后对应历史备份不可恢复",
+            RiskHint::Yellow,
+            0.6,
+        ),
+        (
+            "mobilesync",
+            "iPhone/iPad Finder 整机备份",
+            Some("Finder"),
+            "对应设备的备份永久丢失",
+            RiskHint::Yellow,
+            0.8,
+        ),
+        (
+            "docker.raw",
+            "Docker Desktop 虚拟磁盘",
+            Some("Docker Desktop"),
+            "所有镜像/容器/卷数据，绝不可直接删文件",
+            RiskHint::Red,
+            0.85,
+        ),
+        (
+            "ext4.vhdx",
+            "WSL 发行版虚拟磁盘",
+            Some("WSL"),
+            "整个 Linux 发行版文件系统，绝不可直接删",
+            RiskHint::Red,
+            0.85,
+        ),
+        (
+            "archives",
+            "应用归档（可能含符号化依据）",
+            None,
+            "可能不可逆丢失发布记录",
+            RiskHint::Yellow,
+            0.5,
+        ),
+        (
+            "wechat_files",
+            "微信聊天数据目录",
+            Some("微信"),
+            "聊天记录与文件永久丢失",
+            RiskHint::Red,
+            0.9,
+        ),
+        (
+            "tencent files",
+            "QQ 聊天数据目录",
+            Some("QQ"),
+            "聊天记录与文件永久丢失",
+            RiskHint::Red,
+            0.9,
+        ),
     ];
 
     for (needle, desc, producer, cons, risk, conf) in TABLE {
@@ -114,7 +206,10 @@ fn classify(path: &str, apparent: u64, actual: u64) -> Classification {
     }
 
     Classification {
-        description: format!("未识别目录{}，包含用户数据或应用数据的可能性未知", sparse_note()),
+        description: format!(
+            "未识别目录{}，包含用户数据或应用数据的可能性未知",
+            sparse_note()
+        ),
         producer: None,
         consequence: "未知。未命中规则库，默认按最保守处理：不做任何自动删除".into(),
         risk_hint: RiskHint::Red,
@@ -158,7 +253,9 @@ mod tests {
 
     #[test]
     fn unknown_paths_default_red_low_confidence() {
-        let e = HeuristicExplainer.explain(&req("/Users/x/神秘目录")).unwrap();
+        let e = HeuristicExplainer
+            .explain(&req("/Users/x/神秘目录"))
+            .unwrap();
         assert_eq!(e.suggested_risk, RiskHint::Red);
         assert!(e.confidence < 0.5);
     }

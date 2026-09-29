@@ -32,7 +32,11 @@ fn golden_rules() {
     // 2) id 全局唯一（load_rules 内部也查重，这里独立复核）。
     let mut seen: HashSet<&str> = HashSet::new();
     for rule in &rules {
-        assert!(seen.insert(rule.id.as_str()), "duplicate rule id '{}'", rule.id);
+        assert!(
+            seen.insert(rule.id.as_str()),
+            "duplicate rule id '{}'",
+            rule.id
+        );
     }
 
     // 3) risk=red 的规则只允许 advise（删除类动作必须给出提示而非直接执行）。
@@ -61,7 +65,8 @@ fn golden_rules() {
     }
 
     // 5) golden fixture：按 loader 顺序序列化为 pretty JSON 后精确对比。
-    let fixture_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/golden-rules.json");
+    let fixture_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/golden-rules.json");
     let actual = serde_json::to_string_pretty(&rules).expect("serialize rules") + "\n";
 
     if std::env::var("SLIMIT_UPDATE_GOLDEN").as_deref() == Ok("1") {
@@ -89,10 +94,7 @@ fn first_diff(expected: &str, actual: &str) -> String {
     let expected_lines: Vec<&str> = expected.lines().collect();
     let actual_lines: Vec<&str> = actual.lines().collect();
     for i in 0..expected_lines.len().max(actual_lines.len()) {
-        let (e, a) = (
-            expected_lines.get(i).copied(),
-            actual_lines.get(i).copied(),
-        );
+        let (e, a) = (expected_lines.get(i).copied(), actual_lines.get(i).copied());
         if e == a {
             continue;
         }

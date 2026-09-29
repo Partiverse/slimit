@@ -12,7 +12,10 @@ impl AuditLog {
         let dir = base.join("audit");
         std::fs::create_dir_all(&dir)?;
         let path = dir.join("audit.jsonl");
-        let file = std::fs::OpenOptions::new().create(true).append(true).open(&path)?;
+        let file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)?;
         Ok(Self { path, file })
     }
 

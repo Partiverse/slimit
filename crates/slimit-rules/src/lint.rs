@@ -6,7 +6,8 @@ pub fn lint(rule: &Rule) -> Result<(), String> {
     if rule.api_version != API_VERSION {
         return Err(format!("apiVersion must be {API_VERSION}"));
     }
-    let id_ok = rule.id
+    let id_ok = rule
+        .id
         .chars()
         .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-');
     if !id_ok || rule.id.is_empty() {
@@ -14,7 +15,12 @@ pub fn lint(rule: &Rule) -> Result<(), String> {
     }
     match expected_prefix(&rule.os) {
         Some(prefix) if rule.id.starts_with(prefix) => {}
-        Some(prefix) => return Err(format!("id '{}' missing prefix '{prefix}' for os {}", rule.id, rule.os)),
+        Some(prefix) => {
+            return Err(format!(
+                "id '{}' missing prefix '{prefix}' for os {}",
+                rule.id, rule.os
+            ))
+        }
         None => return Err(format!("unsupported os '{}'", rule.os)),
     }
     if rule.paths.is_empty() {
@@ -29,10 +35,24 @@ pub fn lint(rule: &Rule) -> Result<(), String> {
         }
     }
     if rule.action.kind == ActionKind::Command {
-        if rule.action.command.as_deref().unwrap_or("").trim().is_empty() {
+        if rule
+            .action
+            .command
+            .as_deref()
+            .unwrap_or("")
+            .trim()
+            .is_empty()
+        {
             return Err("command rule requires command".into());
         }
-        if rule.action.dry_run.as_deref().unwrap_or("").trim().is_empty() {
+        if rule
+            .action
+            .dry_run
+            .as_deref()
+            .unwrap_or("")
+            .trim()
+            .is_empty()
+        {
             return Err("command rule requires dry_run (no preview, no entry)".into());
         }
     }

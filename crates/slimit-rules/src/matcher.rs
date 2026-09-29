@@ -13,7 +13,11 @@ pub struct DirSnapshot {
 
 impl DirSnapshot {
     pub fn new(path: &Path, apparent: u64, actual: u64) -> Self {
-        Self { path: path.to_path_buf(), apparent, actual }
+        Self {
+            path: path.to_path_buf(),
+            apparent,
+            actual,
+        }
     }
 }
 
@@ -33,7 +37,9 @@ pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
     let mut out = Vec::new();
     for rule in rules {
         for template in &rule.paths {
-            let Some(path) = expand_tilde(template) else { continue };
+            let Some(path) = expand_tilde(template) else {
+                continue;
+            };
             if by_path.contains(path.as_path()) {
                 if let Some(d) = dirs.iter().find(|d| d.path == path) {
                     out.push(Match {
@@ -78,7 +84,10 @@ mod tests {
     #[test]
     fn tilde_expansion() {
         std::env::set_var("HOME", "/Users/test");
-        assert_eq!(expand_tilde("~/Library/Caches"), Some(PathBuf::from("/Users/test/Library/Caches")));
+        assert_eq!(
+            expand_tilde("~/Library/Caches"),
+            Some(PathBuf::from("/Users/test/Library/Caches"))
+        );
         assert_eq!(expand_tilde("/abs/path"), Some(PathBuf::from("/abs/path")));
     }
 

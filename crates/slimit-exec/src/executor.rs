@@ -1,14 +1,16 @@
 use crate::audit::AuditLog;
 use crate::plan::PlanItem;
 use crate::quarantine::{Manifest, Quarantine};
-use std::path::Path;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ApplyError {
     #[error("target missing: {0}")]
     TargetMissing(std::path::PathBuf),
     #[error("item not executable (risk={risk}): {path}")]
-    NotExecutable { risk: String, path: std::path::PathBuf },
+    NotExecutable {
+        risk: String,
+        path: std::path::PathBuf,
+    },
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
     #[error("json: {0}")]
@@ -58,7 +60,11 @@ pub fn apply(
                     "bytes": item.estimated_bytes,
                     "quarantine_id": id,
                 }));
-                reports.push(ApplyReport { item: item.clone(), quarantine_id: Some(id), error: None });
+                reports.push(ApplyReport {
+                    item: item.clone(),
+                    quarantine_id: Some(id),
+                    error: None,
+                });
             }
             Err(e) => {
                 audit.record(&serde_json::json!({
@@ -67,7 +73,11 @@ pub fn apply(
                     "path": item.path,
                     "error": e.to_string(),
                 }));
-                reports.push(ApplyReport { item: item.clone(), quarantine_id: None, error: Some(e.to_string()) });
+                reports.push(ApplyReport {
+                    item: item.clone(),
+                    quarantine_id: None,
+                    error: Some(e.to_string()),
+                });
             }
         }
     }
@@ -83,7 +93,7 @@ fn purge_into_quarantine(item: &PlanItem, q: &Quarantine) -> Result<String, Appl
     std::fs::create_dir_all(&dest)?;
 
     // 同卷 rename 原子迁移；跨卷（EXDEV）MVP 直接报错，UI 提示（v1.1 做 copy+delete fallback）。
-    match std::fs::rename(&item.path, &dest.join("payload")) {
+    match std::fs::rename(&item.path, dest.join("payload")) {
         Ok(()) => {}
         Err(e) if e.raw_os_error() == Some(18 /* EXDEV */) => {
             return Err(ApplyError::Io(std::io::Error::new(
@@ -104,7 +114,9 @@ pub fn restore(quarantine: &Quarantine, id: &str) -> Result<std::path::PathBuf, 
     let manifest: Manifest = quarantine.read_manifest(id)?;
     let payload = quarantine.entry_dir(id).join("payload");
     if !payload.exists() {
-        return Err(ApplyError::Unrestorable(format!("payload missing for {id}")));
+        return Err(ApplyError::Unrestorable(format!(
+            "payload missing for {id}"
+        )));
     }
     let original = &manifest.original_path;
     let dest = if original.exists() {
@@ -142,6 +154,7 @@ mod tests {
     use crate::audit::AuditLog;
     use slimit_rules::matcher::{DirSnapshot, Match};
     use slimit_rules::{ActionKind, Risk, Rule};
+    use std::path::Path;
 
     fn rule(id: &str, risk: Risk, kind: ActionKind, path: &Path) -> Rule {
         serde_json::from_value(serde_json::json!({
@@ -172,7 +185,13 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let target = dir.path().join("archives");
         std::fs::create_dir_all(&target).unwrap();
-        let item = make_item("macos-xcode-archives", Risk::Red, ActionKind::Advise, &target, 100);
+        let item = make_item(
+            "macos-xcode-archives",
+            Risk::Red,
+            ActionKind::Advise,
+            &target,
+            100,
+        );
         assert!(!item.executable);
     }
 
@@ -183,7 +202,13 @@ mod tests {
         std::fs::create_dir_all(&target).unwrap();
         std::fs::write(target.join("f.bin"), vec![0u8; 512]).unwrap();
 
-        let item = make_item("macos-test-cache", Risk::Green, ActionKind::PurgeDir, &target, 512);
+        let item = make_item(
+            "macos-test-cache",
+            Risk::Green,
+            ActionKind::PurgeDir,
+            &target,
+            512,
+        );
         let q = Quarantine::new(&tmp.path().join("slimit"));
         let mut audit = AuditLog::new(&tmp.path().join("slimit")).unwrap();
 
@@ -205,10 +230,19 @@ mod tests {
         let target = tmp.path().join("caches");
         std::fs::create_dir_all(&target).unwrap();
 
-        let item = make_item("macos-test-cache", Risk::Green, ActionKind::PurgeDir, &target, 0);
+        let item = make_item(
+            "macos-test-cache",
+            Risk::Green,
+            ActionKind::PurgeDir,
+            &target,
+            0,
+        );
         let q = Quarantine::new(&tmp.path().join("slimit"));
         let mut audit = AuditLog::new(&tmp.path().join("slimit")).unwrap();
-        let qid = apply(&[item], &q, &mut audit)[0].quarantine_id.clone().unwrap();
+        let qid = apply(&[item], &q, &mut audit)[0]
+            .quarantine_id
+            .clone()
+            .unwrap();
 
         // 原路径重建（模拟应用又生成了目录）。
         std::fs::create_dir_all(&target).unwrap();
@@ -224,7 +258,13 @@ mod tests {
     fn missing_target_reported_not_fatal() {
         let tmp = tempfile::tempdir().unwrap();
         let ghost = tmp.path().join("ghost");
-        let item = make_item("macos-test-cache", Risk::Green, ActionKind::PurgeDir, &ghost, 0);
+        let item = make_item(
+            "macos-test-cache",
+            Risk::Green,
+            ActionKind::PurgeDir,
+            &ghost,
+            0,
+        );
         let q = Quarantine::new(&tmp.path().join("slimit"));
         let mut audit = AuditLog::new(&tmp.path().join("slimit")).unwrap();
         let reports = apply(&[item], &q, &mut audit);
@@ -238,7 +278,12 @@ mod tests {
         let target = tmp.path().join("caches");
         std::fs::create_dir_all(&target).unwrap();
         let snap = DirSnapshot::new(&target, 1000, 800);
-        let r = rule("macos-test-cache", Risk::Green, ActionKind::PurgeDir, &target);
+        let r = rule(
+            "macos-test-cache",
+            Risk::Green,
+            ActionKind::PurgeDir,
+            &target,
+        );
         let items = crate::plan::plan_from_snapshots(&[r], &[snap]);
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].estimated_bytes, 800);

@@ -85,7 +85,12 @@ mod tests {
             root: PathBuf::from("/r"),
             file_count: 3,
             files: vec![],
-            dirs: vec![dir("/r", 100), dir("/r/b", 60), dir("/r/a", 40), dir("/r/a/x", 30)],
+            dirs: vec![
+                dir("/r", 100),
+                dir("/r/b", 60),
+                dir("/r/a", 40),
+                dir("/r/a/x", 30),
+            ],
         };
         let s = res.summarize(2);
         assert_eq!(s.actual, 100);
