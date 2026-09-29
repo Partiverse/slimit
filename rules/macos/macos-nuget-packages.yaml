@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-nuget-packages
+os: macos
+scope: user
+paths:
+  - "~/.nuget/packages"
+semantics:
+  title: "NuGet 全局包缓存（~/.nuget/packages）"
+  what: ".NET 的 NuGet 全局包文件夹：所有还原过的 NuGet 包按『包名/版本』存放，dotnet build/restore 优先引用此处避免重复下载"
+  producer: "NuGet / dotnet restore"
+  safe_to_delete_because: "Microsoft 文档明确该文件夹是纯缓存、可随时删除：包会按 nuget.config 中的源重新还原；项目 obj/ 中的还原记录保留"
+  consequence: "下次构建需重新从 nuget.org（或私有源）还原依赖，需网络；项目源码与 obj/bin 不受影响"
+  regenerate: "dotnet restore / dotnet build 自动还原"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–10 GB（多 .NET 项目开发者）"
+  recovery: full
+refs:
+  - https://learn.microsoft.com/en-us/nuget/consume-packages/managing-the-global-packages-and-cache-folders

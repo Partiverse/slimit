@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-rustup-toolchains
+os: macos
+scope: user
+paths:
+  - "~/.rustup/toolchains"
+semantics:
+  title: "rustup 旧工具链（~/.rustup/toolchains）"
+  what: "rustup 管理的 Rust 工具链集合：stable/beta/nightly 各版本一套完整编译器与标准库，每个约 1 GB；长期升级会积累废弃旧版本"
+  producer: "rustup（rustup toolchain install / 自动更新）"
+  safe_to_delete_because: "不可整目录删除——当前在用的工具链就在其中；应先用 rustup toolchain list 找出不再需要的版本，逐个用官方命令卸载"
+  consequence: "直接删除整目录会毁掉当前开发环境；逐个卸载旧工具链后，需要时 rustup toolchain install 重新安装（重新下载约 1 GB/个）"
+  regenerate: "rustup toolchain install <toolchain> 重新下载"
+risk: yellow
+red_flags: []
+action:
+  kind: advise
+estimate:
+  typical_size: "每套工具链约 1 GB，总量 2–10 GB"
+  recovery: full
+refs:
+  - https://rust-lang.github.io/rustup/concepts/toolchains.html
+  - https://rust-lang.github.io/rustup/installation/other.html

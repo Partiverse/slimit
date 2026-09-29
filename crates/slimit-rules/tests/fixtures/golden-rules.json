@@ -152,6 +152,44 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-bazel-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.cache/bazel"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Bazel 磁盘缓存（~/.cache/bazel）",
+      "what": "Bazel 构建系统的默认输出/磁盘缓存：构建中间产物、外部依赖仓库（external/）、执行树，多个项目共享以加速增量构建",
+      "producer": "Bazel（bazel build 等命令）",
+      "safe_to_delete_because": "纯构建缓存：Bazel 设计上可随时清空，删除后仅下次构建变慢（全量重建）",
+      "consequence": "下次每个 Bazel 项目首次构建全量重跑并重新拉取外部依赖，需网络；源代码与构建结果（bazel-bin 等符号链接目标）会随项目目录保留，但 bazel-out 产物需重建",
+      "regenerate": "下次 bazel build 自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（重度 Bazel 用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://bazel.build/run/build",
+      "https://bazel.build/external/overview"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-cargo-registry-cache",
     "os": "macos",
     "scope": "user",
@@ -265,6 +303,46 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-conda-clean",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/miniconda3/pkgs",
+      "~/anaconda3/pkgs",
+      "~/miniforge3/pkgs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Conda 包缓存（官方 conda clean）",
+      "what": "Anaconda/Miniconda 的包缓存目录（pkgs/）：下载的 .tar.bz2/.conda 归档与已解包、可被环境硬链接引用的包。必须用官方 conda clean 而非直接删除，因为环境通过硬链接引用此处内容",
+      "producer": "conda / mamba（conda install / create）",
+      "safe_to_delete_because": "官方 conda clean --packages 只移除不再被任何环境硬链接引用的解包缓存，--tarballs 只删下载归档；dry_run 先预览将释放的空间与内容",
+      "consequence": "已创建的环境不受影响（其硬链接文件仍在）；已解包缓存被删后，新建引用同版本包的环境需重新解包/下载",
+      "regenerate": "conda install 重新下载/解包"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "conda clean --yes --packages --tarballs",
+      "dry_run": "conda clean --dry-run --packages --tarballs",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "2–20 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.conda.io/projects/conda/en/latest/commands/conda-clean.html",
+      "https://www.anaconda.com/blog/using-pip-in-a-conda-environment"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-crash-reports",
     "os": "macos",
     "scope": "user",
@@ -303,6 +381,44 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-cypress-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Cypress"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cypress 二进制缓存（~/Library/Caches/Cypress）",
+      "what": "Cypress E2E 测试框架下载的 Cypress 应用二进制（按版本存放），npm 包仅是壳，真正的桌面应用在此",
+      "producer": "Cypress（npm install cypress 时自动下载）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次安装或 cypress open 时重新下载",
+      "consequence": "下次使用需重新下载 Cypress 应用（每版本约 200 MB），需网络",
+      "regenerate": "npm install cypress / cypress install 自动下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多版本累计）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.cypress.io/app/get-started/install-cypress",
+      "https://docs.cypress.io/app/references/advanced-installation#Binary-install-optional"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-docker-builder-cache",
     "os": "macos",
     "scope": "user",
@@ -337,6 +453,197 @@
     "refs": [
       "https://docs.docker.com/build/cache/",
       "https://docs.docker.com/engine/manage-resources/pruning/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-docker-vm-disk",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Docker Desktop 虚拟磁盘（Docker.raw）",
+      "what": "Docker Desktop Linux 虚拟机的整块虚拟磁盘镜像：所有镜像层、容器可写层、命名卷、构建缓存、以及 VM 内文件系统的全部数据都在这一个文件里",
+      "producer": "Docker Desktop",
+      "safe_to_delete_because": "不可直接删除——文件承载整个 Docker 数据盘，删除即毁掉全部镜像/容器/卷数据",
+      "consequence": "所有本地镜像、容器（含未持久化数据）、命名卷、构建缓存永久丢失；Docker Desktop 需重新初始化 VM 才能再用",
+      "regenerate": "镜像可重新 docker pull，但容器与卷内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "这是整块 VM 虚拟磁盘，等价于直接删除一台 Linux 机器的硬盘",
+      "正确瘦身方式：Docker Desktop 设置内清理，或 docker system prune / docker volume prune",
+      "文件表观巨大（可达数百 GB）但多为稀疏空间，真实占用远小于表观值"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数百 GB（表观值虚高，稀疏文件）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://docs.docker.com/desktop/settings-and-maintenance/faqs/",
+      "https://docs.docker.com/engine/reference/commandline/system_prune/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-dropbox-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Dropbox/.dropbox.cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Dropbox 桌面客户端缓存（~/Dropbox/.dropbox.cache）",
+      "what": "Dropbox 桌面客户端为已删除/移动文件保留的暂存缓存：删除或移动文件时先把内容移入此处，防止误删；长期累积可达数 GB",
+      "producer": "Dropbox 桌面客户端",
+      "safe_to_delete_because": "Dropbox 官方说明该缓存仅用于近期误删恢复的临时暂存，会自动清理旧内容；手动清空不影响已同步的云端与本地文件",
+      "consequence": "近期删除的文件不再能从本地缓存直接恢复（云端回收站 30 天内仍可恢复）；同步中的文件不受影响",
+      "regenerate": "按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（重度用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://help.dropbox.com/syncing-uploads/cache-folder"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-edge-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Microsoft Edge"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Edge 浏览器缓存（~/Library/Caches/Microsoft Edge）",
+      "what": "Edge 各 profile 的 HTTP 网页资源缓存与 JavaScript 代码缓存。密码、书签、历史、Cookie 存放在 ~/Library/Application Support/Microsoft Edge，不在此处",
+      "producer": "Microsoft Edge",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，与 Chromium 的用户数据目录约定分离；Edge 自身提供『清除缓存的图片和文件』且不影响密码书签",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Edge 再清理",
+      "regenerate": "Edge 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/deployedge/edge-learnmore-create-user-directory-vars",
+      "https://support.google.com/chrome/answer/2392709"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-electron-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/electron"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Electron 二进制下载缓存（~/Library/Caches/electron）",
+      "what": "@electron/get 下载缓存的 Electron 预编译二进制（zip/headers），供 electron 打包与 npm install electron 使用",
+      "producer": "@electron/get（electron 包安装时自动下载）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次安装/打包时重新下载对应版本",
+      "consequence": "下次 electron 相关安装需重新下载二进制（每版本约 100 MB），需网络",
+      "regenerate": "npm install electron 或打包时自动下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多版本累计）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://www.electronjs.org/docs/latest/tutorial/installation"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-firefox-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Firefox"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Firefox 浏览器缓存（~/Library/Caches/Firefox）",
+      "what": "Firefox 的 HTTP 网页资源缓存与启动缓存。用户数据（书签、历史、密码、Cookie）存放在 ~/Library/Profiles 的 profile 目录，不在此处",
+      "producer": "Mozilla Firefox",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；Mozilla 文档明确 Caches/Firefox 属于可重建缓存，与存放用户数据的 profile 目录分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Firefox 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.mozilla.org/kb/profiles-where-firefox-stores-user-data"
     ]
   },
   {
@@ -448,6 +755,43 @@
     },
     "refs": [
       "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-homebrew-cleanup",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Homebrew"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Homebrew 下载缓存与旧版本（官方 brew cleanup）",
+      "what": "Homebrew 的下载缓存（bottles、源码包）以及本地已安装但被新版本取代的旧版本包。与 macos-homebrew-cache 不同，本条推荐用官方命令一并清理旧版本与过时下载",
+      "producer": "Homebrew（brew install / upgrade）",
+      "safe_to_delete_because": "官方提供的 brew cleanup 专用于清理下载缓存、锁文件与不再被任何包依赖的旧版本；dry_run 可先预览全部将删内容",
+      "consequence": "旧版本包被移除（回滚需重新 brew install 指定版本）；下载缓存重新下载即可；当前使用中的最新版本不受影响",
+      "regenerate": "brew install 重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "brew cleanup -s",
+      "dry_run": "brew cleanup -ns",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（长期不清理）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.brew.sh/Manpage#cleanup-options"
     ]
   },
   {
@@ -725,6 +1069,162 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-nuget-packages",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.nuget/packages"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "NuGet 全局包缓存（~/.nuget/packages）",
+      "what": ".NET 的 NuGet 全局包文件夹：所有还原过的 NuGet 包按『包名/版本』存放，dotnet build/restore 优先引用此处避免重复下载",
+      "producer": "NuGet / dotnet restore",
+      "safe_to_delete_because": "Microsoft 文档明确该文件夹是纯缓存、可随时删除：包会按 nuget.config 中的源重新还原；项目 obj/ 中的还原记录保留",
+      "consequence": "下次构建需重新从 nuget.org（或私有源）还原依赖，需网络；项目源码与 obj/bin 不受影响",
+      "regenerate": "dotnet restore / dotnet build 自动还原"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多 .NET 项目开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/nuget/consume-packages/managing-the-global-packages-and-cache-folders"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-ollama-models",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.ollama/models"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Ollama 本地模型库（~/.ollama/models）",
+      "what": "Ollama 下载到本地的 LLM 权重文件（按 GGUF 存储），每个模型数 GB 到数十 GB",
+      "producer": "Ollama",
+      "safe_to_delete_because": "不可自动清理：模型是用户特意挑选下载的，重新下载耗时耗流量；应让用户逐个决定",
+      "consequence": "被删模型从本地消失，下次使用需重新 ollama pull（重新下载数 GB）；对话历史存于 ~/.ollama/history 之外的会话层，不受影响",
+      "regenerate": "ollama pull <model> 重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每个模型 2–40 GB，多模型用户可达上百 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.ollama.com/",
+      "https://github.com/ollama/ollama/blob/main/docs/faq.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-orbstack-data",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.orbstack"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "OrbStack 数据目录（~/.orbstack）",
+      "what": "OrbStack（macOS 上的 Docker/Kubernetes 运行时）的数据目录：Docker 镜像与容器、Kubernetes 集群状态、各 Linux 发行版机器的磁盘镜像都在这里",
+      "producer": "OrbStack",
+      "safe_to_delete_because": "不可直接删除——承载全部容器化数据与 Linux 机器磁盘",
+      "consequence": "所有 Docker 镜像/容器/卷、Kubernetes 集群、以及创建的 Linux 机器全部丢失",
+      "regenerate": "镜像可重新拉取；容器与机器内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "等同于删除所有 OrbStack 容器与 Linux 虚拟机的硬盘",
+      "正确瘦身方式：OrbStack 应用内设置清理，或 docker system prune"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（随镜像与机器数量）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://docs.orbstack.dev/",
+      "https://docs.orbstack.dev/docker/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-parallels-vms",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Parallels"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Parallels Desktop 虚拟机库",
+      "what": "Parallels Desktop 默认虚拟机目录：每台 Windows/Linux 虚拟机的整块磁盘镜像（.pvm 包，含快照）都在这里",
+      "producer": "Parallels Desktop",
+      "safe_to_delete_because": "不可直接删除——等于删除整台虚拟机",
+      "consequence": "虚拟机及其中的 Windows/Linux 系统、用户文件、快照全部永久丢失",
+      "regenerate": "只能重新新建虚拟机并安装系统；磁盘内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      ".pvm 是完整虚拟机包，删除即毁掉整台虚拟机",
+      "正确方式：在 Parallels Control Center 中删除虚拟机，或至少确认快照与数据已不需要"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台虚拟机数 GB 到数百 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://kb.parallels.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-pip-cache",
     "os": "macos",
     "scope": "user",
@@ -832,6 +1332,158 @@
     },
     "refs": [
       "https://pnpm.io/cli/store"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-poetry-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/pypoetry"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Poetry 包下载缓存（~/Library/Caches/pypoetry）",
+      "what": "Python 依赖管理器 Poetry 的缓存目录：下载过的包轮子与源码归档（cache 一级目录），安装项目依赖时优先从此处取",
+      "producer": "Poetry（poetry install / add 时自动缓存）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次安装依赖时重新从 PyPI 下载；也可用官方 poetry cache clear 清理",
+      "consequence": "下次安装项目依赖需重新下载，需网络；项目虚拟环境与 poetry.lock 不受影响",
+      "regenerate": "poetry install / pip download 按需重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://python-poetry.org/docs/configuration/#cache-directory",
+      "https://python-poetry.org/docs/cli/#cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-pub-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.pub-cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Dart/Flutter 全局包缓存（~/.pub-cache）",
+      "what": "Dart 包管理器 pub 的全局缓存：所有下载过的包版本源码与托管镜像，Flutter/dart 项目依赖解析时引用此处",
+      "producer": "Dart SDK 的 pub 工具（dart pub get / flutter pub get）",
+      "safe_to_delete_because": "纯下载缓存：删除后项目内已有依赖副本仍在各自 .dart_tool 中，下次 pub get 按需重新下载",
+      "consequence": "下次构建时依赖重新下载，需网络；项目本身与锁文件不受影响",
+      "regenerate": "在各项目中执行 dart pub get / flutter pub get 自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 Flutter 项目开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://dart.dev/tools/pub/cmd/pub-cache",
+      "https://docs.flutter.dev/reference/flutter-cli"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-puppeteer-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.cache/puppeteer"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Puppeteer 浏览器下载缓存（~/.cache/puppeteer）",
+      "what": "Puppeteer/Chrome for Testing 自动下载的浏览器二进制（chrome、chromedriver、firefox 等），供自动化测试/爬虫使用",
+      "producer": "Puppeteer（npm 安装与运行时自动下载）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次运行 npm install 或 puppeteer 脚本时按需重新下载",
+      "consequence": "下次使用需重新下载完整浏览器（每个版本 100–200 MB），需网络",
+      "regenerate": "npx puppeteer browsers install chrome 或运行时自动下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多版本累计）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pptr.dev/guides/installation",
+      "https://pptr.dev/browsers-api"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-rustup-toolchains",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.rustup/toolchains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "rustup 旧工具链（~/.rustup/toolchains）",
+      "what": "rustup 管理的 Rust 工具链集合：stable/beta/nightly 各版本一套完整编译器与标准库，每个约 1 GB；长期升级会积累废弃旧版本",
+      "producer": "rustup（rustup toolchain install / 自动更新）",
+      "safe_to_delete_because": "不可整目录删除——当前在用的工具链就在其中；应先用 rustup toolchain list 找出不再需要的版本，逐个用官方命令卸载",
+      "consequence": "直接删除整目录会毁掉当前开发环境；逐个卸载旧工具链后，需要时 rustup toolchain install 重新安装（重新下载约 1 GB/个）",
+      "regenerate": "rustup toolchain install <toolchain> 重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每套工具链约 1 GB，总量 2–10 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://rust-lang.github.io/rustup/concepts/toolchains.html",
+      "https://rust-lang.github.io/rustup/installation/other.html"
     ]
   },
   {
@@ -1024,6 +1676,87 @@
     },
     "refs": [
       "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-utm-virtual-machines",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.utmapp.UTM/Data/Documents"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "UTM 虚拟机库（.utm 虚拟机包）",
+      "what": "UTM（macOS 开源虚拟机）默认存放 .utm 虚拟机包的目录：每个包含该虚拟机的整块磁盘镜像、配置与快照",
+      "producer": "UTM",
+      "safe_to_delete_because": "不可直接删除——等于删除整台虚拟机及其磁盘上的全部数据",
+      "consequence": "对应虚拟机连同其操作系统、文件、快照全部永久丢失",
+      "regenerate": "只能从头新建虚拟机并重装系统；磁盘内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "目录内容是完整虚拟机（磁盘镜像 + 快照），不是缓存",
+      "确实不需要的虚拟机应在 UTM 应用内删除，而非文件系统层直接清理"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台虚拟机数 GB 到数百 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://docs.getutm.app/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-vmware-vms",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Virtual Machines",
+      "~/Virtual Machines.localized"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "VMware Fusion 虚拟机库",
+      "what": "VMware Fusion 默认虚拟机目录：每台虚拟机的 .vmwarevm 包（整块虚拟磁盘 .vmdk、配置、快照）都在这里",
+      "producer": "VMware Fusion",
+      "safe_to_delete_because": "不可直接删除——等于删除整台虚拟机",
+      "consequence": "虚拟机及其中的操作系统、用户文件、快照全部永久丢失",
+      "regenerate": "只能重新创建虚拟机并安装系统；磁盘内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      ".vmwarevm 是完整虚拟机包（含 .vmdk 虚拟磁盘），不是缓存",
+      "确实不需要的虚拟机应在 VMware Fusion 内删除"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台虚拟机数 GB 到数百 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://kb.vmware.com/"
     ]
   },
   {

@@ -1,0 +1,26 @@
+apiVersion: slimit.rules/v1
+id: macos-docker-vm-disk
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+semantics:
+  title: "Docker Desktop 虚拟磁盘（Docker.raw）"
+  what: "Docker Desktop Linux 虚拟机的整块虚拟磁盘镜像：所有镜像层、容器可写层、命名卷、构建缓存、以及 VM 内文件系统的全部数据都在这一个文件里"
+  producer: "Docker Desktop"
+  safe_to_delete_because: "不可直接删除——文件承载整个 Docker 数据盘，删除即毁掉全部镜像/容器/卷数据"
+  consequence: "所有本地镜像、容器（含未持久化数据）、命名卷、构建缓存永久丢失；Docker Desktop 需重新初始化 VM 才能再用"
+  regenerate: "镜像可重新 docker pull，但容器与卷内数据不可恢复"
+risk: red
+red_flags:
+  - "这是整块 VM 虚拟磁盘，等价于直接删除一台 Linux 机器的硬盘"
+  - "正确瘦身方式：Docker Desktop 设置内清理，或 docker system prune / docker volume prune"
+  - "文件表观巨大（可达数百 GB）但多为稀疏空间，真实占用远小于表观值"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 到数百 GB（表观值虚高，稀疏文件）"
+  recovery: none
+refs:
+  - https://docs.docker.com/desktop/settings-and-maintenance/faqs/
+  - https://docs.docker.com/engine/reference/commandline/system_prune/

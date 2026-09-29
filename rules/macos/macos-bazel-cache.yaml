@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-bazel-cache
+os: macos
+scope: user
+paths:
+  - "~/.cache/bazel"
+semantics:
+  title: "Bazel 磁盘缓存（~/.cache/bazel）"
+  what: "Bazel 构建系统的默认输出/磁盘缓存：构建中间产物、外部依赖仓库（external/）、执行树，多个项目共享以加速增量构建"
+  producer: "Bazel（bazel build 等命令）"
+  safe_to_delete_because: "纯构建缓存：Bazel 设计上可随时清空，删除后仅下次构建变慢（全量重建）"
+  consequence: "下次每个 Bazel 项目首次构建全量重跑并重新拉取外部依赖，需网络；源代码与构建结果（bazel-bin 等符号链接目标）会随项目目录保留，但 bazel-out 产物需重建"
+  regenerate: "下次 bazel build 自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（重度 Bazel 用户）"
+  recovery: full
+refs:
+  - https://bazel.build/run/build
+  - https://bazel.build/external/overview

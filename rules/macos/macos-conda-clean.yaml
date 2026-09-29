@@ -1,0 +1,27 @@
+apiVersion: slimit.rules/v1
+id: macos-conda-clean
+os: macos
+scope: user
+paths:
+  - "~/miniconda3/pkgs"
+  - "~/anaconda3/pkgs"
+  - "~/miniforge3/pkgs"
+semantics:
+  title: "Conda 包缓存（官方 conda clean）"
+  what: "Anaconda/Miniconda 的包缓存目录（pkgs/）：下载的 .tar.bz2/.conda 归档与已解包、可被环境硬链接引用的包。必须用官方 conda clean 而非直接删除，因为环境通过硬链接引用此处内容"
+  producer: "conda / mamba（conda install / create）"
+  safe_to_delete_because: "官方 conda clean --packages 只移除不再被任何环境硬链接引用的解包缓存，--tarballs 只删下载归档；dry_run 先预览将释放的空间与内容"
+  consequence: "已创建的环境不受影响（其硬链接文件仍在）；已解包缓存被删后，新建引用同版本包的环境需重新解包/下载"
+  regenerate: "conda install 重新下载/解包"
+risk: yellow
+red_flags: []
+action:
+  kind: command
+  command: "conda clean --yes --packages --tarballs"
+  dry_run: "conda clean --dry-run --packages --tarballs"
+estimate:
+  typical_size: "2–20 GB"
+  recovery: full
+refs:
+  - https://docs.conda.io/projects/conda/en/latest/commands/conda-clean.html
+  - https://www.anaconda.com/blog/using-pip-in-a-conda-environment

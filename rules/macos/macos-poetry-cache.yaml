@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-poetry-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/pypoetry"
+semantics:
+  title: "Poetry 包下载缓存（~/Library/Caches/pypoetry）"
+  what: "Python 依赖管理器 Poetry 的缓存目录：下载过的包轮子与源码归档（cache 一级目录），安装项目依赖时优先从此处取"
+  producer: "Poetry（poetry install / add 时自动缓存）"
+  safe_to_delete_because: "纯下载缓存：删除后下次安装依赖时重新从 PyPI 下载；也可用官方 poetry cache clear 清理"
+  consequence: "下次安装项目依赖需重新下载，需网络；项目虚拟环境与 poetry.lock 不受影响"
+  regenerate: "poetry install / pip download 按需重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://python-poetry.org/docs/configuration/#cache-directory
+  - https://python-poetry.org/docs/cli/#cache

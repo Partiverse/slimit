@@ -1,0 +1,25 @@
+apiVersion: slimit.rules/v1
+id: macos-vmware-vms
+os: macos
+scope: user
+paths:
+  - "~/Virtual Machines"
+  - "~/Virtual Machines.localized"
+semantics:
+  title: "VMware Fusion 虚拟机库"
+  what: "VMware Fusion 默认虚拟机目录：每台虚拟机的 .vmwarevm 包（整块虚拟磁盘 .vmdk、配置、快照）都在这里"
+  producer: "VMware Fusion"
+  safe_to_delete_because: "不可直接删除——等于删除整台虚拟机"
+  consequence: "虚拟机及其中的操作系统、用户文件、快照全部永久丢失"
+  regenerate: "只能重新创建虚拟机并安装系统；磁盘内数据不可恢复"
+risk: red
+red_flags:
+  - ".vmwarevm 是完整虚拟机包（含 .vmdk 虚拟磁盘），不是缓存"
+  - "确实不需要的虚拟机应在 VMware Fusion 内删除"
+action:
+  kind: advise
+estimate:
+  typical_size: "每台虚拟机数 GB 到数百 GB"
+  recovery: none
+refs:
+  - https://kb.vmware.com/

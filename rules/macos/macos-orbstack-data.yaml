@@ -1,0 +1,25 @@
+apiVersion: slimit.rules/v1
+id: macos-orbstack-data
+os: macos
+scope: user
+paths:
+  - "~/.orbstack"
+semantics:
+  title: "OrbStack 数据目录（~/.orbstack）"
+  what: "OrbStack（macOS 上的 Docker/Kubernetes 运行时）的数据目录：Docker 镜像与容器、Kubernetes 集群状态、各 Linux 发行版机器的磁盘镜像都在这里"
+  producer: "OrbStack"
+  safe_to_delete_because: "不可直接删除——承载全部容器化数据与 Linux 机器磁盘"
+  consequence: "所有 Docker 镜像/容器/卷、Kubernetes 集群、以及创建的 Linux 机器全部丢失"
+  regenerate: "镜像可重新拉取；容器与机器内数据不可恢复"
+risk: red
+red_flags:
+  - "等同于删除所有 OrbStack 容器与 Linux 虚拟机的硬盘"
+  - "正确瘦身方式：OrbStack 应用内设置清理，或 docker system prune"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 到数十 GB（随镜像与机器数量）"
+  recovery: none
+refs:
+  - https://docs.orbstack.dev/
+  - https://docs.orbstack.dev/docker/

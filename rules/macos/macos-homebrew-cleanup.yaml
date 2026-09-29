@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-homebrew-cleanup
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Homebrew"
+semantics:
+  title: "Homebrew 下载缓存与旧版本（官方 brew cleanup）"
+  what: "Homebrew 的下载缓存（bottles、源码包）以及本地已安装但被新版本取代的旧版本包。与 macos-homebrew-cache 不同，本条推荐用官方命令一并清理旧版本与过时下载"
+  producer: "Homebrew（brew install / upgrade）"
+  safe_to_delete_because: "官方提供的 brew cleanup 专用于清理下载缓存、锁文件与不再被任何包依赖的旧版本；dry_run 可先预览全部将删内容"
+  consequence: "旧版本包被移除（回滚需重新 brew install 指定版本）；下载缓存重新下载即可；当前使用中的最新版本不受影响"
+  regenerate: "brew install 重新下载"
+risk: yellow
+red_flags: []
+action:
+  kind: command
+  command: "brew cleanup -s"
+  dry_run: "brew cleanup -ns"
+estimate:
+  typical_size: "1–10 GB（长期不清理）"
+  recovery: full
+refs:
+  - https://docs.brew.sh/Manpage#cleanup-options

@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-puppeteer-cache
+os: macos
+scope: user
+paths:
+  - "~/.cache/puppeteer"
+semantics:
+  title: "Puppeteer 浏览器下载缓存（~/.cache/puppeteer）"
+  what: "Puppeteer/Chrome for Testing 自动下载的浏览器二进制（chrome、chromedriver、firefox 等），供自动化测试/爬虫使用"
+  producer: "Puppeteer（npm 安装与运行时自动下载）"
+  safe_to_delete_because: "纯下载缓存：删除后下次运行 npm install 或 puppeteer 脚本时按需重新下载"
+  consequence: "下次使用需重新下载完整浏览器（每个版本 100–200 MB），需网络"
+  regenerate: "npx puppeteer browsers install chrome 或运行时自动下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多版本累计）"
+  recovery: full
+refs:
+  - https://pptr.dev/guides/installation
+  - https://pptr.dev/browsers-api

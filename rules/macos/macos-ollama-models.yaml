@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-ollama-models
+os: macos
+scope: user
+paths:
+  - "~/.ollama/models"
+semantics:
+  title: "Ollama 本地模型库（~/.ollama/models）"
+  what: "Ollama 下载到本地的 LLM 权重文件（按 GGUF 存储），每个模型数 GB 到数十 GB"
+  producer: "Ollama"
+  safe_to_delete_because: "不可自动清理：模型是用户特意挑选下载的，重新下载耗时耗流量；应让用户逐个决定"
+  consequence: "被删模型从本地消失，下次使用需重新 ollama pull（重新下载数 GB）；对话历史存于 ~/.ollama/history 之外的会话层，不受影响"
+  regenerate: "ollama pull <model> 重新下载"
+risk: yellow
+red_flags: []
+action:
+  kind: advise
+estimate:
+  typical_size: "每个模型 2–40 GB，多模型用户可达上百 GB"
+  recovery: full
+refs:
+  - https://docs.ollama.com/
+  - https://github.com/ollama/ollama/blob/main/docs/faq.md
