@@ -40,6 +40,7 @@ function CleanPanel() {
   const [root, setRoot] = useState("");
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [err, setErr] = useState("");
   const [progress, setProgress] = useState(0);
   const [data, setData] = useState<ScanPlanResponse | null>(null);
@@ -63,6 +64,7 @@ function CleanPanel() {
     setErr("");
     setReports(null);
     setTips({});
+    setConfirming(false);
     setProgress(0);
     seqRef.current += 1;
     try {
@@ -87,15 +89,20 @@ function CleanPanel() {
     });
   };
 
-  const runApply = async () => {
+  const runApply = async (confirmed: boolean) => {
     if (!data || applying) return;
     const items = data.plan.filter((p) => p.executable && selected.has(p.path));
-    if (items.length === 0) return;
-    const ok = window.confirm(
-      `将把 ${items.length} 个目录迁入隔离区（可完整恢复）：\n\n` +
-        items.map((i) => i.path).join("\n"),
-    );
-    if (!ok) return;
+    if (items.length === 0) {
+      setConfirming(false);
+      return;
+    }
+    // 确认必须走应用内两段式按钮：Tauri/WKWebView 的 window.confirm
+    // 不可靠（可能静默返回），原生对话框在本环境实测未弹出。
+    if (!confirmed) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
     setApplying(true);
     setErr("");
     try {
@@ -178,11 +185,21 @@ function CleanPanel() {
                 </tbody>
               </table>
               <div className="row">
-                <button onClick={runApply} disabled={applying || planBytes === 0}>
+                <button
+                  onClick={() => runApply(confirming)}
+                  disabled={applying || planBytes === 0}
+                >
                   {applying
                     ? "执行中…"
-                    : `执行（隔离 ${planBytes ? fmtSize(planBytes) : "0 MiB"}）`}
+                    : confirming
+                      ? `✅ 确认执行（隔离 ${fmtSize(planBytes)}）`
+                      : `执行（隔离 ${planBytes ? fmtSize(planBytes) : "0 MiB"}）`}
                 </button>
+                {confirming && (
+                  <button className="ghost" onClick={() => setConfirming(false)}>
+                    取消
+                  </button>
+                )}
                 <span className="hint">
                   仅 green/yellow 可执行项；全部迁入隔离区，可随时恢复
                 </span>

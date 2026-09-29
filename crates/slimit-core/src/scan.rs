@@ -148,8 +148,14 @@ fn aggregate(root: &Path, files: &[FileEntry]) -> Vec<DirStat> {
 
     // 只含子目录（无直属文件）的中间目录与根也要有条目，否则聚合链断裂、
     // 这些目录的统计整体丢失（W2 前 du 对照发现的 bug）。
+    // root 自身不向上走：否则会把扫描根之上的真实祖先目录（如扫
+    // ~/Library/Caches/X 时暴露 ~/Library/Caches）以 0 统计插入 dirs，
+    // 规则匹配层会把它们当作可执行目标（W7 手测抓到的正确性 bug）。
     let existing: Vec<PathBuf> = own.keys().cloned().collect();
     for path in existing {
+        if path == root {
+            continue;
+        }
         let mut anc = path.as_path();
         while let Some(parent) = anc.parent() {
             if !own.contains_key(parent) {
@@ -161,6 +167,9 @@ fn aggregate(root: &Path, files: &[FileEntry]) -> Vec<DirStat> {
             anc = parent;
         }
     }
+
+    // 兜底：任何游离在扫描根之上的条目（防御性，正常流程不会再产生）。
+    own.retain(|path, _| path.starts_with(root));
 
     // 目录路径按深度降序，把自身值累加进父目录。
     let mut dir_paths: Vec<PathBuf> = own.keys().cloned().collect();
@@ -354,6 +363,25 @@ mod tests {
             *last.lock().unwrap(),
             65,
             "final callback must equal file count"
+        );
+    }
+
+    #[test]
+    fn dirs_never_escape_scan_root() {
+        // W7 手测回归：root 自身有直属文件时，aggregate 的向上遍历曾把根
+        // 之上的真实祖先目录（/tmp、/var、/ …）以 0 统计插入 dirs，导致
+        // 规则匹配层产生扫描范围之外的可执行计划项。
+        let tmp = tempfile::tempdir().unwrap();
+        fs::write(tmp.path().join("direct.bin"), vec![0u8; 32]).unwrap();
+        let sub = tmp.path().join("sub");
+        fs::create_dir(&sub).unwrap();
+        fs::write(sub.join("f.bin"), vec![0u8; 32]).unwrap();
+
+        let res = scan(tmp.path()).unwrap();
+        assert!(
+            res.dirs.iter().all(|d| d.path.starts_with(tmp.path())),
+            "dirs must stay under scan root, got: {:?}",
+            res.dirs
         );
     }
 }
