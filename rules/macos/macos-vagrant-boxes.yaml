@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-vagrant-boxes
+os: macos
+scope: user
+paths:
+  - "~/.vagrant.d/boxes"
+semantics:
+  title: "Vagrant Box 下载缓存（~/.vagrant.d/boxes）"
+  what: "Vagrant 下载的 box 基础镜像缓存（按 名字/版本 目录存放），vagrant up 时以 copy/link 方式用于初始化项目虚拟机；项目运行中的虚拟机磁盘不在此处"
+  producer: "Vagrant（vagrant init/up 时下载）"
+  safe_to_delete_because: "纯下载缓存：box 可随时从 Vagrant Cloud 重新下载；已建好的项目虚拟机（存于各项目 .vagrant 与 VirtualBox/VMware 目录）不受影响"
+  consequence: "下次 vagrant up 新环境需重新下载对应 box（数百 MB 到数 GB），需网络"
+  regenerate: "vagrant up / vagrant box add 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（多 box 用户）"
+  recovery: full
+refs:
+  - https://developer.hashicorp.com/vagrant/docs/cli/box

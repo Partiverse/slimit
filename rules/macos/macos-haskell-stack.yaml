@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-haskell-stack
+os: macos
+scope: user
+paths:
+  - "~/.stack"
+semantics:
+  title: "Stack Haskell 工作区（~/.stack）"
+  what: "Haskell 工具 Stack 的全局目录：快照包数据库、GHC 编译器安装（programs/，每套约 1–2 GB）、预编译包缓存（snapshots/）等"
+  producer: "stack（stack build / stack setup）"
+  safe_to_delete_because: "不可整目录删除——GHC 编译器安装就在其中，删掉后项目构建中断；正确方式是删除不再需要的 GHC 版本目录或用 stack uninstall 语义逐项清理"
+  consequence: "整目录删除后所有项目需重新 stack setup（重新下载 GHC 数 GB）并重建快照依赖；源代码不受影响"
+  regenerate: "stack setup / stack build 自动重建，但耗时耗流量"
+risk: yellow
+red_flags: []
+action:
+  kind: advise
+estimate:
+  typical_size: "5–20 GB（Haskell 开发者）"
+  recovery: full
+refs:
+  - https://docs.haskellstack.org/en/stable/stack_root/

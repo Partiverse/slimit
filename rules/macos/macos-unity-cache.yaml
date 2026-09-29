@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-unity-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Unity/cache"
+semantics:
+  title: "Unity 全局缓存（~/Library/Unity/cache）"
+  what: "Unity 编辑器的全局包缓存：Unity Package Manager 下载的包 tarball、Git 包、以及 GI（全局光照）缓存，多个项目共享以加速导入"
+  producer: "Unity Editor / Unity Package Manager"
+  safe_to_delete_because: "官方文档说明包缓存仅用于加速重复安装，可整体删除；下次打开项目时按项目 manifest.json 重新下载"
+  consequence: "下次打开各 Unity 项目需重新下载包（需网络）并重建 GI 缓存，首次导入明显变慢；项目 Assets 与场景不受影响"
+  regenerate: "打开项目时自动重新下载与重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "2–20 GB（Unity 开发者）"
+  recovery: full
+refs:
+  - https://docs.unity3d.com/Manual/upm-cache.html

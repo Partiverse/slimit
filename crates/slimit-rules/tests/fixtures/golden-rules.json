@@ -38,6 +38,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-adobe-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Adobe"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Adobe 全家桶缓存（~/Library/Caches/Adobe）",
+      "what": "Adobe 应用（Photoshop/Premiere/Illustrator 等与 Creative Cloud）的缓存总目录：字体缓存、媒体缓存索引、机器学习模型缓存、更新缓存等，重度用户常见 5–20 GB",
+      "producer": "Adobe Creative Cloud 各应用",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录，按 Apple 文件系统规范其内容必须是应用可自行重建的数据；各应用启动时按需重建",
+      "consequence": "各 Adobe 应用首次启动与打开文件会重建缓存，Premiere 大项目需重新生成媒体缓存索引，短期变慢；个别应用可能要求重新登录 Creative Cloud 一次；文档与素材本身不受影响",
+      "regenerate": "应用运行时按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "5–20 GB（重度 Adobe 用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-android-avd",
     "os": "macos",
     "scope": "user",
@@ -152,6 +189,44 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-arc-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Arc"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Arc 浏览器缓存",
+      "what": "Arc（Chromium 内核，The Browser Company）的 HTTP 网页资源缓存与代码缓存。Spaces、收藏、密码、历史等用户数据存放在 ~/Library/Application Support/Arc，不在此处",
+      "producer": "Arc 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，遵循 Chromium 缓存与用户数据分离的约定",
+      "consequence": "Spaces、密码、收藏、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Arc",
+      "regenerate": "浏览器运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（Arc 重度用户缓存可达 5 GB+）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://support.arc.net/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-bazel-cache",
     "os": "macos",
     "scope": "user",
@@ -186,6 +261,44 @@
     "refs": [
       "https://bazel.build/run/build",
       "https://bazel.build/external/overview"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-brave-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/BraveSoftware/Brave-Browser"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Brave 浏览器缓存",
+      "what": "Brave（Chromium 内核）的 HTTP 网页资源缓存与代码缓存，按 profile 存放。密码、书签、历史等用户数据存放在 ~/Library/Application Support/BraveSoftware，不在此处",
+      "producer": "Brave 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，遵循 Chromium 用户数据目录与缓存分离的约定；浏览器自身『清除浏览数据』也不影响密码书签",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Brave",
+      "regenerate": "浏览器运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://github.com/brave/brave-browser/wiki"
     ]
   },
   {
@@ -303,6 +416,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-composer-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/composer"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Composer 包下载缓存（~/Library/Caches/composer）",
+      "what": "PHP 依赖管理器 Composer 的下载缓存（zips、vcs 元数据），composer install/update 优先从此处取包避免重复下载",
+      "producer": "Composer（composer install / update）",
+      "safe_to_delete_because": "纯下载缓存：Composer 文档说明缓存仅用于加速，可随时清空（官方 composer clearcache 即是此事）；删除后按 composer.lock 重新下载",
+      "consequence": "下次安装依赖需重新从 packagist/源下载，需网络；项目 vendor 目录与 composer.lock 不受影响",
+      "regenerate": "composer install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://getcomposer.org/doc/03-cli.md#clear-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-conda-clean",
     "os": "macos",
     "scope": "user",
@@ -339,6 +489,43 @@
     "refs": [
       "https://docs.conda.io/projects/conda/en/latest/commands/conda-clean.html",
       "https://www.anaconda.com/blog/using-pip-in-a-conda-environment"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-coursier-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Coursier"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Coursier Scala 构件缓存（~/Library/Caches/Coursier）",
+      "what": "Coursier（Scala 生态默认依赖解析器，sbt/Mill/scala-cli 底层共用）的 jar/构件下载缓存，按 Maven 坐标目录存放",
+      "producer": "Coursier（sbt / scala-cli / coursier fetch）",
+      "safe_to_delete_because": "纯下载缓存：Coursier 文档说明缓存可随时删除，下次构建按 ivy/maven 坐标重新下载",
+      "consequence": "下次构建 Scala 项目需重新下载依赖 jar，需网络；项目源码与编译产物不受影响",
+      "regenerate": "sbt compile / scala-cli compile 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–5 GB（Scala 开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://get-coursier.io/docs/cache"
     ]
   },
   {
@@ -453,6 +640,43 @@
     "refs": [
       "https://docs.docker.com/build/cache/",
       "https://docs.docker.com/engine/manage-resources/pruning/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-docker-desktop-logs",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.docker.docker/Data/log"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Docker Desktop 日志（com.docker.docker 容器内 log）",
+      "what": "Docker Desktop 在 macOS 沙盒容器内写入的诊断日志（vm、com.docker.backend 等子目录），排障用，随时间累积",
+      "producer": "Docker Desktop",
+      "safe_to_delete_because": "官方排障文档将此目录列为日志收集位置，日志是纯诊断输出，删除不影响镜像/容器/设置",
+      "consequence": "历史日志丢失（正在排障时保留为好）；Docker 功能与数据不受影响",
+      "regenerate": "Docker Desktop 运行时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB（长期不重启用户更大）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.docker.com/desktop/troubleshoot/overview/"
     ]
   },
   {
@@ -759,6 +983,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-gradle-wrapper-dists",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/wrapper/dists"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle Wrapper 发行版缓存（~/.gradle/wrapper/dists）",
+      "what": "gradle wrapper 按项目声明的版本自动下载的 Gradle 发行版（每个版本约 130 MB 解压后 500 MB+），长期多项目开发会积累大量旧版本",
+      "producer": "Gradle Wrapper（gradlew 首次运行时下载）",
+      "safe_to_delete_because": "纯下载缓存：各项目的 gradlew 下次运行时按 gradle-wrapper.properties 声明的版本重新下载；与 macos-gradle-caches（~/.gradle/caches 构建缓存）互补不重叠",
+      "consequence": "每个项目首次构建需重新下载对应 Gradle 版本，需网络；项目源码与构建脚本不受影响",
+      "regenerate": "gradlew 运行时自动下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多版本积累）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/gradle_wrapper.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-haskell-stack",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.stack"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Stack Haskell 工作区（~/.stack）",
+      "what": "Haskell 工具 Stack 的全局目录：快照包数据库、GHC 编译器安装（programs/，每套约 1–2 GB）、预编译包缓存（snapshots/）等",
+      "producer": "stack（stack build / stack setup）",
+      "safe_to_delete_because": "不可整目录删除——GHC 编译器安装就在其中，删掉后项目构建中断；正确方式是删除不再需要的 GHC 版本目录或用 stack uninstall 语义逐项清理",
+      "consequence": "整目录删除后所有项目需重新 stack setup（重新下载 GHC 数 GB）并重建快照依赖；源代码不受影响",
+      "regenerate": "stack setup / stack build 自动重建，但耗时耗流量"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "5–20 GB（Haskell 开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.haskellstack.org/en/stable/stack_root/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-homebrew-cleanup",
     "os": "macos",
     "scope": "user",
@@ -1031,6 +1329,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-minikube-clusters",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.minikube"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "minikube 本地集群（~/.minikube）",
+      "what": "minikube 本地 Kubernetes 集群的数据目录：集群虚拟机磁盘镜像、拉取的容器镜像缓存（单集群常见 20 GB+）、证书与 kubeconfig 条目",
+      "producer": "minikube（minikube start）",
+      "safe_to_delete_because": "不可直接删除整目录——正在使用的集群证书与 kubeconfig 在其中；正确方式是官方 minikube delete 删除不再需要的集群（dry_run 先列出集群清单）",
+      "consequence": "官方命令删除后集群及其镜像缓存释放；kubeconfig 中对应条目一并清理；直接删目录会留下失效证书与 kubeconfig 残留",
+      "regenerate": "minikube start 重建集群"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "minikube delete --all",
+      "dry_run": "minikube profile list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "10–30 GB（含镜像缓存）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://minikube.sigs.k8s.io/docs/commands/delete/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-npm-cache",
     "os": "macos",
     "scope": "user",
@@ -1140,6 +1475,44 @@
     "refs": [
       "https://docs.ollama.com/",
       "https://github.com/ollama/ollama/blob/main/docs/faq.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-opera-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.operasoftware.Opera"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Opera 浏览器缓存",
+      "what": "Opera（Chromium 内核）的 HTTP 网页资源缓存与代码缓存。用户数据存放在 ~/Library/Application Support/com.operasoftware.Opera，不在此处",
+      "producer": "Opera 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，遵循 Chromium 缓存与用户数据分离的约定",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Opera",
+      "regenerate": "浏览器运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://help.opera.com/"
     ]
   },
   {
@@ -1564,6 +1937,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-telegram-media-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Telegram macOS 媒体缓存（Group Container）",
+      "what": "Telegram macOS 客户端的数据目录：浏览过的图片/视频/文件的本地媒体缓存随使用增长可达数十 GB。聊天记录本体在 Telegram 云端，本地仅是缓存与登录态",
+      "producer": "Telegram for macOS",
+      "safe_to_delete_because": "不可自动清理：目录内除媒体缓存外还有登录状态与本地设置，整目录删除会要求重新登录；正确方式是应用内『数据与存储 → 清除缓存』按大小/时间清理",
+      "consequence": "整目录直接删除会丢失本地登录态（需重新扫码登录）与本地设置；云端聊天记录不受影响",
+      "regenerate": "媒体缓存随浏览自动重建；登录态需重新登录"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（重度用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://telegram.org/faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-time-machine-local-snapshots",
     "os": "macos",
     "scope": "user",
@@ -1643,6 +2053,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-unity-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Unity/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Unity 全局缓存（~/Library/Unity/cache）",
+      "what": "Unity 编辑器的全局包缓存：Unity Package Manager 下载的包 tarball、Git 包、以及 GI（全局光照）缓存，多个项目共享以加速导入",
+      "producer": "Unity Editor / Unity Package Manager",
+      "safe_to_delete_because": "官方文档说明包缓存仅用于加速重复安装，可整体删除；下次打开项目时按项目 manifest.json 重新下载",
+      "consequence": "下次打开各 Unity 项目需重新下载包（需网络）并重建 GI 缓存，首次导入明显变慢；项目 Assets 与场景不受影响",
+      "regenerate": "打开项目时自动重新下载与重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "2–20 GB（Unity 开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.unity3d.com/Manual/upm-cache.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-user-caches",
     "os": "macos",
     "scope": "user",
@@ -1716,6 +2163,118 @@
     },
     "refs": [
       "https://docs.getutm.app/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-uv-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/uv"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "uv 包缓存（~/Library/Caches/uv）",
+      "what": "Astral 的 Python 包管理器 uv 的构建与下载缓存：PyPI 包归档、wheel 构建缓存、托管环境快照，供各项目 uv pip/venv 安装复用",
+      "producer": "uv（uv pip install / uv sync / uv python）",
+      "safe_to_delete_because": "官方文档明确缓存目录可以随时安全删除，uv 会在需要时重新下载并重建；也可用官方 uv cache clean",
+      "consequence": "下次安装依赖需重新下载，需网络；项目虚拟环境（.venv）与 uv.lock 不受影响",
+      "regenerate": "uv install/sync 自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多项目 Python 开发者）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.astral.sh/uv/concepts/cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-vagrant-boxes",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.vagrant.d/boxes"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Vagrant Box 下载缓存（~/.vagrant.d/boxes）",
+      "what": "Vagrant 下载的 box 基础镜像缓存（按 名字/版本 目录存放），vagrant up 时以 copy/link 方式用于初始化项目虚拟机；项目运行中的虚拟机磁盘不在此处",
+      "producer": "Vagrant（vagrant init/up 时下载）",
+      "safe_to_delete_because": "纯下载缓存：box 可随时从 Vagrant Cloud 重新下载；已建好的项目虚拟机（存于各项目 .vagrant 与 VirtualBox/VMware 目录）不受影响",
+      "consequence": "下次 vagrant up 新环境需重新下载对应 box（数百 MB 到数 GB），需网络",
+      "regenerate": "vagrant up / vagrant box add 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多 box 用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.hashicorp.com/vagrant/docs/cli/box"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-vivaldi-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Vivaldi"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Vivaldi 浏览器缓存",
+      "what": "Vivaldi（Chromium 内核）的 HTTP 网页资源缓存与代码缓存。用户数据（书签、密码、历史）存放在 ~/Library/Application Support/Vivaldi，不在此处",
+      "producer": "Vivaldi 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，遵循 Chromium 缓存与用户数据分离的约定",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Vivaldi",
+      "regenerate": "浏览器运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://help.vivaldi.com/"
     ]
   },
   {

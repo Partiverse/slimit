@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-telegram-media-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram"
+semantics:
+  title: "Telegram macOS 媒体缓存（Group Container）"
+  what: "Telegram macOS 客户端的数据目录：浏览过的图片/视频/文件的本地媒体缓存随使用增长可达数十 GB。聊天记录本体在 Telegram 云端，本地仅是缓存与登录态"
+  producer: "Telegram for macOS"
+  safe_to_delete_because: "不可自动清理：目录内除媒体缓存外还有登录状态与本地设置，整目录删除会要求重新登录；正确方式是应用内『数据与存储 → 清除缓存』按大小/时间清理"
+  consequence: "整目录直接删除会丢失本地登录态（需重新扫码登录）与本地设置；云端聊天记录不受影响"
+  regenerate: "媒体缓存随浏览自动重建；登录态需重新登录"
+risk: yellow
+red_flags: []
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 到数十 GB（重度用户）"
+  recovery: full
+refs:
+  - https://telegram.org/faq

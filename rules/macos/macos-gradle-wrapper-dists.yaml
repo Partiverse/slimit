@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-gradle-wrapper-dists
+os: macos
+scope: user
+paths:
+  - "~/.gradle/wrapper/dists"
+semantics:
+  title: "Gradle Wrapper 发行版缓存（~/.gradle/wrapper/dists）"
+  what: "gradle wrapper 按项目声明的版本自动下载的 Gradle 发行版（每个版本约 130 MB 解压后 500 MB+），长期多项目开发会积累大量旧版本"
+  producer: "Gradle Wrapper（gradlew 首次运行时下载）"
+  safe_to_delete_because: "纯下载缓存：各项目的 gradlew 下次运行时按 gradle-wrapper.properties 声明的版本重新下载；与 macos-gradle-caches（~/.gradle/caches 构建缓存）互补不重叠"
+  consequence: "每个项目首次构建需重新下载对应 Gradle 版本，需网络；项目源码与构建脚本不受影响"
+  regenerate: "gradlew 运行时自动下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–10 GB（多版本积累）"
+  recovery: full
+refs:
+  - https://docs.gradle.org/current/userguide/gradle_wrapper.html

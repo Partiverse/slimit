@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-docker-desktop-logs
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.docker.docker/Data/log"
+semantics:
+  title: "Docker Desktop 日志（com.docker.docker 容器内 log）"
+  what: "Docker Desktop 在 macOS 沙盒容器内写入的诊断日志（vm、com.docker.backend 等子目录），排障用，随时间累积"
+  producer: "Docker Desktop"
+  safe_to_delete_because: "官方排障文档将此目录列为日志收集位置，日志是纯诊断输出，删除不影响镜像/容器/设置"
+  consequence: "历史日志丢失（正在排障时保留为好）；Docker 功能与数据不受影响"
+  regenerate: "Docker Desktop 运行时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB（长期不重启用户更大）"
+  recovery: full
+refs:
+  - https://docs.docker.com/desktop/troubleshoot/overview/

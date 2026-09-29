@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-composer-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/composer"
+semantics:
+  title: "Composer 包下载缓存（~/Library/Caches/composer）"
+  what: "PHP 依赖管理器 Composer 的下载缓存（zips、vcs 元数据），composer install/update 优先从此处取包避免重复下载"
+  producer: "Composer（composer install / update）"
+  safe_to_delete_because: "纯下载缓存：Composer 文档说明缓存仅用于加速，可随时清空（官方 composer clearcache 即是此事）；删除后按 composer.lock 重新下载"
+  consequence: "下次安装依赖需重新从 packagist/源下载，需网络；项目 vendor 目录与 composer.lock 不受影响"
+  regenerate: "composer install 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://getcomposer.org/doc/03-cli.md#clear-cache

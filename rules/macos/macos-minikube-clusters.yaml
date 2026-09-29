@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-minikube-clusters
+os: macos
+scope: user
+paths:
+  - "~/.minikube"
+semantics:
+  title: "minikube 本地集群（~/.minikube）"
+  what: "minikube 本地 Kubernetes 集群的数据目录：集群虚拟机磁盘镜像、拉取的容器镜像缓存（单集群常见 20 GB+）、证书与 kubeconfig 条目"
+  producer: "minikube（minikube start）"
+  safe_to_delete_because: "不可直接删除整目录——正在使用的集群证书与 kubeconfig 在其中；正确方式是官方 minikube delete 删除不再需要的集群（dry_run 先列出集群清单）"
+  consequence: "官方命令删除后集群及其镜像缓存释放；kubeconfig 中对应条目一并清理；直接删目录会留下失效证书与 kubeconfig 残留"
+  regenerate: "minikube start 重建集群"
+risk: yellow
+red_flags: []
+action:
+  kind: command
+  command: "minikube delete --all"
+  dry_run: "minikube profile list"
+estimate:
+  typical_size: "10–30 GB（含镜像缓存）"
+  recovery: full
+refs:
+  - https://minikube.sigs.k8s.io/docs/commands/delete/

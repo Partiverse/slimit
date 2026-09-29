@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-arc-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Arc"
+semantics:
+  title: "Arc 浏览器缓存"
+  what: "Arc（Chromium 内核，The Browser Company）的 HTTP 网页资源缓存与代码缓存。Spaces、收藏、密码、历史等用户数据存放在 ~/Library/Application Support/Arc，不在此处"
+  producer: "Arc 浏览器"
+  safe_to_delete_because: "全部为浏览器自动生成的派生数据，遵循 Chromium 缓存与用户数据分离的约定"
+  consequence: "Spaces、密码、收藏、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。建议先退出 Arc"
+  regenerate: "浏览器运行中按需自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 至数 GB（Arc 重度用户缓存可达 5 GB+）"
+  recovery: full
+refs:
+  - https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md
+  - https://support.arc.net/
