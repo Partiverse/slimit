@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-bun-cache
+os: macos
+scope: user
+paths:
+  - "~/.bun/install/cache"
+semantics:
+  title: "Bun 包下载缓存（~/.bun/install/cache）"
+  what: "Bun（JavaScript 运行时与包管理器）的 npm 包下载缓存：下载过的包 tarball 按名称/版本存放，bun install 时复用"
+  producer: "Bun（bun install / bun add）"
+  safe_to_delete_because: "纯下载缓存：删除后下次安装依赖时重新从 npm registry 下载；项目 node_modules 与 bun.lock 不受影响"
+  consequence: "下次安装需重新下载，需网络"
+  regenerate: "bun install 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://bun.sh/docs/install/cache

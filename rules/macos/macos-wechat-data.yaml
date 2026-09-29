@@ -1,0 +1,27 @@
+apiVersion: slimit.rules/v1
+id: macos-wechat-data
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files"
+  - "~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat"
+semantics:
+  title: "微信聊天数据目录（xwechat_files / 旧版 Application Support）"
+  what: "微信 macOS 客户端的本地数据：4.x 存于 xwechat_files（聊天记录数据库、图片视频文件、收藏），3.x 旧版存于 Application Support/com.tencent.xinWeChat 下的版本目录"
+  producer: "微信（Tencent）"
+  safe_to_delete_because: "不可自动清理：这是聊天记录本体，删除后未备份的聊天记录、图片、视频、文件永久丢失；官方仅提供应用内迁移/备份能力"
+  consequence: "本地聊天记录与媒体文件永久丢失（云端仅保留有限的服务器消息）；对多数用户等同不可逆数据损失"
+  regenerate: "不可恢复；仅能从用户自行做的备份迁移回来"
+risk: red
+red_flags:
+  - "目录内容是聊天记录数据库与媒体文件本体，不是缓存"
+  - "瘦身只能通过微信应用内『设置 → 通用 → 存储空间』管理（可选清理特定聊天的媒体）"
+  - "清理前必须由用户自行完成聊天记录备份/迁移"
+action:
+  kind: advise
+estimate:
+  typical_size: "5–50 GB（重度用户可超 100 GB）"
+  recovery: none
+refs:
+  - https://zhuanlan.zhihu.com/p/1933915147388303287
+  - https://www.rehiy.com/post/604

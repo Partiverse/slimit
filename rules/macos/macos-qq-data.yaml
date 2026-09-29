@@ -1,0 +1,26 @@
+apiVersion: slimit.rules/v1
+id: macos-qq-data
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.tencent.qq/Data/Library/Application Support/QQ"
+semantics:
+  title: "QQ NT 聊天数据目录（nt_qq 数据库）"
+  what: "QQ NT 版 macOS 客户端的本地数据：每个登录过的账号一个 nt_qq_{id} 目录，nt_db 子目录是聊天记录 SQLite 数据库，另含接收的文件与图片缓存"
+  producer: "QQ（Tencent，NT 架构）"
+  safe_to_delete_because: "不可自动清理：nt_db 是聊天记录数据库本体，删除后未导出的聊天记录永久丢失"
+  consequence: "对应账号的本地聊天记录、接收文件索引永久丢失；NT 数据库无法从云端完整拉回历史"
+  regenerate: "不可恢复；仅能从 QQ 内『消息管理器 → 导出』的备份或用户自行拷贝的 nt_qq 目录恢复"
+risk: red
+red_flags:
+  - "nt_db 是 SQLite 聊天记录数据库本体"
+  - "瘦身应通过 QQ 应用内清理或先在消息管理器导出备份"
+  - "多账号用户删除会同时影响所有登录过的账号数据"
+action:
+  kind: advise
+estimate:
+  typical_size: "2–30 GB"
+  recovery: none
+refs:
+  - https://global.v2ex.com/
+  - https://github.com/QQBackup/qq-win-db-key

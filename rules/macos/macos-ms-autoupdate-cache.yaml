@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-ms-autoupdate-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/com.microsoft.autoupdate2"
+semantics:
+  title: "Microsoft AutoUpdate 更新包缓存"
+  what: "Microsoft AutoUpdate（Office/Edge 等 Microsoft 应用的更新器）下载的安装包缓存：每次更新都会在此暂存完整的 .pkg 安装包，更新完成后即无用"
+  producer: "Microsoft AutoUpdate"
+  safe_to_delete_because: "位于 macOS 约定的 Caches 目录；更新包安装完成后即失去作用，下次更新时重新下载"
+  consequence: "无功能影响；下次检查更新时重新下载安装包"
+  regenerate: "AutoUpdate 运行时自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（更新频繁的 Office 用户）"
+  recovery: full
+refs:
+  - https://learn.microsoft.com/en-us/microsoft-365-apps/mac/update-office-for-mac-using-msupdate

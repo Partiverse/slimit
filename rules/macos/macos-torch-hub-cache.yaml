@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-torch-hub-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/torch"
+semantics:
+  title: "PyTorch Hub 模型缓存（~/Library/Caches/torch）"
+  what: "torch.hub 下载的预训练模型权重与 GitHub 仓库快照：模型代码与 .pt/.pth 权重文件，单个模型可达数 GB"
+  producer: "PyTorch（torch.hub.load / 首次运行模型时下载）"
+  safe_to_delete_because: "不可自动清理：模型权重是用户特意下载的，重新下载耗时耗流量；确认不再使用后可删"
+  consequence: "下次运行相应模型需重新下载权重（重新消耗数 GB 流量）"
+  regenerate: "torch.hub.load 自动重新下载"
+risk: yellow
+red_flags: []
+action:
+  kind: advise
+estimate:
+  typical_size: "1–30 GB（多模型用户）"
+  recovery: full
+refs:
+  - https://pytorch.org/docs/stable/hub.html

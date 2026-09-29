@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-node-gyp-cache
+os: macos
+scope: user
+paths:
+  - "~/.node-gyp"
+semantics:
+  title: "node-gyp 头文件缓存（~/.node-gyp）"
+  what: "node-gyp 编译原生 Node 扩展时下载的各版本 Node.js C/C++ 头文件（include/node），按版本号分目录存放"
+  producer: "node-gyp（npm install 含原生模块时自动调用）"
+  safe_to_delete_because: "纯下载缓存：删除后下次编译原生模块时按当前 Node 版本重新下载头文件"
+  consequence: "下次安装含原生扩展的包需重新下载头文件（每版本约 10 MB），需网络"
+  regenerate: "node-gyp configure 时自动下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数百 MB（多 Node 版本）"
+  recovery: full
+refs:
+  - https://github.com/nodejs/node-gyp

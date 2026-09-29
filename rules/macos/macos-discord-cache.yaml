@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-discord-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/com.hnc.Discord"
+semantics:
+  title: "Discord 桌面客户端缓存"
+  what: "Discord（Electron 架构）的 macOS 缓存目录：图片/视频/网页资源缓存与代码缓存。账号、消息、设置存放在 ~/Library/Application Support/discord，不在此处"
+  producer: "Discord 桌面客户端"
+  safe_to_delete_because: "遵循 macOS Caches 目录约定，内容为客户端可自行重建的派生数据；删除不影响账号与聊天记录（消息本体在云端）"
+  consequence: "之后首次打开频道需重新下载媒体资源，加载略慢；登录态与消息不受影响"
+  regenerate: "客户端运行中按需自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–5 GB（重度语音/视频用户）"
+  recovery: full
+refs:
+  - https://support.discord.com/

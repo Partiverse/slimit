@@ -303,6 +303,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-bun-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.bun/install/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Bun 包下载缓存（~/.bun/install/cache）",
+      "what": "Bun（JavaScript 运行时与包管理器）的 npm 包下载缓存：下载过的包 tarball 按名称/版本存放，bun install 时复用",
+      "producer": "Bun（bun install / bun add）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次安装依赖时重新从 npm registry 下载；项目 node_modules 与 bun.lock 不受影响",
+      "consequence": "下次安装需重新下载，需网络",
+      "regenerate": "bun install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://bun.sh/docs/install/cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-cargo-git",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.cargo/git"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cargo Git 依赖缓存（~/.cargo/git）",
+      "what": "cargo 对 Git 依赖（path 指向 git 仓库的依赖）的克隆与检出缓存：git db（裸仓库）与 checkouts（按 rev 检出的工作树）。与 macos-cargo-registry-cache（registry 下载缓存）互补不重叠",
+      "producer": "cargo（cargo build/fetch 拉取 git 依赖时）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 cargo 重新 clone 并 checkout 对应 rev",
+      "consequence": "下次构建需重新克隆 git 依赖仓库（需网络，私有仓库需凭据可用）；项目代码与 Cargo.lock 不受影响",
+      "regenerate": "cargo fetch / cargo build 自动重新克隆"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 git 依赖项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://doc.rust-lang.org/cargo/guide/cargo-home.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-cargo-registry-cache",
     "os": "macos",
     "scope": "user",
@@ -412,6 +486,46 @@
     },
     "refs": [
       "https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-colima-data",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.colima"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Colima 容器运行时虚拟磁盘（~/.colima）",
+      "what": "Colima（macOS 上的轻量 Docker/容器运行时）的数据目录：Docker 虚拟机的整块磁盘镜像（含全部镜像、容器、卷）与运行时状态",
+      "producer": "colima（colima start）",
+      "safe_to_delete_because": "不可直接删除——承载 Docker 数据盘全部内容；不用了应 colima delete 而非文件系统层清理",
+      "consequence": "所有镜像、容器、命名卷数据永久丢失，等同删除一台 Docker 主机的硬盘",
+      "regenerate": "colima start 重建虚拟机，但镜像/容器/卷需重新拉取，卷内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "虚拟磁盘内是 Docker 全部数据（镜像/容器/卷）",
+      "正确方式：colima list 查看，colima delete 删除实例，或 docker system prune 瘦身"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://github.com/abiosoft/colima/blob/main/docs/FAQ.md"
     ]
   },
   {
@@ -602,6 +716,80 @@
     "refs": [
       "https://docs.cypress.io/app/get-started/install-cypress",
       "https://docs.cypress.io/app/references/advanced-installation#Binary-install-optional"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-deno-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/deno"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Deno 模块与编译缓存（~/Library/Caches/deno）",
+      "what": "Deno 运行时的默认 DENO_DIR：远程模块缓存、依赖注册表数据、TypeScript 编译缓存、HTTP 缓存等",
+      "producer": "Deno（deno run / deno cache）",
+      "safe_to_delete_because": "纯缓存：Deno 文档说明清空 DENO_DIR 后模块在下次运行时按 lockfile/远程源重新下载编译",
+      "consequence": "下次运行 Deno 程序需重新下载远程模块并重新编译 TS，需网络；项目源码与 deno.lock 不受影响",
+      "regenerate": "deno run / deno cache 自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.deno.com/runtime/manual/basics/environment_variables/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-discord-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.hnc.Discord"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Discord 桌面客户端缓存",
+      "what": "Discord（Electron 架构）的 macOS 缓存目录：图片/视频/网页资源缓存与代码缓存。账号、消息、设置存放在 ~/Library/Application Support/discord，不在此处",
+      "producer": "Discord 桌面客户端",
+      "safe_to_delete_because": "遵循 macOS Caches 目录约定，内容为客户端可自行重建的派生数据；删除不影响账号与聊天记录（消息本体在云端）",
+      "consequence": "之后首次打开频道需重新下载媒体资源，加载略慢；登录态与消息不受影响",
+      "regenerate": "客户端运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–5 GB（重度语音/视频用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.discord.com/"
     ]
   },
   {
@@ -835,6 +1023,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-emscripten-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.emscripten_cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Emscripten 工具链缓存（~/.emscripten_cache）",
+      "what": "Emscripten（C/C++ → WebAssembly 编译器）的 SDK 缓存：sysroot、libc++、标准库的预编译 wasm 产物等，emsdk install/activate 时生成",
+      "producer": "emcc / emsdk",
+      "safe_to_delete_because": "官方支持的缓存清理方式：emcc --clear-cache 即是清空此目录；删除后下次编译自动重建",
+      "consequence": "下次 WebAssembly 编译首次变慢（重建 sysroot 与标准库缓存），需网络下载组件",
+      "regenerate": "emcc 编译时自动重建（或 emsdk activate）"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–3 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://emscripten.org/docs/tools_reference/emcc.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-firefox-cache",
     "os": "macos",
     "scope": "user",
@@ -979,6 +1204,43 @@
     },
     "refs": [
       "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-gradle-jdks",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/jdks"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle 自动下载的 JDK（~/.gradle/jdks）",
+      "what": "Gradle Java 工具链自动供给（toolchain auto-provisioning）下载的 JDK 安装包与解压目录：项目声明需要特定 Java 版本而本机没有时，Gradle 自动下载到此",
+      "producer": "Gradle（foojay-resolver 工具链探测）",
+      "safe_to_delete_because": "纯下载缓存：与 macos-gradle-caches（~/.gradle/caches 构建缓存）互补；删除后下次构建按 build.gradle 声明重新下载所需 JDK",
+      "consequence": "下次构建需重新下载 JDK（每个 200–400 MB），需网络；项目代码与已配置的系统 JDK 不受影响",
+      "regenerate": "gradle build 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–6 GB（多 Java 版本项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/toolchains.html"
     ]
   },
   {
@@ -1253,6 +1515,46 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-lima-vms",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.lima"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Lima 虚拟机磁盘（~/.lima）",
+      "what": "Lima（macOS 上的 Linux 虚拟机管理器，Docker/OrbStack 替代方案）的数据目录：每台实例的整块磁盘镜像（diffdisk）、配置与日志都在这里",
+      "producer": "lima（limactl start）",
+      "safe_to_delete_because": "不可直接删除——等于删除全部 Linux 虚拟机的硬盘；不用了的实例应 limactl delete 逐台删除",
+      "consequence": "所有 Lima 实例及其中的 Linux 系统、容器、文件全部永久丢失",
+      "regenerate": "limactl create/start 可重建实例，但实例内数据不可恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "diffdisk 是虚拟机整块磁盘镜像，不是缓存",
+      "正确方式：limactl list 查看实例，limactl delete <实例名> 逐台清理"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每台数 GB 到数十 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://lima-vm.io/docs/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-mail-downloads",
     "os": "macos",
     "scope": "user",
@@ -1362,6 +1664,80 @@
     },
     "refs": [
       "https://minikube.sigs.k8s.io/docs/commands/delete/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-ms-autoupdate-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.microsoft.autoupdate2"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft AutoUpdate 更新包缓存",
+      "what": "Microsoft AutoUpdate（Office/Edge 等 Microsoft 应用的更新器）下载的安装包缓存：每次更新都会在此暂存完整的 .pkg 安装包，更新完成后即无用",
+      "producer": "Microsoft AutoUpdate",
+      "safe_to_delete_because": "位于 macOS 约定的 Caches 目录；更新包安装完成后即失去作用，下次更新时重新下载",
+      "consequence": "无功能影响；下次检查更新时重新下载安装包",
+      "regenerate": "AutoUpdate 运行时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（更新频繁的 Office 用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoft-365-apps/mac/update-office-for-mac-using-msupdate"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-node-gyp-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.node-gyp"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "node-gyp 头文件缓存（~/.node-gyp）",
+      "what": "node-gyp 编译原生 Node 扩展时下载的各版本 Node.js C/C++ 头文件（include/node），按版本号分目录存放",
+      "producer": "node-gyp（npm install 含原生模块时自动调用）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次编译原生模块时按当前 Node 版本重新下载头文件",
+      "consequence": "下次安装含原生扩展的包需重新下载头文件（每版本约 10 MB），需网络",
+      "regenerate": "node-gyp configure 时自动下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多 Node 版本）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://github.com/nodejs/node-gyp"
     ]
   },
   {
@@ -1823,6 +2199,85 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-qq-data",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.tencent.qq/Data/Library/Application Support/QQ"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "QQ NT 聊天数据目录（nt_qq 数据库）",
+      "what": "QQ NT 版 macOS 客户端的本地数据：每个登录过的账号一个 nt_qq_{id} 目录，nt_db 子目录是聊天记录 SQLite 数据库，另含接收的文件与图片缓存",
+      "producer": "QQ（Tencent，NT 架构）",
+      "safe_to_delete_because": "不可自动清理：nt_db 是聊天记录数据库本体，删除后未导出的聊天记录永久丢失",
+      "consequence": "对应账号的本地聊天记录、接收文件索引永久丢失；NT 数据库无法从云端完整拉回历史",
+      "regenerate": "不可恢复；仅能从 QQ 内『消息管理器 → 导出』的备份或用户自行拷贝的 nt_qq 目录恢复"
+    },
+    "risk": "red",
+    "red_flags": [
+      "nt_db 是 SQLite 聊天记录数据库本体",
+      "瘦身应通过 QQ 应用内清理或先在消息管理器导出备份",
+      "多账号用户删除会同时影响所有登录过的账号数据"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "2–30 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://global.v2ex.com/",
+      "https://github.com/QQBackup/qq-win-db-key"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-rustup-downloads",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.rustup/downloads"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "rustup 下载临时目录（~/.rustup/downloads）",
+      "what": "rustup 安装/更新工具链时的下载暂存目录：安装包解压完成后即无用，异常退出时可能残留半成品",
+      "producer": "rustup（rustup update / toolchain install）",
+      "safe_to_delete_because": "纯下载临时目录：rustup 文档将其列为临时存储，删除不影响已安装的工具链与 rustup 本身",
+      "consequence": "无任何功能影响；下次更新时重新下载",
+      "regenerate": "rustup update 时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "0–2 GB（更新中断时残留更大）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://rust-lang.github.io/rustup/installation/index.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-rustup-toolchains",
     "os": "macos",
     "scope": "user",
@@ -2008,6 +2463,43 @@
     "refs": [
       "https://support.apple.com/en-us/102154",
       "https://keith.github.io/xcode-man-pages/tmutil.8.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-torch-hub-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/torch"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "PyTorch Hub 模型缓存（~/Library/Caches/torch）",
+      "what": "torch.hub 下载的预训练模型权重与 GitHub 仓库快照：模型代码与 .pt/.pth 权重文件，单个模型可达数 GB",
+      "producer": "PyTorch（torch.hub.load / 首次运行模型时下载）",
+      "safe_to_delete_because": "不可自动清理：模型权重是用户特意下载的，重新下载耗时耗流量；确认不再使用后可删",
+      "consequence": "下次运行相应模型需重新下载权重（重新消耗数 GB 流量）",
+      "regenerate": "torch.hub.load 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–30 GB（多模型用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pytorch.org/docs/stable/hub.html"
     ]
   },
   {
@@ -2354,6 +2846,49 @@
     "refs": [
       "https://code.visualstudio.com/docs/setup/uninstall",
       "https://code.visualstudio.com/docs/supporting/FAQ"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-wechat-data",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files",
+      "~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "微信聊天数据目录（xwechat_files / 旧版 Application Support）",
+      "what": "微信 macOS 客户端的本地数据：4.x 存于 xwechat_files（聊天记录数据库、图片视频文件、收藏），3.x 旧版存于 Application Support/com.tencent.xinWeChat 下的版本目录",
+      "producer": "微信（Tencent）",
+      "safe_to_delete_because": "不可自动清理：这是聊天记录本体，删除后未备份的聊天记录、图片、视频、文件永久丢失；官方仅提供应用内迁移/备份能力",
+      "consequence": "本地聊天记录与媒体文件永久丢失（云端仅保留有限的服务器消息）；对多数用户等同不可逆数据损失",
+      "regenerate": "不可恢复；仅能从用户自行做的备份迁移回来"
+    },
+    "risk": "red",
+    "red_flags": [
+      "目录内容是聊天记录数据库与媒体文件本体，不是缓存",
+      "瘦身只能通过微信应用内『设置 → 通用 → 存储空间』管理（可选清理特定聊天的媒体）",
+      "清理前必须由用户自行完成聊天记录备份/迁移"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "5–50 GB（重度用户可超 100 GB）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://zhuanlan.zhihu.com/p/1933915147388303287",
+      "https://www.rehiy.com/post/604"
     ]
   },
   {

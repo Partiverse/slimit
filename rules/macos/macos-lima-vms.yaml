@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-lima-vms
+os: macos
+scope: user
+paths:
+  - "~/.lima"
+semantics:
+  title: "Lima 虚拟机磁盘（~/.lima）"
+  what: "Lima（macOS 上的 Linux 虚拟机管理器，Docker/OrbStack 替代方案）的数据目录：每台实例的整块磁盘镜像（diffdisk）、配置与日志都在这里"
+  producer: "lima（limactl start）"
+  safe_to_delete_because: "不可直接删除——等于删除全部 Linux 虚拟机的硬盘；不用了的实例应 limactl delete 逐台删除"
+  consequence: "所有 Lima 实例及其中的 Linux 系统、容器、文件全部永久丢失"
+  regenerate: "limactl create/start 可重建实例，但实例内数据不可恢复"
+risk: red
+red_flags:
+  - "diffdisk 是虚拟机整块磁盘镜像，不是缓存"
+  - "正确方式：limactl list 查看实例，limactl delete <实例名> 逐台清理"
+action:
+  kind: advise
+estimate:
+  typical_size: "每台数 GB 到数十 GB"
+  recovery: none
+refs:
+  - https://lima-vm.io/docs/

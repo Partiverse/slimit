@@ -63,6 +63,38 @@ fn scan_and_plan(
 
 #[tauri::command]
 fn explain(req: ExplanationRequest) -> Result<Explanation, String> {
+    // 规则命中时，语义解释以规则库为准（SPEC §5：规则命中时 AI 仅补充
+    // 语气）；启发式解释器仅作未命中时的降级兜底。
+    if let Some(rule_id) = req.nearest_rule_hits.first() {
+        if let Some(rule) = slimit_rules::embedded_rules()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|r| &r.id == rule_id)
+        {
+            let Some(s) = &rule.semantics else {
+                return HeuristicExplainer.explain(&req);
+            };
+            return Ok(Explanation {
+                what: format!(
+                    "{}（规则库 {}）",
+                    s.what.clone().unwrap_or_default(),
+                    rule.id
+                ),
+                producer: s.producer.clone().unwrap_or_else(|| "未知".to_string()),
+                consequence: s
+                    .consequence
+                    .clone()
+                    .or_else(|| s.safe_to_delete_because.clone())
+                    .unwrap_or_else(|| "规则库未描述删除后果".to_string()),
+                suggested_risk: match rule.risk {
+                    slimit_rules::Risk::Green => slimit_ai::RiskHint::Green,
+                    slimit_rules::Risk::Yellow => slimit_ai::RiskHint::Yellow,
+                    slimit_rules::Risk::Red => slimit_ai::RiskHint::Red,
+                },
+                confidence: 0.95,
+            });
+        }
+    }
     HeuristicExplainer.explain(&req)
 }
 

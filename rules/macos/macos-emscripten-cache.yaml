@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-emscripten-cache
+os: macos
+scope: user
+paths:
+  - "~/.emscripten_cache"
+semantics:
+  title: "Emscripten 工具链缓存（~/.emscripten_cache）"
+  what: "Emscripten（C/C++ → WebAssembly 编译器）的 SDK 缓存：sysroot、libc++、标准库的预编译 wasm 产物等，emsdk install/activate 时生成"
+  producer: "emcc / emsdk"
+  safe_to_delete_because: "官方支持的缓存清理方式：emcc --clear-cache 即是清空此目录；删除后下次编译自动重建"
+  consequence: "下次 WebAssembly 编译首次变慢（重建 sysroot 与标准库缓存），需网络下载组件"
+  regenerate: "emcc 编译时自动重建（或 emsdk activate）"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–3 GB"
+  recovery: full
+refs:
+  - https://emscripten.org/docs/tools_reference/emcc.html

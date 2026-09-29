@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-gradle-jdks
+os: macos
+scope: user
+paths:
+  - "~/.gradle/jdks"
+semantics:
+  title: "Gradle 自动下载的 JDK（~/.gradle/jdks）"
+  what: "Gradle Java 工具链自动供给（toolchain auto-provisioning）下载的 JDK 安装包与解压目录：项目声明需要特定 Java 版本而本机没有时，Gradle 自动下载到此"
+  producer: "Gradle（foojay-resolver 工具链探测）"
+  safe_to_delete_because: "纯下载缓存：与 macos-gradle-caches（~/.gradle/caches 构建缓存）互补；删除后下次构建按 build.gradle 声明重新下载所需 JDK"
+  consequence: "下次构建需重新下载 JDK（每个 200–400 MB），需网络；项目代码与已配置的系统 JDK 不受影响"
+  regenerate: "gradle build 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "1–6 GB（多 Java 版本项目）"
+  recovery: full
+refs:
+  - https://docs.gradle.org/current/userguide/toolchains.html

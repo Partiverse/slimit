@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-colima-data
+os: macos
+scope: user
+paths:
+  - "~/.colima"
+semantics:
+  title: "Colima 容器运行时虚拟磁盘（~/.colima）"
+  what: "Colima（macOS 上的轻量 Docker/容器运行时）的数据目录：Docker 虚拟机的整块磁盘镜像（含全部镜像、容器、卷）与运行时状态"
+  producer: "colima（colima start）"
+  safe_to_delete_because: "不可直接删除——承载 Docker 数据盘全部内容；不用了应 colima delete 而非文件系统层清理"
+  consequence: "所有镜像、容器、命名卷数据永久丢失，等同删除一台 Docker 主机的硬盘"
+  regenerate: "colima start 重建虚拟机，但镜像/容器/卷需重新拉取，卷内数据不可恢复"
+risk: red
+red_flags:
+  - "虚拟磁盘内是 Docker 全部数据（镜像/容器/卷）"
+  - "正确方式：colima list 查看，colima delete 删除实例，或 docker system prune 瘦身"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 到数十 GB"
+  recovery: none
+refs:
+  - https://github.com/abiosoft/colima/blob/main/docs/FAQ.md
