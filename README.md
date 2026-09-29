@@ -2,7 +2,7 @@
 
 跨 macOS / Windows / Linux 的存储瘦身工具。核心差异化：**AI 语义化解释 + 机制级安全**——解释每个目录是什么、谁产生的、删了会怎样，并以隔离区可回滚方式清理。
 
-**状态**：MVP W4 完成（2026-09-29）——W2 扫描器 `getattrlistbulk` 批量枚举（[docs/BENCH.md](./docs/BENCH.md)：~/Library 实测 296 万文件热 57s，同机 `du` 913s，快 ~16×）；W3 规则库 33 条 macOS 规则（green 19 / yellow 8 / red 3，validate + golden fixture 全绿）；W4 APFS 探测接入 core：`slimit snapshots <volume>` / `slimit volume <mount>`（`diskutil -plist` 官方来源，快照 Purgeable/LimitingContainerShrink 标志 + 卷/容器容量）。仓库：https://github.com/Partiverse/slimit（私有）。
+**状态**：MVP W5 骨架完成（2026-09-29）——W2 扫描器 `getattrlistbulk` 批量枚举（[docs/BENCH.md](./docs/BENCH.md)：~/Library 实测 296 万文件热 57s，同机 `du` 913s，快 ~16×）；W3 规则库 33 条 macOS 规则（green 19 / yellow 8 / red 3，validate + golden fixture 全绿）；W4 APFS 探测接入 core：`slimit snapshots <volume>` / `slimit volume <mount>`；W5 Tauri 2 + React 前端骨架（[docs/BRIDGE.md](./docs/BRIDGE.md)）：三命令桥接（扫描/卷容量/快照），扫描走 `ScanSummary` 聚合不传明细。仓库：https://github.com/Partiverse/slimit（私有）。
 
 ## 文档索引
 

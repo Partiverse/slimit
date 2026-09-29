@@ -34,6 +34,67 @@ pub struct ScanResult {
     pub dirs: Vec<DirStat>,
 }
 
+/// UI 桥接用的扫描聚合（前端不接收百万级 `files` 明细）。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScanSummary {
+    pub root: PathBuf,
+    pub file_count: u64,
+    pub actual: u64,
+    pub apparent: u64,
+    /// 按 actual 降序的前 N 个目录（含根自身）。
+    pub top_dirs: Vec<DirStat>,
+}
+
+impl ScanResult {
+    /// 从完整扫描结果生成前端聚合视图；`top` 截断 top_dirs。
+    pub fn summarize(&self, top: usize) -> ScanSummary {
+        let mut dirs = self.dirs.clone();
+        dirs.sort_unstable_by(|a, b| b.actual.cmp(&a.actual).then(a.path.cmp(&b.path)));
+        let (actual, apparent) = self
+            .dirs
+            .iter()
+            .find(|d| d.path == self.root)
+            .map(|d| (d.actual, d.apparent))
+            .unwrap_or((0, 0));
+        ScanSummary {
+            root: self.root.clone(),
+            file_count: self.file_count,
+            actual,
+            apparent,
+            top_dirs: dirs.into_iter().take(top).collect(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dir(path: &str, actual: u64) -> DirStat {
+        DirStat {
+            path: PathBuf::from(path),
+            apparent: actual,
+            actual,
+            file_count: 1,
+        }
+    }
+
+    #[test]
+    fn summarize_orders_and_takes_top() {
+        let res = ScanResult {
+            root: PathBuf::from("/r"),
+            file_count: 3,
+            files: vec![],
+            dirs: vec![dir("/r", 100), dir("/r/b", 60), dir("/r/a", 40), dir("/r/a/x", 30)],
+        };
+        let s = res.summarize(2);
+        assert_eq!(s.actual, 100);
+        assert_eq!(s.top_dirs.len(), 2);
+        assert_eq!(s.top_dirs[0].path, PathBuf::from("/r"));
+        assert_eq!(s.top_dirs[1].path, PathBuf::from("/r/b"));
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum ScanError {
     #[error("root does not exist: {0}")]

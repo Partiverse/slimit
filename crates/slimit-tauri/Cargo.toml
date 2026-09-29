@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "SlimIt GUI 壳（Tauri 2）。W5 接入 Tauri 依赖与前端；当前仅占位保证 workspace 完整。"
+description = "SlimIt GUI 壳（Tauri 2）：桥接 core 扫描/APFS 探测到 React 前端"
 
-# W5 里程碑接入：tauri = "2"、tauri-build、前端 TS/React（见 docs/SPEC_MVP.md §7）。
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
 [dependencies]
+slimit-core = { path = "../slimit-core" }
+tauri = { version = "2", features = [] }
+serde = { workspace = true }
+serde_json = { workspace = true }

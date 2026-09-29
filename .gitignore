@@ -4,3 +4,5 @@
 .mimosa/
 .v2c/
 .video_agent/
+
+crates/slimit-tauri/gen/
