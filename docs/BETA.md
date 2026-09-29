@@ -9,9 +9,10 @@
 - `target/release/bundle/macos/SlimIt.app` — 主程序（arm64，macOS 26 实测）
 - `target/release/bundle/dmg/SlimIt_0.1.0_aarch64.dmg` — 分发镜像（hdiutil 生成，无装饰布局）
 
-> 已知问题：tauri 自带 bundle_dmg.sh 依赖 Finder AppleScript 定位图标，在本环境报
-> -10006（自动化授权缺失），故 DMG 用 `hdiutil create -srcfolder` 手工生成。
-> W8 notarization 阶段一并处理签名与 DMG 美化。
+> 备注：tauri 自带 bundle_dmg.sh 依赖 Finder AppleScript 定位图标，偶发 -10006
+> （自动化授权缺失）导致 DMG 步骤失败；失败时可 `hdiutil create -volname SlimIt
+> -srcfolder target/release/bundle/macos/SlimIt.app -ov -format UDZO <输出>.dmg`
+> 直接生成。W8 notarization 阶段一并处理签名与 DMG 美化。
 
 ## 安装指引（未签名应用的 Gatekeeper 通行方式）
 
