@@ -6,6 +6,7 @@ import {
   getSettings,
   listQuarantine,
   listSnapshots,
+  purgeExpiredQuarantine,
   restoreItem,
   scanAndPlan,
   setSettings,
@@ -467,6 +468,9 @@ function QuarantinePanel() {
   const [items, setItems] = useState<Manifest[] | null>(null);
   const [err, setErr] = useState("");
   const [restored, setRestored] = useState<string | null>(null);
+  const [purgeConfirming, setPurgeConfirming] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purged, setPurged] = useState<Manifest[] | null>(null);
 
   const run = async () => {
     setErr("");
@@ -487,14 +491,51 @@ function QuarantinePanel() {
     }
   };
 
+  // 两段式确认对齐 CleanPanel：第一次点击进入确认态，第二次才真正执行。
+  // 不可逆删除（红线④）：执行后经后端审计日志记录，UI 提示被清理项。
+  const purge = async () => {
+    setErr("");
+    setPurging(true);
+    try {
+      const cleaned = await purgeExpiredQuarantine();
+      setPurged(cleaned);
+      setPurgeConfirming(false);
+      await run();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setPurging(false);
+    }
+  };
+
   return (
     <section>
       <h2>隔离区</h2>
       <div className="row">
         <button onClick={run}>列出隔离条目</button>
+        <button
+          onClick={() => (purgeConfirming ? purge() : setPurgeConfirming(true))}
+          disabled={purging}
+        >
+          {purging
+            ? "清理中…"
+            : purgeConfirming
+              ? "✅ 确认清理已过期条目（14 天，不可恢复）"
+              : "清理已过期条目（14 天）"}
+        </button>
+        {purgeConfirming && (
+          <button className="ghost" onClick={() => setPurgeConfirming(false)}>
+            取消
+          </button>
+        )}
       </div>
       {err && <p className="error">{err}</p>}
       {restored && <p className="ok">已恢复到：{restored}</p>}
+      {purged && (
+        <p className="ok">
+          已清理 {purged.length} 个过期条目（payload + manifest 一并移除，审计已记录）
+        </p>
+      )}
       {items && (
         <>
           <p>{items.length} 个条目</p>

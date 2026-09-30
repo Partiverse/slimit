@@ -20,6 +20,20 @@ pub struct Manifest {
     pub actual_bytes: u64,
 }
 
+/// 隔离条目默认保留期（天）：红线③「删除一律进隔离区（14 天可恢复）」
+/// 的到期清理口径。
+pub const DEFAULT_RETENTION_DAYS: u64 = 14;
+
+/// 解析 `quarantined_at` 为 unix 秒（当前格式 `"{secs} (unix-seconds)"`，
+/// 兼容纯数字串）。不可解析返回 None——年龄未知按保守处理，永不删除。
+fn parse_unix_secs(s: &str) -> Option<u64> {
+    let digits = s.split_whitespace().next()?;
+    if !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    digits.parse().ok()
+}
+
 impl Quarantine {
     pub fn new(base: &Path) -> Self {
         Self {
@@ -90,6 +104,32 @@ impl Quarantine {
         out.sort_by(|a, b| a.quarantined_at.cmp(&b.quarantined_at));
         Ok(out)
     }
+    /// 清理迁入超过 `max_age_days` 的隔离条目（payload + manifest 一并
+    /// 移除），返回被清理的 manifest。这是不可逆删除——调用方负责二次
+    /// 确认与审计。语义：
+    /// - `quarantined_at` 不可解析或 manifest 不可读的条目跳过不删
+    ///   （年龄未知按保守处理）。
+    /// - 年龄恰好达到 `max_age_days` 即视为过期（`>=`）。
+    /// - 单项删除失败立即返回 Err（已清理项不回滚，失败项留在隔离区，
+    ///   下次调用重试）。
+    pub fn purge_expired(&self, max_age_days: u64) -> std::io::Result<Vec<Manifest>> {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        let max_age_secs = max_age_days.saturating_mul(86_400);
+        let mut purged = Vec::new();
+        for m in self.list()? {
+            let Some(t) = parse_unix_secs(&m.quarantined_at) else {
+                continue;
+            };
+            if now.saturating_sub(t) >= max_age_secs {
+                std::fs::remove_dir_all(self.entry_dir(&m.id))?;
+                purged.push(m);
+            }
+        }
+        Ok(purged)
+    }
 }
 
 fn now_rfc3339() -> String {
@@ -112,6 +152,71 @@ mod tests {
         let (id, m) = q.build_manifest(Path::new("/tmp/x"), "macos-test", 123);
         assert!(!id.is_empty());
         assert_eq!(m.original_path, Path::new("/tmp/x"));
+    }
+
+    #[test]
+    fn parse_unix_secs_formats() {
+        assert_eq!(super::parse_unix_secs("123 (unix-seconds)"), Some(123));
+        assert_eq!(super::parse_unix_secs("456"), Some(456));
+        assert_eq!(super::parse_unix_secs("abc"), None);
+        assert_eq!(super::parse_unix_secs(""), None);
+    }
+
+    #[test]
+    fn purge_expired_removes_old_keeps_new() {
+        let dir = tempfile::tempdir().unwrap();
+        let q = Quarantine::new(dir.path());
+
+        // 旧条目：quarantined_at = epoch（必然超过 14 天）。
+        let (old_id, mut old_m) = q.build_manifest(Path::new("/tmp/old"), "macos-test", 100);
+        old_m.quarantined_at = "0 (unix-seconds)".into();
+        std::fs::create_dir_all(q.entry_dir(&old_id)).unwrap();
+        std::fs::write(
+            q.manifest_path(&old_id),
+            serde_json::to_string(&old_m).unwrap(),
+        )
+        .unwrap();
+        std::fs::write(q.entry_dir(&old_id).join("payload"), b"old").unwrap();
+
+        // 新条目：当前时间（未到期）。
+        let (new_id, new_m) = q.build_manifest(Path::new("/tmp/new"), "macos-test", 5);
+        std::fs::create_dir_all(q.entry_dir(&new_id)).unwrap();
+        std::fs::write(
+            q.manifest_path(&new_id),
+            serde_json::to_string(&new_m).unwrap(),
+        )
+        .unwrap();
+        std::fs::write(q.entry_dir(&new_id).join("payload"), b"new").unwrap();
+
+        let purged = q.purge_expired(14).unwrap();
+        assert_eq!(purged.len(), 1);
+        assert_eq!(purged[0].original_path, Path::new("/tmp/old"));
+        assert!(
+            !q.entry_dir(&old_id).exists(),
+            "expired entry must be removed"
+        );
+        assert!(
+            q.entry_dir(&new_id).join("payload").exists(),
+            "fresh entry must survive"
+        );
+        assert_eq!(q.list().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn purge_expired_skips_unknown_age() {
+        let dir = tempfile::tempdir().unwrap();
+        let q = Quarantine::new(dir.path());
+        let (id, mut m) = q.build_manifest(Path::new("/tmp/x"), "macos-test", 1);
+        m.quarantined_at = "not-a-date".into();
+        std::fs::create_dir_all(q.entry_dir(&id)).unwrap();
+        std::fs::write(q.manifest_path(&id), serde_json::to_string(&m).unwrap()).unwrap();
+
+        let purged = q.purge_expired(14).unwrap();
+        assert!(
+            purged.is_empty(),
+            "unparseable timestamp must never be purged"
+        );
+        assert!(q.entry_dir(&id).exists());
     }
 
     #[test]

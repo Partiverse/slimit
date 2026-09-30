@@ -116,6 +116,12 @@ export function listQuarantine(): Promise<Manifest[]> {
   return invoke("list_quarantine");
 }
 
+/** 清理迁入超 14 天（DEFAULT_RETENTION_DAYS）的隔离条目，返回被清理项。
+ *  不可逆：UI 必须二次确认后调用。 */
+export function purgeExpiredQuarantine(): Promise<Manifest[]> {
+  return invoke("purge_expired_quarantine");
+}
+
 export function listSnapshots(volume: string): Promise<SnapshotInfo[]> {
   return invoke("list_snapshots", { volume });
 }

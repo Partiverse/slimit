@@ -7,6 +7,8 @@
 //! - `apply_plan(items)` → `Vec<ApplyReport>`（仅 executable 项进隔离区）
 //! - `restore_item(id)` → 恢复路径
 //! - `list_quarantine()` → `Vec<Manifest>`
+//! - `purge_expired_quarantine()` → `Vec<Manifest>`（清理迁入超 14 天条目，
+//!   不可逆——UI 二次确认后调用；每项追加 `purge-expired` 审计事件）
 //! - `list_snapshots(volume)` / `volume_summary(mount)` 同 W5
 //!
 //! 红线（SPEC §5）：AI 输出只进 UI 提示层；执行授权只来自规则库；
@@ -174,6 +176,31 @@ fn list_quarantine(app: AppHandle) -> Result<Vec<Manifest>, String> {
     quarantine(&app)?.list().map_err(|e| e.to_string())
 }
 
+/// 清理隔离区中迁入超过 14 天（`DEFAULT_RETENTION_DAYS`）的条目。
+/// 这是不可逆删除——调用方（UI）负责二次确认；本命令负责审计：
+/// 每个被清理条目追加一行 `purge-expired` 事件（红线④：删除必须可追溯）。
+#[tauri::command]
+fn purge_expired_quarantine(app: AppHandle) -> Result<Vec<Manifest>, String> {
+    let data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("resolve app data dir: {e}"))?;
+    let q = quarantine(&app)?;
+    let purged = q
+        .purge_expired(slimit_exec::DEFAULT_RETENTION_DAYS)
+        .map_err(|e| e.to_string())?;
+    let mut audit = slimit_exec::AuditLog::new(&data).map_err(|e| e.to_string())?;
+    for m in &purged {
+        audit.record(&serde_json::json!({
+            "event": "purge-expired",
+            "id": m.id,
+            "path": m.original_path,
+            "rule": m.rule_id,
+        }));
+    }
+    Ok(purged)
+}
+
 #[tauri::command]
 fn list_snapshots(volume: String) -> Result<Vec<slimit_core::SnapshotInfo>, String> {
     slimit_core::list_snapshots(&volume).map_err(|e| e.to_string())
@@ -194,6 +221,7 @@ pub fn run() {
             apply_plan,
             restore_item,
             list_quarantine,
+            purge_expired_quarantine,
             list_snapshots,
             volume_summary_cmd
         ])

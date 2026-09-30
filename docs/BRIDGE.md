@@ -10,6 +10,7 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 | `apply_plan` | `items: PlanItem[]` | `ApplyReport[]` | 仅 `executable` 项迁入隔离区（app data 目录），逐项报告 |
 | `restore_item` | `id: string` | `string`（恢复路径） | 按 manifest 完整恢复，绝不覆盖已存在路径 |
 | `list_quarantine` | — | `Manifest[]` | 按迁入时间升序；manifest 损坏条目跳过 |
+| `purge_expired_quarantine` | — | `Manifest[]`（被清理项） | 清理迁入超 14 天（`DEFAULT_RETENTION_DAYS`）的条目，payload + manifest 一并移除；**不可逆**——UI 必须二次确认后调用；每个被清理条目追加 `purge-expired` 审计事件；年龄不可解析的条目跳过不删 |
 | `volume_summary_cmd` | `mount: string` | `VolumeSummary` | `diskutil info -plist` 摘要 |
 | `list_snapshots` | `volume: string` | `SnapshotInfo[]` | `diskutil apfs listSnapshots -plist` |
 
@@ -45,6 +46,7 @@ interface VolumeSummary { volume_name: string | null; device_identifier: string 
 - 前端只接收 `ScanSummary` 聚合与 `PlanItem` 命中列表，永不传百万级 `files` 明细。
 - 规则库编译期嵌入（`slimit-rules::embedded_rules`，build.rs 快照），GUI 免运行时规则文件路径；与 `load_rules()` 目录加载同管线、同结果（`tests/embedded.rs` 保证一致）。
 - 安全红线（SPEC §5）：`risk: red` 与 `advise/command` 项 `executable=false`，前端不可勾选、`apply_plan` 再拒一次（双层保险）；AI 解释只进 UI 提示层；清理动作只做"迁入隔离区"，可完整恢复，AI 永无删除权。
+- 隔离区保留期 `DEFAULT_RETENTION_DAYS = 14`（`slimit-exec` 单一事实来源）：迁入超 14 天的条目由 `purge_expired_quarantine` 不可逆清理（UI 二次确认 + 后端审计），红线③"删除一律进隔离区（14 天可恢复）"的最后一环。
 - 隔离区位于 `<app_data_dir>/quarantine/`（identifier `dev.partiverse.slimit`），审计日志 `<app_data_dir>/audit/audit.jsonl`。
 - purgeable 数值无公开来源，不估算；只透出快照标志。APFS Data 卷容量展示用 `apfs_container_free`。
 
