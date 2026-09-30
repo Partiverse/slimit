@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: win-docker-builder-cache
+os: windows
+scope: user
+paths:
+  - "~/AppData/Local/docker/buildstore"
+semantics:
+  title: "Docker 构建缓存（buildstore）"
+  what: "Docker BuildKit 的构建缓存（中间层镜像、构建产物）"
+  producer: "Docker（docker build）"
+  safe_to_delete_because: "纯构建缓存：删除后下次构建时 Docker 重新生成；镜像与容器不受影响"
+  consequence: "下次构建需重新执行所有步骤（首次变慢）；已构建的镜像完全不受影响"
+  regenerate: "docker build 自动重新生成"
+risk: yellow
+action:
+  kind: command
+  command: "docker builder prune --force"
+  dry_run: "docker builder ls"
+estimate:
+  typical_size: "数 GB 到数十 GB（多项目/多构建常见）"
+  recovery: partial
+refs:
+  - https://docs.docker.com/build/cache/

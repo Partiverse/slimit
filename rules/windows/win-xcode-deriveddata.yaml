@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-xcode-deriveddata
+os: windows
+scope: user
+paths:
+  - "~/Library/Developer/Xcode/DerivedData"
+semantics:
+  title: "Xcode DerivedData（~/Library/Developer/Xcode/DerivedData）"
+  what: "Xcode 的构建产物、索引、调试符号缓存（每个项目的 DerivedData 子目录）"
+  producer: "Xcode（xcodebuild / Xcode IDE 构建时）"
+  safe_to_delete_because: "纯构建缓存：删除后 Xcode 重新构建并索引；项目源码、.xcodeproj、Scheme 均不受影响"
+  consequence: "下次构建需重新编译（首次变慢，大型项目可达数分钟）；功能与结果完全不受影响"
+  regenerate: "xcodebuild 自动重新构建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（多项目常见）"
+  recovery: partial
+refs:
+  - https://developer.apple.com/documentation/xcode

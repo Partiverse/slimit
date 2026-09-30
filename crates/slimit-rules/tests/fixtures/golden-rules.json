@@ -5015,6 +5015,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-docker-builder-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/docker/buildstore"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Docker 构建缓存（buildstore）",
+      "what": "Docker BuildKit 的构建缓存（中间层镜像、构建产物）",
+      "producer": "Docker（docker build）",
+      "safe_to_delete_because": "纯构建缓存：删除后下次构建时 Docker 重新生成；镜像与容器不受影响",
+      "consequence": "下次构建需重新执行所有步骤（首次变慢）；已构建的镜像完全不受影响",
+      "regenerate": "docker build 自动重新生成"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "docker builder prune --force",
+      "dry_run": "docker builder ls",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多项目/多构建常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.docker.com/build/cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-edge-cache",
     "os": "windows",
     "scope": "user",
@@ -5536,6 +5573,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-vagrant-boxes",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.vagrant.d/boxes"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Vagrant 盒子缓存（~/.vagrant.d/boxes）",
+      "what": "Vagrant 下载的虚拟机盒子（box）缓存（.box 文件与解压后的镜像）",
+      "producer": "Vagrant（vagrant box add / vagrant up 首次）",
+      "safe_to_delete_because": "纯下载缓存：删除后 Vagrant 重新下载；已创建的 VM 不受影响（已解压到 .vagrant.d/boxes 子目录）",
+      "consequence": "下次 vagrant up 需重新下载盒子（需网络，首次变慢）；已创建的 VM 完全不受影响",
+      "regenerate": "vagrant box add 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 box 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.hashicorp.com/vagrant/docs/cli/box"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-vivaldi-cache",
     "os": "windows",
     "scope": "user",
@@ -5569,6 +5643,80 @@
     },
     "refs": [
       "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-xcode-caches",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/com.apple.dt.Xcode"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode 缓存（~/Library/Caches/com.apple.dt.Xcode）",
+      "what": "Xcode 的索引缓存、预览缓存、Swift 模块缓存等",
+      "producer": "Xcode（IDE 启动、索引构建、预览时）",
+      "safe_to_delete_because": "纯缓存：删除后 Xcode 重新索引并生成；项目源码、.xcodeproj、Scheme 均不受影响",
+      "consequence": "下次启动 Xcode 需重新索引（首次变慢）；功能与结果完全不受影响",
+      "regenerate": "Xcode 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-xcode-deriveddata",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/Library/Developer/Xcode/DerivedData"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Xcode DerivedData（~/Library/Developer/Xcode/DerivedData）",
+      "what": "Xcode 的构建产物、索引、调试符号缓存（每个项目的 DerivedData 子目录）",
+      "producer": "Xcode（xcodebuild / Xcode IDE 构建时）",
+      "safe_to_delete_because": "纯构建缓存：删除后 Xcode 重新构建并索引；项目源码、.xcodeproj、Scheme 均不受影响",
+      "consequence": "下次构建需重新编译（首次变慢，大型项目可达数分钟）；功能与结果完全不受影响",
+      "regenerate": "xcodebuild 自动重新构建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多项目常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://developer.apple.com/documentation/xcode"
     ]
   }
 ]

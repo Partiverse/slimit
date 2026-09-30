@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-vagrant-boxes
+os: windows
+scope: user
+paths:
+  - "~/.vagrant.d/boxes"
+semantics:
+  title: "Vagrant 盒子缓存（~/.vagrant.d/boxes）"
+  what: "Vagrant 下载的虚拟机盒子（box）缓存（.box 文件与解压后的镜像）"
+  producer: "Vagrant（vagrant box add / vagrant up 首次）"
+  safe_to_delete_because: "纯下载缓存：删除后 Vagrant 重新下载；已创建的 VM 不受影响（已解压到 .vagrant.d/boxes 子目录）"
+  consequence: "下次 vagrant up 需重新下载盒子（需网络，首次变慢）；已创建的 VM 完全不受影响"
+  regenerate: "vagrant box add 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 box 常见）"
+  recovery: full
+refs:
+  - https://developer.hashicorp.com/vagrant/docs/cli/box
