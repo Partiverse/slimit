@@ -4718,6 +4718,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-brave-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Brave 浏览器缓存（~/.cache/BraveSoftware/Brave-Browser）",
+      "what": "Brave 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Brave 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Brave 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-chrome-cache",
     "os": "windows",
     "scope": "user",
@@ -4752,6 +4789,43 @@
     "refs": [
       "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
       "https://support.google.com/chrome/answer/2392709"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-discord-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/discord/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Discord 缓存（~/AppData/Roaming/discord/Cache）",
+      "what": "Discord 客户端的图片、视频、贴纸等媒体缓存",
+      "producer": "Discord 客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/视频需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Discord 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多服务器/多频道常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.discord.com/"
     ]
   },
   {
@@ -4832,6 +4906,118 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-gradle-caches",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/caches"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle 构建缓存（~/.gradle/caches）",
+      "what": "Gradle 构建产物缓存（编译输出、依赖下载、构建缓存）与本地 Maven 仓库（build-scan 插件数据等）",
+      "producer": "Gradle（gradle build / gradle test 等）",
+      "safe_to_delete_because": "纯构建缓存：删除后下次构建时 Gradle 重新下载依赖并重新编译；项目源码与配置不受影响",
+      "consequence": "下次构建需重新下载依赖并重新编译，首次构建耗时变长；功能与结果完全不受影响",
+      "regenerate": "下次 gradle build 时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-jetbrains-caches",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/JetBrains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 缓存（~/AppData/Local/JetBrains）",
+      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的索引、缓存、本地历史与插件数据",
+      "producer": "JetBrains IDE（IDE 启动、索引构建、代码分析时）",
+      "safe_to_delete_because": "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置、代码、VCS 历史均不受影响",
+      "consequence": "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；功能与结果完全不受影响",
+      "regenerate": "IDE 启动时自动重新索引"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-maven-repository-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.m2/repository"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Maven 本地仓库（~/.m2/repository）",
+      "what": "Maven 从远程仓库下载的依赖（jar、pom、源码等）的本地缓存，按 groupId/artifactId/version 组织",
+      "producer": "Maven（mvn compile / mvn package 等）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 Maven 重新从远程仓库下载依赖；项目源码与 pom.xml 不受影响",
+      "consequence": "下次构建需重新下载所有依赖（需网络，首次构建变慢）；功能与结果完全不受影响",
+      "regenerate": "下次 mvn compile 时自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多依赖常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://maven.apache.org/settings.html",
+      "https://maven.apache.org/guides/introduction/introduction-to-repositories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-npm-cache",
     "os": "windows",
     "scope": "user",
@@ -4906,6 +5092,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-opera-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/Opera Software/Opera Stable/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Opera 浏览器缓存（~/.cache/operasoftware/Opera）",
+      "what": "Opera 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Opera 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Opera 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-pip-cache",
     "os": "windows",
     "scope": "user",
@@ -4976,6 +5199,191 @@
     },
     "refs": [
       "https://pnpm.io/cli/store"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-slack-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/slack/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Slack 缓存（~/AppData/Roaming/slack/Cache）",
+      "what": "Slack 客户端的图片、文件、Emoji 缓存",
+      "producer": "Slack 客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Slack 自动重新下载；聊天记录、频道设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Slack 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多工作区常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://slack.com/help/articles/115004071768"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-steam-appcache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Valve/Steam/appcache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Steam 应用缓存（appcache）",
+      "what": "Steam 客户端的网页内容与应用缓存（商店页面、社区、截图等）",
+      "producer": "Steam 客户端",
+      "safe_to_delete_because": "纯网页与应用缓存：删除后 Steam 自动重新下载；已安装游戏与游戏存档不受影响",
+      "consequence": "Steam 商店/社区页面首次加载变慢；已安装游戏完全不受影响",
+      "regenerate": "Steam 启动时自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://help.steampowered.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-teams-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Microsoft/Teams/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Teams 缓存（~/AppData/Roaming/Microsoft/Teams/Cache）",
+      "what": "Microsoft Teams 客户端的图片、文件、缓存数据",
+      "producer": "Microsoft Teams 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Teams 自动重新下载；聊天记录、频道设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Teams 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoftteams/new-teams-faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-telegram-media-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Telegram Desktop/tdata"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Telegram 媒体缓存（tdata）",
+      "what": "Telegram 桌面客户端的图片、视频、文档、语音消息缓存",
+      "producer": "Telegram 桌面客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响",
+      "consequence": "已缓存的媒体需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Telegram 运行时按需自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多群组/频道常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://telegram.org/faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-vivaldi-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/Vivaldi/User Data/Default/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Vivaldi 浏览器缓存（~/.cache/Vivaldi）",
+      "what": "Vivaldi 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Vivaldi 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Vivaldi 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
     ]
   }
 ]

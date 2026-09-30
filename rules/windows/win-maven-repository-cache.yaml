@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: win-maven-repository-cache
+os: windows
+scope: user
+paths:
+  - "~/.m2/repository"
+semantics:
+  title: "Maven 本地仓库（~/.m2/repository）"
+  what: "Maven 从远程仓库下载的依赖（jar、pom、源码等）的本地缓存，按 groupId/artifactId/version 组织"
+  producer: "Maven（mvn compile / mvn package 等）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 Maven 重新从远程仓库下载依赖；项目源码与 pom.xml 不受影响"
+  consequence: "下次构建需重新下载所有依赖（需网络，首次构建变慢）；功能与结果完全不受影响"
+  regenerate: "下次 mvn compile 时自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多项目/多依赖常见）"
+  recovery: full
+refs:
+  - https://maven.apache.org/settings.html
+  - https://maven.apache.org/guides/introduction/introduction-to-repositories.html

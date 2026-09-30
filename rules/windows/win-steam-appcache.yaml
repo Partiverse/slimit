@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-steam-appcache
+os: windows
+scope: user
+paths:
+  - "~/AppData/Roaming/Valve/Steam/appcache"
+semantics:
+  title: "Steam 应用缓存（appcache）"
+  what: "Steam 客户端的网页内容与应用缓存（商店页面、社区、截图等）"
+  producer: "Steam 客户端"
+  safe_to_delete_because: "纯网页与应用缓存：删除后 Steam 自动重新下载；已安装游戏与游戏存档不受影响"
+  consequence: "Steam 商店/社区页面首次加载变慢；已安装游戏完全不受影响"
+  regenerate: "Steam 启动时自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数 GB"
+  recovery: full
+refs:
+  - https://help.steampowered.com/
