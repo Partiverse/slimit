@@ -20,6 +20,9 @@
 5. 删除类动作默认 `delete_contents_only: true`（保留目录本身，防止应用失去目录句柄/权限）。
 6. `refs` 至少一条官方文档或权威信源。
 7. 文案（semantics.*）用目标用户语言写清楚：这是什么、谁产生的、删了会怎样。
+8. `paths` 模板语义：
+   - 以 `~` 开头的路径按主目录展开（解析链 `HOME` → `USERPROFILE`，Windows 无 `HOME` 时仍可命中）。
+   - 含 glob 元字符（`*`、`?`、`[`）的模板按 [globset](https://docs.rs/globset) 语义匹配——用于目标带随机后缀的场景（如 Firefox 的 `Profiles/<随机>/cache2`）；字面路径不受影响，仍做精确匹配。
 
 CI 会拒绝：重复 id、red 缺 red_flags、command 缺 dry_run、schema 不合、refs 为空。
 

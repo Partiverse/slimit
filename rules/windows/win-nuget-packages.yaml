@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: win-nuget-packages
+os: windows
+scope: user
+paths:
+  - "~/.nuget/packages"
+semantics:
+  title: "NuGet 全局包缓存（global-packages）"
+  what: "dotnet/NuGet 安装包时的全局包文件夹（global-packages），存放已下载解压的 nupkg 内容，供项目 restore 时复用，仅用于加速还原"
+  producer: "dotnet/NuGet 在 restore 时自动写入"
+  safe_to_delete_because: "纯下载缓存，只影响下次 restore 速度；项目源码与已构建产物不受影响，包可随时从 nuget.org 重新获取"
+  consequence: "下次 dotnet restore 需重新联网下载包，还原变慢、消耗流量；解决方案与项目本身均正常工作"
+  regenerate: "下次 dotnet restore 时自动按需重新下载并重建缓存"
+risk: green
+action:
+  kind: command
+  command: "dotnet nuget locals global-packages --clear"
+  dry_run: "dotnet nuget locals all --list"
+estimate:
+  typical_size: "1–10 GB（活跃 .NET 开发常见数 GB）"
+  recovery: full
+refs:
+  - https://learn.microsoft.com/en-us/nuget/consume-packages/managing-the-global-packages-and-cache-folders

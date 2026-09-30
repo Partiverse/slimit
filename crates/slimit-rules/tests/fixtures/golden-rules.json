@@ -3414,5 +3414,267 @@
     "refs": [
       "https://developer.apple.com/documentation/xcode"
     ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-chrome-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/Google/Chrome/User Data/Default/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Google Chrome 浏览器缓存（Default profile）",
+      "what": "Chrome Default profile 为加速网页加载而保存的派生数据：HTTP 网页资源缓存（Cache_Data）、JavaScript 代码缓存等。密码、书签、历史记录、Cookie 等用户数据存放在 User Data 下其他目录（Login Data、Bookmarks、History 等），不在此目录",
+      "producer": "Google Chrome",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，仅用于加速页面重复加载；Chrome 官方自身提供『清除缓存的图片和文件』选项，并明确该操作不影响密码、书签与历史记录",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问各网站需重新下载资源，加载略慢，用得越多恢复越快。Chrome 正在运行时清理一般也能自动恢复，稳妥起见建议先退出 Chrome",
+      "regenerate": "无需手动操作，Chrome 运行中按需自动重建目录并重新缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用可达 5 GB 以上）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md",
+      "https://support.google.com/chrome/answer/2392709"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-edge-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/Microsoft/Edge/User Data/Default/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Edge 浏览器缓存（Default profile）",
+      "what": "Edge Default profile 为加速网页加载而保存的派生数据：HTTP 网页资源缓存（Cache_Data）、JavaScript 代码缓存等。密码、收藏夹、历史记录、Cookie 等用户数据存放在 User Data 下其他目录，不在此目录",
+      "producer": "Microsoft Edge（Chromium 内核）",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据，仅用于加速页面重复加载；Edge 官方自身提供『清除缓存的图片和文件』选项，并明确该操作不影响密码、收藏夹与历史记录",
+      "consequence": "登录状态、密码、收藏夹、历史均不受影响；之后首次访问各网站需重新下载资源，加载略慢，用得越多恢复越快。Edge 正在运行时清理一般也能自动恢复，稳妥起见建议先退出 Edge",
+      "regenerate": "无需手动操作，Edge 运行中按需自动重建目录并重新缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用可达 5 GB 以上）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoft-edge/",
+      "https://support.microsoft.com/en-us/microsoft-edge"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-firefox-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/Mozilla/Firefox/Profiles/*/cache2"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Firefox 浏览器缓存（各 profile 的 cache2）",
+      "what": "Firefox 各 profile 的 HTTP 网页资源缓存与启动缓存（cache2 目录，profile 目录带随机后缀，故用 glob 命中）。用户数据（书签、历史、密码、Cookie）存放在同一 profile 目录的其他子目录，不在此处",
+      "producer": "Mozilla Firefox",
+      "safe_to_delete_because": "cache2 全部为浏览器自动生成的派生数据；Mozilla 文档明确缓存目录可安全清除，与存放用户数据的文件（places.sqlite、logins.json 等）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢。Firefox 正在运行时清理一般也能自动恢复，稳妥起见建议先退出 Firefox",
+      "regenerate": "Firefox 运行中按需自动重建 cache2 目录"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.mozilla.org/kb/how-clear-firefox-cache",
+      "https://support.mozilla.org/kb/profiles-where-firefox-stores-user-data"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-npm-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/npm-cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "npm 包缓存（npm-cache）",
+      "what": "npm 安装/下载包时缓存的 tarball 与元数据内容寻址存储（_cacache），仅用于加速重复安装",
+      "producer": "npm（Node.js 包管理器）在 install/update 时自动写入",
+      "safe_to_delete_because": "纯下载缓存，已安装的 node_modules 与全局包不受影响；包内容可随时从 registry 重新获取",
+      "consequence": "下次 npm install 需重新联网下载包，离线或网络受限时安装变慢；npm 本身与已装项目均正常工作",
+      "regenerate": "执行任意 npm install 时按需自动重新下载并重建缓存；npm cache verify 可手动校验与修复"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "npm cache clean --force",
+      "dry_run": "npm cache verify",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用者可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.npmjs.com/cli/commands/npm-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-nuget-packages",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.nuget/packages"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "NuGet 全局包缓存（global-packages）",
+      "what": "dotnet/NuGet 安装包时的全局包文件夹（global-packages），存放已下载解压的 nupkg 内容，供项目 restore 时复用，仅用于加速还原",
+      "producer": "dotnet/NuGet 在 restore 时自动写入",
+      "safe_to_delete_because": "纯下载缓存，只影响下次 restore 速度；项目源码与已构建产物不受影响，包可随时从 nuget.org 重新获取",
+      "consequence": "下次 dotnet restore 需重新联网下载包，还原变慢、消耗流量；解决方案与项目本身均正常工作",
+      "regenerate": "下次 dotnet restore 时自动按需重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "dotnet nuget locals global-packages --clear",
+      "dry_run": "dotnet nuget locals all --list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（活跃 .NET 开发常见数 GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/nuget/consume-packages/managing-the-global-packages-and-cache-folders"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-pip-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/pip/Cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pip 下载缓存",
+      "what": "pip 安装 Python 包时下载的 HTTP 响应（PyPI 页面与 wheel 文件）及本地构建的 wheel 缓存，仅用于加速重复安装",
+      "producer": "pip（Python 官方包管理器）",
+      "safe_to_delete_because": "纯下载缓存，只影响下次安装速度；已安装到虚拟环境/系统 site-packages 的包不受任何影响",
+      "consequence": "下次 pip install 曾缓存过的包需重新从 PyPI 下载，安装变慢、消耗流量，此外无任何损失",
+      "regenerate": "下次 pip install 时自动按需重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pip cache purge",
+      "dry_run": "pip cache list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 至数 GB（活跃 Python 开发常见数百 MB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pip.pypa.io/en/stable/cli/pip_cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-pnpm-store",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/pnpm/store"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pnpm 内容寻址存储（store）",
+      "what": "pnpm 的全局内容寻址存储，所有项目通过硬链接共享包文件，store 本身仅用于加速安装与节省磁盘",
+      "producer": "pnpm 在 install/add 时自动写入",
+      "safe_to_delete_because": "store 中的包文件通过硬链接被各项目 node_modules 引用，删除 store 中未被引用的包（pnpm store prune 的语义）不影响任何项目；已装项目的 node_modules 不受影响",
+      "consequence": "下次 pnpm install 需重新联网下载包；注意：直接删除 store 目录可能使硬链接失效导致项目 node_modules 损坏，因此动作走 pnpm store prune 而非裸删",
+      "regenerate": "下次 pnpm install 时自动重建 store 并重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pnpm store prune",
+      "dry_run": "pnpm store path",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多项目共享时可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pnpm.io/cli/store"
+    ]
   }
 ]

@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: win-edge-cache
+os: windows
+scope: user
+paths:
+  - "~/AppData/Local/Microsoft/Edge/User Data/Default/Cache"
+semantics:
+  title: "Microsoft Edge 浏览器缓存（Default profile）"
+  what: "Edge Default profile 为加速网页加载而保存的派生数据：HTTP 网页资源缓存（Cache_Data）、JavaScript 代码缓存等。密码、收藏夹、历史记录、Cookie 等用户数据存放在 User Data 下其他目录，不在此目录"
+  producer: "Microsoft Edge（Chromium 内核）"
+  safe_to_delete_because: "全部为浏览器自动生成的派生数据，仅用于加速页面重复加载；Edge 官方自身提供『清除缓存的图片和文件』选项，并明确该操作不影响密码、收藏夹与历史记录"
+  consequence: "登录状态、密码、收藏夹、历史均不受影响；之后首次访问各网站需重新下载资源，加载略慢，用得越多恢复越快。Edge 正在运行时清理一般也能自动恢复，稳妥起见建议先退出 Edge"
+  regenerate: "无需手动操作，Edge 运行中按需自动重建目录并重新缓存"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 至数 GB（重度使用可达 5 GB 以上）"
+  recovery: full
+refs:
+  - https://learn.microsoft.com/en-us/microsoft-edge/
+  - https://support.microsoft.com/en-us/microsoft-edge
