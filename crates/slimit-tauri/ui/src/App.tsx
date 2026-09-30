@@ -5,6 +5,7 @@ import {
   explain,
   getSettings,
   listQuarantine,
+  listRules,
   listSnapshots,
   purgeExpiredQuarantine,
   restoreItem,
@@ -16,6 +17,7 @@ import {
   type Explanation,
   type Manifest,
   type PlanItem,
+  type RuleInfo,
   type ScanPlanResponse,
   type ScanProgress,
   type SnapshotInfo,
@@ -612,6 +614,142 @@ function VolumePanel() {
   );
 }
 
+function RulesPanel() {
+  const [rules, setRules] = useState<RuleInfo[] | null>(null);
+  const [err, setErr] = useState("");
+  const [os, setOs] = useState<"all" | "macos" | "linux" | "windows">("all");
+  const [risk, setRisk] = useState<"all" | "green" | "yellow" | "red">("all");
+  const [q, setQ] = useState("");
+
+  const run = async () => {
+    setErr("");
+    try {
+      setRules(await listRules());
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  const filtered = (rules ?? []).filter((r) => {
+    if (os !== "all" && r.os !== os) return false;
+    if (risk !== "all" && r.risk !== risk) return false;
+    if (q) {
+      const needle = q.toLowerCase();
+      if (
+        !r.id.toLowerCase().includes(needle) &&
+        !r.title.toLowerCase().includes(needle) &&
+        !r.paths.some((p) => p.toLowerCase().includes(needle))
+      )
+        return false;
+    }
+    return true;
+  });
+
+  const byOs = (rules ?? []).reduce(
+    (acc, r) => {
+      acc[r.os] = (acc[r.os] || 0) + 1;
+      return acc;
+    },
+    { macos: 0, linux: 0, windows: 0 } as Record<string, number>,
+  );
+
+  return (
+    <section>
+      <h2>规则库（{rules ? rules.length : "?"} 条）</h2>
+      <div className="row">
+        <button onClick={run}>加载规则</button>
+        {rules && (
+          <>
+            <select value={os} onChange={(e) => setOs(e.target.value as any)}>
+              <option value="all">全部平台</option>
+              <option value="macos">macOS ({byOs.macos})</option>
+              <option value="linux">Linux ({byOs.linux})</option>
+              <option value="windows">Windows ({byOs.windows})</option>
+            </select>
+            <select value={risk} onChange={(e) => setRisk(e.target.value as any)}>
+              <option value="all">全部风险</option>
+              <option value="green">🟢 低风险</option>
+              <option value="yellow">🟡 注意</option>
+              <option value="red">🔴 谨慎</option>
+            </select>
+            <input
+              placeholder="搜索 id / 标题 / 路径…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+          </>
+        )}
+      </div>
+      {err && <p className="error">{err}</p>}
+      {rules && (
+        <>
+          <p className="hint">
+            共 {filtered.length} 条规则（{rules.length} 条总库）。规则库是可信输入，
+            任何失败即整体报错；UI 仅展示，不触发执行。
+          </p>
+          <div className="rules-list">
+            {filtered.map((r) => (
+              <details key={r.id} className="rule-card">
+                <summary>
+                  <span className="risk-tag">{RISK_LABEL[r.risk]}</span>
+                  <span className="rule-id">{r.id}</span>
+                  <span className="rule-os">{r.os}</span>
+                </summary>
+                <p className="rule-title">{r.title}</p>
+                <p className="rule-what">{r.what}</p>
+                <p>
+                  <strong>产生方：</strong>
+                  {r.producer}
+                </p>
+                <p>
+                  <strong>删除后果：</strong>
+                  {r.consequence}
+                </p>
+                <p>
+                  <strong>安全原因：</strong>
+                  {r.safe_to_delete_because}
+                </p>
+                <p>
+                  <strong>自动重建：</strong>
+                  {r.regenerate}
+                </p>
+                <p>
+                  <strong>典型大小：</strong>
+                  {r.typical_size} · 恢复：{r.recovery}
+                </p>
+                <p>
+                  <strong>路径：</strong>
+                </p>
+                <ul className="rule-paths">
+                  {r.paths.map((p) => (
+                    <li key={p} className="path">
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                {r.refs.length > 0 && (
+                  <p>
+                    <strong>参考：</strong>
+                  </p>
+                )}
+                <ul className="rule-refs">
+                  {r.refs.map((ref) => (
+                    <li key={ref}>
+                      <a href={ref} target="_blank" rel="noopener noreferrer">
+                        {ref}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function SnapshotsPanel() {
   const [volume, setVolume] = useState("/System/Volumes/Data");
   const [err, setErr] = useState("");
@@ -674,6 +812,7 @@ export default function App() {
       <QuarantinePanel />
       <VolumePanel />
       <SnapshotsPanel />
+      <RulesPanel />
       <AiSettingsPanel />
     </main>
   );

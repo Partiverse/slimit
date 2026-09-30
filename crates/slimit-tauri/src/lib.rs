@@ -17,6 +17,7 @@
 use slimit_ai::{Explainer, Explanation, ExplanationRequest, HeuristicExplainer};
 use slimit_core::ScanSummary;
 use slimit_exec::{ApplyReport, Manifest, PlanItem};
+use slimit_rules::Rule;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter, Manager};
@@ -211,6 +212,13 @@ fn volume_summary_cmd(mount: String) -> Result<slimit_core::VolumeSummary, Strin
     slimit_core::volume_summary(&mount).map_err(|e| e.to_string())
 }
 
+/// 列出全部嵌入规则（按 os 分组，按 risk 排序）。
+/// 用于 UI 规则面板：用户可浏览规则库内容，不触发任何执行。
+#[tauri::command]
+fn list_rules() -> Result<Vec<Rule>, String> {
+    slimit_rules::embedded_rules().map_err(|e| e.to_string())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -223,7 +231,8 @@ pub fn run() {
             list_quarantine,
             purge_expired_quarantine,
             list_snapshots,
-            volume_summary_cmd
+            volume_summary_cmd,
+            list_rules
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -136,3 +136,25 @@ export interface ScanProgress {
   files_done: number;
   current_dir: string;
 }
+
+/** 规则库条目（list_rules 返回）。 */
+export interface RuleInfo {
+  id: string;
+  os: "macos" | "linux" | "windows";
+  scope: string;
+  paths: string[];
+  risk: "green" | "yellow" | "red";
+  title: string;
+  what: string;
+  producer: string;
+  consequence: string;
+  safe_to_delete_because: string;
+  regenerate: string;
+  typical_size: string;
+  recovery: string;
+  refs: string[];
+}
+
+export function listRules(): Promise<RuleInfo[]> {
+  return invoke("list_rules");
+}
