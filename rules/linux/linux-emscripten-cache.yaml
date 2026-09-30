@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-emscripten-cache
+os: linux
+scope: user
+paths:
+  - "~/.emscripten_cache"
+semantics:
+  title: "Emscripten 编译缓存（~/.emscripten_cache）"
+  what: "Emscripten（C/C++ 到 WebAssembly 编译器）的编译缓存（LLVM 位码、中间产物）"
+  producer: "Emscripten（emcc 编译时）"
+  safe_to_delete_because: "纯编译缓存：删除后下次编译时 Emscripten 重新生成；源码与编译命令不受影响"
+  consequence: "下次编译需重新生成缓存（首次变慢）；功能与结果完全不受影响"
+  regenerate: "emcc 自动重新生成"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多项目常见）"
+  recovery: full
+refs:
+  - https://emscripten.org/docs/tools_reference/emcc.html

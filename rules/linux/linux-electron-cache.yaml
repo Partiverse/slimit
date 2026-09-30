@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-electron-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/electron"
+semantics:
+  title: "Electron 缓存（~/.cache/electron）"
+  what: "Electron 下载的二进制文件与构建缓存（electron-builder、electron-download）"
+  producer: "Electron（electron-builder / electron-download）"
+  safe_to_delete_because: "纯下载与构建缓存：删除后下次构建时 Electron 重新下载；项目源码与配置不受影响"
+  consequence: "下次构建需重新下载 Electron 二进制（首次变慢，需网络）；功能完全不受影响"
+  regenerate: "electron-builder 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "100 MB 到 500 MB"
+  recovery: full
+refs:
+  - https://www.electronjs.org/docs/latest/tutorial/installation

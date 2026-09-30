@@ -38,6 +38,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-arc-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/arc"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "ARC 浏览器缓存（~/.cache/arc）",
+      "what": "ARC 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "ARC 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "ARC 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-bazel-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/bazel"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Bazel 构建缓存（~/.cache/bazel）",
+      "what": "Bazel 构建系统的输出仓库与缓存（action 缓存、仓库缓存）",
+      "producer": "Bazel（bazel build / bazel test）",
+      "safe_to_delete_because": "纯构建缓存：删除后 Bazel 重新构建；项目源码与 WORKSPACE/BUILD 文件不受影响",
+      "consequence": "下次构建需重新执行所有 action（首次变慢）；功能与结果完全不受影响",
+      "regenerate": "bazel build 自动重新构建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://bazel.build/run/build"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-brave-cache",
     "os": "linux",
     "scope": "user",
@@ -300,6 +374,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-cypress-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/Cypress"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cypress 浏览器缓存（~/.cache/Cypress）",
+      "what": "Cypress 测试框架下载的浏览器二进制文件缓存",
+      "producer": "Cypress（cypress install）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次运行 Cypress 时自动重新下载；测试代码与配置不受影响",
+      "consequence": "下次运行需重新下载浏览器（首次变慢，需网络）；功能完全不受影响",
+      "regenerate": "Cypress 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "100 MB 到 500 MB（单个浏览器）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.cypress.io/app/get-started/install-cypress"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-deno-cache",
     "os": "linux",
     "scope": "user",
@@ -407,6 +518,80 @@
     },
     "refs": [
       "https://learn.microsoft.com/en-us/deployedge/edge-learnmore-create-user-directory-vars"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-electron-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/electron"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Electron 缓存（~/.cache/electron）",
+      "what": "Electron 下载的二进制文件与构建缓存（electron-builder、electron-download）",
+      "producer": "Electron（electron-builder / electron-download）",
+      "safe_to_delete_because": "纯下载与构建缓存：删除后下次构建时 Electron 重新下载；项目源码与配置不受影响",
+      "consequence": "下次构建需重新下载 Electron 二进制（首次变慢，需网络）；功能完全不受影响",
+      "regenerate": "electron-builder 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "100 MB 到 500 MB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://www.electronjs.org/docs/latest/tutorial/installation"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-emscripten-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.emscripten_cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Emscripten 编译缓存（~/.emscripten_cache）",
+      "what": "Emscripten（C/C++ 到 WebAssembly 编译器）的编译缓存（LLVM 位码、中间产物）",
+      "producer": "Emscripten（emcc 编译时）",
+      "safe_to_delete_because": "纯编译缓存：删除后下次编译时 Emscripten 重新生成；源码与编译命令不受影响",
+      "consequence": "下次编译需重新生成缓存（首次变慢）；功能与结果完全不受影响",
+      "regenerate": "emcc 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://emscripten.org/docs/tools_reference/emcc.html"
     ]
   },
   {
