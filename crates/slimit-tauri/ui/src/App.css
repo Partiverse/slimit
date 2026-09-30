@@ -200,3 +200,86 @@ td.tip {
   word-break: break-all;
 }
 
+.rules-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rule-card {
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: rgba(128, 128, 128, 0.04);
+}
+
+.rule-card > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.rule-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rule-card > summary::before {
+  content: "▶";
+  font-size: 10px;
+  color: rgba(128, 128, 128, 0.6);
+  transition: transform 0.15s;
+}
+
+.rule-card[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.risk-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.rule-id {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rule-os {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(47, 158, 143, 0.15);
+  color: #2f9e8f;
+}
+
+.rule-title {
+  margin: 6px 0 2px;
+  font-weight: 500;
+}
+
+.rule-what {
+  margin: 2px 0 6px;
+  color: rgba(128, 128, 128, 0.9);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.rule-paths {
+  margin: 4px 0 2px;
+}
+
+.rule-refs {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+.rule-refs a {
+  color: #2f9e8f;
+  word-break: break-all;
+}
+
