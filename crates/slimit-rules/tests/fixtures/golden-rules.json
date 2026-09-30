@@ -5052,6 +5052,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-docker-desktop-logs",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/docker/log"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Docker Desktop 日志（~/AppData/Local/docker/log）",
+      "what": "Docker Desktop 的运行日志、容器日志、WSL 2 虚拟机日志",
+      "producer": "Docker Desktop",
+      "safe_to_delete_because": "纯日志：删除后 Docker Desktop 自动重新生成；镜像、容器、卷均不受影响",
+      "consequence": "历史日志丢失，故障排查时无历史记录；Docker 功能完全不受影响",
+      "regenerate": "Docker Desktop 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数 GB（长时间运行常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.docker.com/desktop/troubleshoot/overview/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-edge-cache",
     "os": "windows",
     "scope": "user",
@@ -5165,6 +5202,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-gradle-jdks",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/jdks"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle JDK 工具链缓存（~/.gradle/jdks）",
+      "what": "Gradle 工具链（Toolchain）下载的 JDK 发行版缓存",
+      "producer": "Gradle（使用工具链时自动下载）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 Gradle 重新下载；项目 build.gradle 中工具链配置不受影响",
+      "consequence": "下次构建需重新下载 JDK（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "Gradle 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 JDK 版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/toolchains.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-gradle-wrapper-dists",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/wrapper/dists"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle Wrapper 分发缓存（~/.gradle/wrapper/dists）",
+      "what": "Gradle Wrapper 下载的 Gradle 发行版缓存（zip 包与解压后的发行版）",
+      "producer": "Gradle Wrapper（./gradlew 首次运行时）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次运行 ./gradlew 时重新下载；项目 gradle-wrapper.properties 不受影响",
+      "consequence": "下次运行需重新下载 Gradle 发行版（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "./gradlew 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/gradle_wrapper.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-jetbrains-caches",
     "os": "windows",
     "scope": "user",
@@ -5240,6 +5351,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-minikube-clusters",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.minikube"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Minikube 集群缓存（~/.minikube）",
+      "what": "Minikube 下载的 ISO 镜像、虚拟机镜像、集群配置缓存",
+      "producer": "Minikube（minikube start / minikube delete）",
+      "safe_to_delete_because": "纯下载与配置缓存：删除后 Minikube 重新下载；已创建的集群需重新创建",
+      "consequence": "已创建的集群需重新创建（minikube delete + minikube start）；功能完全不受影响",
+      "regenerate": "minikube start 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多集群/多版本常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://minikube.sigs.k8s.io/docs/commands/delete/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-npm-cache",
     "os": "windows",
     "scope": "user",
@@ -5310,6 +5458,43 @@
     },
     "refs": [
       "https://learn.microsoft.com/en-us/nuget/consume-packages/managing-the-global-packages-and-cache-folders"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-ollama-models",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.ollama/models"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Ollama 模型缓存（~/.ollama/models）",
+      "what": "Ollama 下载的 LLM 模型文件（GGUF 格式）与元数据",
+      "producer": "Ollama（ollama pull / ollama run）",
+      "safe_to_delete_because": "纯下载缓存：删除后 Ollama 重新下载；模型配置与参数不受影响",
+      "consequence": "已下载的模型需重新下载（需网络，首次变慢，模型文件通常数 GB）；功能完全不受影响",
+      "regenerate": "ollama pull 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多模型常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.ollama.com/"
     ]
   },
   {

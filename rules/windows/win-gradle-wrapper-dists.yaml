@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-gradle-wrapper-dists
+os: windows
+scope: user
+paths:
+  - "~/.gradle/wrapper/dists"
+semantics:
+  title: "Gradle Wrapper 分发缓存（~/.gradle/wrapper/dists）"
+  what: "Gradle Wrapper 下载的 Gradle 发行版缓存（zip 包与解压后的发行版）"
+  producer: "Gradle Wrapper（./gradlew 首次运行时）"
+  safe_to_delete_because: "纯下载缓存：删除后下次运行 ./gradlew 时重新下载；项目 gradle-wrapper.properties 不受影响"
+  consequence: "下次运行需重新下载 Gradle 发行版（需网络，首次变慢）；功能完全不受影响"
+  regenerate: "./gradlew 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数百 MB（多版本常见）"
+  recovery: full
+refs:
+  - https://docs.gradle.org/current/userguide/gradle_wrapper.html

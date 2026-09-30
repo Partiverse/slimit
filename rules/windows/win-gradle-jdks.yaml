@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-gradle-jdks
+os: windows
+scope: user
+paths:
+  - "~/.gradle/jdks"
+semantics:
+  title: "Gradle JDK 工具链缓存（~/.gradle/jdks）"
+  what: "Gradle 工具链（Toolchain）下载的 JDK 发行版缓存"
+  producer: "Gradle（使用工具链时自动下载）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 Gradle 重新下载；项目 build.gradle 中工具链配置不受影响"
+  consequence: "下次构建需重新下载 JDK（需网络，首次变慢）；功能完全不受影响"
+  regenerate: "Gradle 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 JDK 版本常见）"
+  recovery: full
+refs:
+  - https://docs.gradle.org/current/userguide/toolchains.html

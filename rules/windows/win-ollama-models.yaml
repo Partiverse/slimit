@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-ollama-models
+os: windows
+scope: user
+paths:
+  - "~/.ollama/models"
+semantics:
+  title: "Ollama 模型缓存（~/.ollama/models）"
+  what: "Ollama 下载的 LLM 模型文件（GGUF 格式）与元数据"
+  producer: "Ollama（ollama pull / ollama run）"
+  safe_to_delete_because: "纯下载缓存：删除后 Ollama 重新下载；模型配置与参数不受影响"
+  consequence: "已下载的模型需重新下载（需网络，首次变慢，模型文件通常数 GB）；功能完全不受影响"
+  regenerate: "ollama pull 自动重新下载"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（多模型常见）"
+  recovery: partial
+refs:
+  - https://docs.ollama.com/

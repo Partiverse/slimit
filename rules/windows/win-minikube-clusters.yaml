@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-minikube-clusters
+os: windows
+scope: user
+paths:
+  - "~/.minikube"
+semantics:
+  title: "Minikube 集群缓存（~/.minikube）"
+  what: "Minikube 下载的 ISO 镜像、虚拟机镜像、集群配置缓存"
+  producer: "Minikube（minikube start / minikube delete）"
+  safe_to_delete_because: "纯下载与配置缓存：删除后 Minikube 重新下载；已创建的集群需重新创建"
+  consequence: "已创建的集群需重新创建（minikube delete + minikube start）；功能完全不受影响"
+  regenerate: "minikube start 自动重新下载"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多集群/多版本常见）"
+  recovery: partial
+refs:
+  - https://minikube.sigs.k8s.io/docs/commands/delete/

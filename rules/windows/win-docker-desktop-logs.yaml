@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-docker-desktop-logs
+os: windows
+scope: user
+paths:
+  - "~/AppData/Local/docker/log"
+semantics:
+  title: "Docker Desktop 日志（~/AppData/Local/docker/log）"
+  what: "Docker Desktop 的运行日志、容器日志、WSL 2 虚拟机日志"
+  producer: "Docker Desktop"
+  safe_to_delete_because: "纯日志：删除后 Docker Desktop 自动重新生成；镜像、容器、卷均不受影响"
+  consequence: "历史日志丢失，故障排查时无历史记录；Docker 功能完全不受影响"
+  regenerate: "Docker Desktop 自动重新生成"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数 GB（长时间运行常见）"
+  recovery: full
+refs:
+  - https://docs.docker.com/desktop/troubleshoot/overview/
