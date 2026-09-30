@@ -93,32 +93,14 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 - **手测注意**：dev 模式 rust 重编会重启应用并可能残留孤儿进程，自动化测试前先 `pkill` 清场；Tauri WKWebView 里 `window.confirm` 不可靠，一律用应用内两段式确认。
 - **凭据纪律**：一切密钥只走环境变量，不入库、不进日志（sign-notarize.sh 是范本）。
 
-## 6. 工具链清单（原 ZCode 开发环境 → 接手环境等价操作）
+## 6. 工具链说明
 
-以下能力是原开发环境（ZCode CLI）的扩展机制，**不随仓库分发**；接手环境（如 CodeArts agent）无需寻找对应插件，直接使用等价 CLI/流程即可。
+原开发环境（ZCode CLI）的部分能力属环境专属（安全扫描插件、网页调研、GUI 自动化、发布插件、commit hook 提醒等），**不随仓库分发，接手环境无需寻找对应物**——所需的实际操作全部是 §4 中仓库内可直接执行的命令。仓库内自带、接手环境直接可用的工具只有：
 
-### 6.1 Skills（技能）
+- `.agents/skills/slimit-rule-author/`（已入库）：规则编写/审查/批量生成工作流（SKILL.md）；其 `scripts/validate.py` 为 CI 同款校验，`python3 .../validate.py rules/` 直接跑。
+- 依赖安全审计等价物：`cargo-audit` / `cargo-deny`（历史结论：551 依赖 0 advisory 命中；主扫描曾 inconclusive/partial，**发布前需重跑完整审计并更新 [SECURITY.md](./SECURITY.md)，在此之前不得宣称项目安全**）。
 
-| 技能 | 位置 | 用途 | 接手环境等价物 |
-|---|---|---|---|
-| `slimit-rule-author` | **仓库内** `.agents/skills/slimit-rule-author/`（已入库） | 规则编写/审查/批量生成工作流；其 `scripts/validate.py` 被直接执行并复用为 CI 校验 | 无需插件：读 SKILL.md 遵循流程，`python3 .../validate.py rules/` 直接跑 |
-| `computer-use` | 用户级 | 驱动 GUI 做 Tauri 应用全链路手测（扫描→计划→解释→隔离→恢复，磁盘证据验证） | macOS UI 自动化（AppleScript/cliclick 等）或人工手测 |
-| `github:release` 等 | 用户级插件 | `gh` CLI 发布 rc1/rc2、仓库操作 | 直接用 `gh` CLI |
-| 通用规划/调试类（brainstorming、writing-plans、test-driven-development、systematic-debugging、verification-before-completion 等） | 用户级 | 方案调研、规格撰写、开发过程纪律 | 属方法论，直接按 §5 约定执行即可 |
-
-### 6.2 MCP 服务器
-
-| MCP | 用途 | 接手环境等价物 |
-|---|---|---|
-| `mimosa`（插件） | 项目深度安全扫描（结果落 SECURITY.md；551 依赖 0 advisory 命中；主结论 inconclusive/partial，发布前需重跑） | `cargo-audit`/`cargo-deny` 做依赖审计 + 对 Tauri command 层人工安全审计 |
-| `web-reader` | 规则事实核查时的网页调研 | 直接 HTTP fetch / 搜索引擎 |
-| `partisync` | 用户级配置，属于其他项目，本项目未使用 | — |
-
-### 6.3 Commands / Hooks / Workflows
-
-- **自定义 commands**：无。
-- **Hooks**：仓库 `.git/hooks/` 全为 sample；但原开发环境（ZCode）配置了 **mimosa 插件的 commit hook**：每次 `git commit` 时若项目缺完整安全扫描结论（如 callgraph partial）会注入提醒——继续放行但禁止宣称项目安全，并要求尽快重跑完整审计。接手环境等价物：把「发布/重要提交前重跑安全审计（或 `cargo-audit`）并更新 SECURITY.md」作为流程性检查项。
-- **动态 workflow**：`.zcode/workflow-drafts/macOS-规则库批量产出.dwf.ts` 是 ZCode 本地批量生成规则的草稿（未入库，仅本机）；批量产规则的完整纪律以 §5 规则约定为准。
+用户协作习惯（回复语言、推进方式、下一步建议等）已固化在根 [AGENTS.md](../AGENTS.md)「协作习惯」节，接手环境直接遵循；下一步工作清单见 [AGENTS.md](../AGENTS.md)「下一步工作」与本档 §7。
 
 ## 7. 建议的任务池（接手后可立即开工）
 
