@@ -1,6 +1,43 @@
 [
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-app-logs",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.local/share/logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "用户级应用日志（~/.local/share/logs）",
+      "what": "各应用（浏览器、IDE、包管理器等）的运行日志、错误日志、调试日志",
+      "producer": "各应用（应用启动、运行、调试时）",
+      "safe_to_delete_because": "纯日志：删除后应用自动重新生成；应用配置、数据、用户数据均不受影响",
+      "consequence": "历史日志丢失，故障排查时无历史记录；应用功能完全不受影响",
+      "regenerate": "应用自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多应用常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-apt-cache",
     "os": "linux",
     "scope": "user",
@@ -485,6 +522,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-dropbox-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.dropbox.cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Dropbox 缓存（~/.dropbox.cache）",
+      "what": "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）",
+      "producer": "Dropbox 客户端",
+      "safe_to_delete_because": "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响",
+      "consequence": "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响",
+      "regenerate": "Dropbox 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多文件常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://help.dropbox.com/syncing-uploads/cache-folder"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-edge-cache",
     "os": "linux",
     "scope": "user",
@@ -707,6 +781,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-haskell-stack",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.stack"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Haskell Stack 缓存（~/.stack）",
+      "what": "Haskell Stack 下载的 GHC 编译器、包索引、构建产物缓存",
+      "producer": "Haskell Stack（stack build / stack install）",
+      "safe_to_delete_because": "纯下载与构建缓存：删除后 Stack 重新下载；项目源码与 stack.yaml 不受影响",
+      "consequence": "下次构建需重新下载 GHC 与包（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "stack build 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 GHC 版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.haskellstack.org/en/stable/stack_root/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-huggingface-cache",
     "os": "linux",
     "scope": "user",
@@ -774,6 +885,43 @@
     "estimate": {
       "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
       "recovery": "partial"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-jetbrains-logs",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.local/share/JetBrains/logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 日志（~/.local/share/JetBrains/logs）",
+      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的运行日志、插件日志、索引日志",
+      "producer": "JetBrains IDE（IDE 启动、运行、调试时）",
+      "safe_to_delete_because": "纯日志：删除后 IDE 自动重新生成；项目配置、代码、VCS 历史均不受影响",
+      "consequence": "历史日志丢失，故障排查时无历史记录；IDE 功能完全不受影响",
+      "regenerate": "IDE 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多 IDE/多项目常见）",
+      "recovery": "full"
     },
     "refs": [
       "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
@@ -1190,6 +1338,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-rustup-toolchains",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.rustup/toolchains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "rustup 工具链缓存（~/.rustup/toolchains）",
+      "what": "rustup 下载的 Rust 工具链（stable、nightly、各版本）安装目录",
+      "producer": "rustup（rustup install / rustup update）",
+      "safe_to_delete_because": "纯下载缓存：删除后 rustup 重新下载；已安装的 toolchain 不受影响",
+      "consequence": "下次 rustup 命令需重新下载工具链（需网络，首次变慢）；已安装的 toolchain 完全不受影响",
+      "regenerate": "rustup 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 toolchain 常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://rust-lang.github.io/rustup/concepts/toolchains.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-slack-cache",
     "os": "linux",
     "scope": "user",
@@ -1260,6 +1445,43 @@
     },
     "refs": [
       "https://www.swift.org/documentation/package-manager/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-spotify-persistent-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/spotify/PersistentCache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Spotify 持久缓存（~/.cache/spotify/PersistentCache）",
+      "what": "Spotify 客户端的音频缓存、图片缓存、播放列表缓存",
+      "producer": "Spotify 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Spotify 自动重新下载；播放列表、收藏、用户数据均不受影响",
+      "consequence": "已缓存的音频需重新下载；播放列表与功能完全不受影响",
+      "regenerate": "Spotify 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多播放列表/离线播放常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.spotify.com/us/article/storage-information/"
     ]
   },
   {
@@ -1371,6 +1593,43 @@
     },
     "refs": [
       "https://telegram.org/faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-torch-hub",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/torch/hub"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "PyTorch Hub 缓存（~/.cache/torch/hub）",
+      "what": "PyTorch Hub 下载的模型（torch.hub.load 缓存）与预训练权重",
+      "producer": "PyTorch（torch.hub.load / torch.hub.load_state_dict_from_url）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次加载时重新下载；模型代码与配置不受影响",
+      "consequence": "已下载的模型需重新下载（需网络，模型文件通常数 GB）；功能完全不受影响",
+      "regenerate": "torch.hub.load 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多模型常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://pytorch.org/docs/stable/hub.html"
     ]
   },
   {
@@ -1523,6 +1782,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-vscode-cached-data",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/Code/CachedData"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "VS Code 缓存数据（~/.cache/Code/CachedData）",
+      "what": "VS Code 的扩展缓存、渲染缓存、语言服务缓存",
+      "producer": "VS Code（code 启动、扩展加载、语言服务时）",
+      "safe_to_delete_because": "纯缓存：删除后 VS Code 自动重新生成；扩展配置、项目设置、用户数据均不受影响",
+      "consequence": "下次启动需重新生成缓存（首次变慢）；功能完全不受影响",
+      "regenerate": "VS Code 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多扩展/多项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://code.visualstudio.com/docs/setup/uninstall"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-yarn-cache",
     "os": "linux",
     "scope": "user",
@@ -1557,6 +1853,43 @@
     "refs": [
       "https://classic.yarnpkg.com/en/docs/cli/cache",
       "https://classic.yarnpkg.com/en/docs/cli/cache/clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-zoom-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/zoom"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Zoom 缓存（~/.cache/zoom）",
+      "what": "Zoom 客户端的图片、文件、聊天缓存",
+      "producer": "Zoom 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Zoom 自动重新下载；聊天记录、会议设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Zoom 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多会议/多文件常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
     ]
   },
   {
@@ -4977,6 +5310,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-app-logs",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "用户级应用日志（~/AppData/Local/logs）",
+      "what": "各应用（浏览器、IDE、包管理器等）的运行日志、错误日志、调试日志",
+      "producer": "各应用（应用启动、运行、调试时）",
+      "safe_to_delete_because": "纯日志：删除后应用自动重新生成；应用配置、数据、用户数据均不受影响",
+      "consequence": "历史日志丢失，故障排查时无历史记录；应用功能完全不受影响",
+      "regenerate": "应用自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多应用常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-brave-cache",
     "os": "windows",
     "scope": "user",
@@ -5202,6 +5572,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-dropbox-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Dropbox/user.cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Dropbox 缓存（~/AppData/Roaming/Dropbox）",
+      "what": "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）",
+      "producer": "Dropbox 客户端",
+      "safe_to_delete_because": "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响",
+      "consequence": "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响",
+      "regenerate": "Dropbox 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多文件常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://help.dropbox.com/syncing-uploads/cache-folder"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-edge-cache",
     "os": "windows",
     "scope": "user",
@@ -5389,6 +5796,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-haskell-stack",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.stack"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Haskell Stack 缓存（~/.stack）",
+      "what": "Haskell Stack 下载的 GHC 编译器、包索引、构建产物缓存",
+      "producer": "Haskell Stack（stack build / stack install）",
+      "safe_to_delete_because": "纯下载与构建缓存：删除后 Stack 重新下载；项目源码与 stack.yaml 不受影响",
+      "consequence": "下次构建需重新下载 GHC 与包（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "stack build 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 GHC 版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.haskellstack.org/en/stable/stack_root/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-huggingface-cache",
     "os": "windows",
     "scope": "user",
@@ -5456,6 +5900,43 @@
     "estimate": {
       "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
       "recovery": "partial"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-jetbrains-logs",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Local/JetBrains/logs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 日志（~/AppData/Local/JetBrains/logs）",
+      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的运行日志、插件日志、索引日志",
+      "producer": "JetBrains IDE（IDE 启动、运行、调试时）",
+      "safe_to_delete_because": "纯日志：删除后 IDE 自动重新生成；项目配置、代码、VCS 历史均不受影响",
+      "consequence": "历史日志丢失，故障排查时无历史记录；IDE 功能完全不受影响",
+      "regenerate": "IDE 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB（多 IDE/多项目常见）",
+      "recovery": "full"
     },
     "refs": [
       "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
@@ -5760,6 +6241,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-rustup-toolchains",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.rustup/toolchains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "rustup 工具链缓存（~/.rustup/toolchains）",
+      "what": "rustup 下载的 Rust 工具链（stable、nightly、各版本）安装目录",
+      "producer": "rustup（rustup install / rustup update）",
+      "safe_to_delete_because": "纯下载缓存：删除后 rustup 重新下载；已安装的 toolchain 不受影响",
+      "consequence": "下次 rustup 命令需重新下载工具链（需网络，首次变慢）；已安装的 toolchain 完全不受影响",
+      "regenerate": "rustup 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 toolchain 常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://rust-lang.github.io/rustup/concepts/toolchains.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-slack-cache",
     "os": "windows",
     "scope": "user",
@@ -5793,6 +6311,43 @@
     },
     "refs": [
       "https://slack.com/help/articles/115004071768"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-spotify-persistent-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Spotify/PersistentCache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Spotify 持久缓存（~/AppData/Roaming/Spotify）",
+      "what": "Spotify 客户端的音频缓存、图片缓存、播放列表缓存",
+      "producer": "Spotify 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Spotify 自动重新下载；播放列表、收藏、用户数据均不受影响",
+      "consequence": "已缓存的音频需重新下载；播放列表与功能完全不受影响",
+      "regenerate": "Spotify 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多播放列表/离线播放常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.spotify.com/us/article/storage-information/"
     ]
   },
   {
@@ -5908,6 +6463,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-torch-hub",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.cache/torch/hub"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "PyTorch Hub 缓存（~/.cache/torch/hub）",
+      "what": "PyTorch Hub 下载的模型（torch.hub.load 缓存）与预训练权重",
+      "producer": "PyTorch（torch.hub.load / torch.hub.load_state_dict_from_url）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次加载时重新下载；模型代码与配置不受影响",
+      "consequence": "已下载的模型需重新下载（需网络，模型文件通常数 GB）；功能完全不受影响",
+      "regenerate": "torch.hub.load 自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多模型常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://pytorch.org/docs/stable/hub.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-unity-cache",
     "os": "windows",
     "scope": "user",
@@ -6019,6 +6611,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-vscode-cached-data",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Code/CachedData"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "VS Code 缓存数据（~/AppData/Roaming/Code）",
+      "what": "VS Code 的扩展缓存、渲染缓存、语言服务缓存",
+      "producer": "VS Code（code 启动、扩展加载、语言服务时）",
+      "safe_to_delete_because": "纯缓存：删除后 VS Code 自动重新生成；扩展配置、项目设置、用户数据均不受影响",
+      "consequence": "下次启动需重新生成缓存（首次变慢）；功能完全不受影响",
+      "regenerate": "VS Code 自动重新生成"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多扩展/多项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://code.visualstudio.com/docs/setup/uninstall"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-xcode-caches",
     "os": "windows",
     "scope": "user",
@@ -6089,6 +6718,43 @@
     },
     "refs": [
       "https://developer.apple.com/documentation/xcode"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-zoom-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/AppData/Roaming/Zoom/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Zoom 缓存（~/AppData/Roaming/Zoom）",
+      "what": "Zoom 客户端的图片、文件、聊天缓存",
+      "producer": "Zoom 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Zoom 自动重新下载；聊天记录、会议设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Zoom 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多会议/多文件常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
     ]
   }
 ]

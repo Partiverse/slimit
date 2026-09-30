@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-dropbox-cache
+os: windows
+scope: user
+paths:
+  - "~/AppData/Roaming/Dropbox/user.cache"
+semantics:
+  title: "Dropbox 缓存（~/AppData/Roaming/Dropbox）"
+  what: "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）"
+  producer: "Dropbox 客户端"
+  safe_to_delete_because: "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响"
+  consequence: "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响"
+  regenerate: "Dropbox 自动重新下载"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多文件常见）"
+  recovery: partial
+refs:
+  - https://help.dropbox.com/syncing-uploads/cache-folder

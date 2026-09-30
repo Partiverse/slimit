@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-spotify-persistent-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/spotify/PersistentCache"
+semantics:
+  title: "Spotify 持久缓存（~/.cache/spotify/PersistentCache）"
+  what: "Spotify 客户端的音频缓存、图片缓存、播放列表缓存"
+  producer: "Spotify 客户端"
+  safe_to_delete_because: "纯缓存数据：删除后 Spotify 自动重新下载；播放列表、收藏、用户数据均不受影响"
+  consequence: "已缓存的音频需重新下载；播放列表与功能完全不受影响"
+  regenerate: "Spotify 运行时按需自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多播放列表/离线播放常见）"
+  recovery: full
+refs:
+  - https://support.spotify.com/us/article/storage-information/

@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-jetbrains-logs
+os: linux
+scope: user
+paths:
+  - "~/.local/share/JetBrains/logs"
+semantics:
+  title: "JetBrains IDE 日志（~/.local/share/JetBrains/logs）"
+  what: "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的运行日志、插件日志、索引日志"
+  producer: "JetBrains IDE（IDE 启动、运行、调试时）"
+  safe_to_delete_because: "纯日志：删除后 IDE 自动重新生成；项目配置、代码、VCS 历史均不受影响"
+  consequence: "历史日志丢失，故障排查时无历史记录；IDE 功能完全不受影响"
+  regenerate: "IDE 自动重新生成"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数百 MB（多 IDE/多项目常见）"
+  recovery: full
+refs:
+  - https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html

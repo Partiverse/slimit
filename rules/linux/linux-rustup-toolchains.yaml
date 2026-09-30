@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-rustup-toolchains
+os: linux
+scope: user
+paths:
+  - "~/.rustup/toolchains"
+semantics:
+  title: "rustup 工具链缓存（~/.rustup/toolchains）"
+  what: "rustup 下载的 Rust 工具链（stable、nightly、各版本）安装目录"
+  producer: "rustup（rustup install / rustup update）"
+  safe_to_delete_because: "纯下载缓存：删除后 rustup 重新下载；已安装的 toolchain 不受影响"
+  consequence: "下次 rustup 命令需重新下载工具链（需网络，首次变慢）；已安装的 toolchain 完全不受影响"
+  regenerate: "rustup 自动重新下载"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 toolchain 常见）"
+  recovery: partial
+refs:
+  - https://rust-lang.github.io/rustup/concepts/toolchains.html
