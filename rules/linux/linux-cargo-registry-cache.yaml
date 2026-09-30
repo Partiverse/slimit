@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-cargo-registry-cache
+os: linux
+scope: user
+paths:
+  - "~/.cargo/registry/cache"
+semantics:
+  title: "Cargo 注册表下载缓存（~/.cargo/registry/cache）"
+  what: "cargo 从 crates.io 等注册表下载的 crate 压缩包缓存（.crate 文件，按内容寻址）。与 linux-cargo-git（git 依赖缓存）互补不重叠"
+  producer: "cargo（cargo build/fetch 下载 crate 时）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 cargo 重新下载对应 crate；已下载的 crate 源码在 registry/src 中不受影响"
+  consequence: "下次构建需重新下载 crate 压缩包（需网络）；项目代码与 Cargo.lock 不受影响"
+  regenerate: "cargo fetch / cargo build 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多依赖项目）"
+  recovery: full
+refs:
+  - https://doc.rust-lang.org/cargo/reference/registry.html
+  - https://doc.rust-lang.org/cargo/guide/dependencies.html

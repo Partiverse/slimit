@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-composer-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/composer"
+semantics:
+  title: "Composer 包缓存（~/.cache/composer）"
+  what: "Composer 安装/下载 PHP 包时缓存的 tarball 与元数据，用于加速重复安装"
+  producer: "Composer（composer install / composer update）"
+  safe_to_delete_because: "纯下载缓存，已安装的 vendor 目录与全局包不受影响；包内容可随时从 Packagist 重新获取"
+  consequence: "下次 composer install 需重新联网下载包，离线或网络受限时安装变慢；Composer 本身与已装项目均正常工作"
+  regenerate: "执行任意 composer install 时按需自动重新下载并重建缓存"
+risk: green
+action:
+  kind: command
+  command: "composer clear-cache"
+  dry_run: "composer cache list"
+estimate:
+  typical_size: "数百 MB 至数 GB（重度 PHP 开发者常见）"
+  recovery: full
+refs:
+  - https://getcomposer.org/doc/03-cli.md#clear-cache

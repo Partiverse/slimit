@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-deno-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/deno"
+semantics:
+  title: "Deno 缓存（~/.cache/deno）"
+  what: "Deno 下载的远程模块缓存（deps）、TypeScript 编译缓存（gen）、TypeScript 类型定义缓存（lang）"
+  producer: "Deno（deno run / deno cache 等）"
+  safe_to_delete_because: "纯下载与编译缓存：删除后下次运行 deno 时自动重新下载并编译；项目代码与配置不受影响"
+  consequence: "下次运行需重新下载远程模块并编译，首次运行变慢；功能与结果完全不受影响"
+  regenerate: "deno run / deno cache 自动重新下载并编译"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数 GB（多项目/多依赖常见）"
+  recovery: full
+refs:
+  - https://docs.deno.com/runtime/manual/basics/environment_variables/

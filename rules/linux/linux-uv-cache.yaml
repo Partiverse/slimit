@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-uv-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/uv"
+semantics:
+  title: "uv 包缓存（~/.cache/uv）"
+  what: "uv（Astral 的 Python 包管理器）下载的 wheel 包、源包与构建产物缓存，用于加速重复安装"
+  producer: "uv（uv pip install / uv venv 等）"
+  safe_to_delete_because: "纯下载与构建缓存：删除后下次 uv 命令重新下载并构建；已安装的虚拟环境不受影响"
+  consequence: "下次 uv pip install 需重新下载包（需网络，首次安装变慢）；功能与结果完全不受影响"
+  regenerate: "uv pip install 自动重新下载并构建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多项目/多依赖常见）"
+  recovery: full
+refs:
+  - https://docs.astral.sh/uv/concepts/cache/

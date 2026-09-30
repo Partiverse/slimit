@@ -1,0 +1,25 @@
+apiVersion: slimit.rules/v1
+id: linux-conda-clean
+os: linux
+scope: user
+paths:
+  - "~/miniconda3/pkgs"
+  - "~/anaconda3/pkgs"
+  - "~/miniforge3/pkgs"
+semantics:
+  title: "Conda 包缓存（pkgs 目录）"
+  what: "Conda 安装/下载包时缓存的 tarball 包（pkgs 目录），用于加速重复安装与离线部署"
+  producer: "Conda（conda install / conda create）"
+  safe_to_delete_because: "纯下载缓存：删除后下次 conda install 时重新下载；已安装的环境不受影响（环境中的包已解压到 env 目录）"
+  consequence: "下次 conda install 需重新下载包（需网络，首次安装变慢）；已安装环境完全不受影响"
+  regenerate: "conda clean --yes --packages 可手动清理；下次安装自动重新下载"
+risk: green
+action:
+  kind: command
+  command: "conda clean --yes --packages"
+  dry_run: "conda clean --packages --dry-run"
+estimate:
+  typical_size: "数 GB 到数十 GB（Conda 包通常较大）"
+  recovery: full
+refs:
+  - https://docs.conda.io/projects/conda/en/latest/commands/clean.html

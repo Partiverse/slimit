@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-apt-cache
+os: linux
+scope: user
+paths:
+  - "/var/cache/apt/archives"
+semantics:
+  title: "APT 包下载缓存（/var/cache/apt/archives）"
+  what: "apt 安装/升级时下载的 .deb 包文件缓存，用于重复安装或离线部署"
+  producer: "apt（apt-get install / apt upgrade / apt install）"
+  safe_to_delete_because: "纯下载缓存：删除后下次 apt install 时重新下载；已安装的包不受影响（已解压到系统目录）"
+  consequence: "下次 apt install 需重新下载包（需网络，首次安装变慢）；已安装软件完全不受影响"
+  regenerate: "apt-get clean 可手动清理；下次安装自动重新下载"
+risk: green
+action:
+  kind: command
+  command: "sudo apt-get clean"
+  dry_run: "sudo apt-get --dry-run clean"
+estimate:
+  typical_size: "数百 MB 到数 GB（多包/多升级常见）"
+  recovery: full
+refs:
+  - https://manpages.debian.org/bookworm/apt/apt-get.8.en.html

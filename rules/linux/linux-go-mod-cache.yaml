@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-go-mod-cache
+os: linux
+scope: user
+paths:
+  - "~/go/pkg/mod/cache/download"
+semantics:
+  title: "Go 模块缓存（GOMODCACHE）"
+  what: "go mod download 下载的模块 zip 包与校验数据（GOMODCACHE，默认 ~/go/pkg/mod/cache/download）。与 linux-go-build-cache（编译产物缓存）互补不重叠"
+  producer: "Go 工具链（go mod download / go build 触发模块下载）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 Go 重新从 proxy 下载模块 zip 包；项目 go.mod 与源码不受影响"
+  consequence: "下次构建需重新下载模块（需网络，首次构建变慢）；功能与结果完全不受影响"
+  regenerate: "go mod download 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多模块项目）"
+  recovery: full
+refs:
+  - https://pkg.go.dev/cmd/go

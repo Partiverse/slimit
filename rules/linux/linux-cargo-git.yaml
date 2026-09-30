@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-cargo-git
+os: linux
+scope: user
+paths:
+  - "~/.cargo/git"
+semantics:
+  title: "Cargo Git 依赖缓存（~/.cargo/git）"
+  what: "cargo 对 Git 依赖（path 指向 git 仓库的依赖）的克隆与检出缓存：git db（裸仓库）与 checkouts（按 rev 检出的工作树）。与 linux-cargo-registry-cache（registry 下载缓存）互补不重叠"
+  producer: "cargo（cargo build/fetch 拉取 git 依赖时）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 cargo 重新 clone 并 checkout 对应 rev"
+  consequence: "下次构建需重新克隆 git 依赖仓库（需网络，私有仓库需凭据可用）；项目代码与 Cargo.lock 不受影响"
+  regenerate: "cargo fetch / cargo build 自动重新克隆"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 git 依赖项目）"
+  recovery: full
+refs:
+  - https://doc.rust-lang.org/cargo/guide/cargo-home.html

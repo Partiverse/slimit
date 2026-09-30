@@ -1,6 +1,417 @@
 [
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-apt-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "/var/cache/apt/archives"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "APT 包下载缓存（/var/cache/apt/archives）",
+      "what": "apt 安装/升级时下载的 .deb 包文件缓存，用于重复安装或离线部署",
+      "producer": "apt（apt-get install / apt upgrade / apt install）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次 apt install 时重新下载；已安装的包不受影响（已解压到系统目录）",
+      "consequence": "下次 apt install 需重新下载包（需网络，首次安装变慢）；已安装软件完全不受影响",
+      "regenerate": "apt-get clean 可手动清理；下次安装自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "sudo apt-get clean",
+      "dry_run": "sudo apt-get --dry-run clean",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多包/多升级常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://manpages.debian.org/bookworm/apt/apt-get.8.en.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-bun-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.bun/install/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Bun 安装缓存（~/.bun/install/cache）",
+      "what": "Bun 安装/下载包时缓存的 tarball 与元数据，用于加速重复安装",
+      "producer": "Bun（bun install / bun add）",
+      "safe_to_delete_because": "纯下载缓存，已安装的 node_modules 与全局包不受影响；包内容可随时从 registry 重新获取",
+      "consequence": "下次 bun install 需重新联网下载包，离线或网络受限时安装变慢；Bun 本身与已装项目均正常工作",
+      "regenerate": "执行任意 bun install 时按需自动重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用者可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://bun.sh/docs/install/cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-cargo-git",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cargo/git"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cargo Git 依赖缓存（~/.cargo/git）",
+      "what": "cargo 对 Git 依赖（path 指向 git 仓库的依赖）的克隆与检出缓存：git db（裸仓库）与 checkouts（按 rev 检出的工作树）。与 linux-cargo-registry-cache（registry 下载缓存）互补不重叠",
+      "producer": "cargo（cargo build/fetch 拉取 git 依赖时）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 cargo 重新 clone 并 checkout 对应 rev",
+      "consequence": "下次构建需重新克隆 git 依赖仓库（需网络，私有仓库需凭据可用）；项目代码与 Cargo.lock 不受影响",
+      "regenerate": "cargo fetch / cargo build 自动重新克隆"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 git 依赖项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://doc.rust-lang.org/cargo/guide/cargo-home.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-cargo-registry-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cargo/registry/cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Cargo 注册表下载缓存（~/.cargo/registry/cache）",
+      "what": "cargo 从 crates.io 等注册表下载的 crate 压缩包缓存（.crate 文件，按内容寻址）。与 linux-cargo-git（git 依赖缓存）互补不重叠",
+      "producer": "cargo（cargo build/fetch 下载 crate 时）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 cargo 重新下载对应 crate；已下载的 crate 源码在 registry/src 中不受影响",
+      "consequence": "下次构建需重新下载 crate 压缩包（需网络）；项目代码与 Cargo.lock 不受影响",
+      "regenerate": "cargo fetch / cargo build 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多依赖项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://doc.rust-lang.org/cargo/reference/registry.html",
+      "https://doc.rust-lang.org/cargo/guide/dependencies.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-composer-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/composer"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Composer 包缓存（~/.cache/composer）",
+      "what": "Composer 安装/下载 PHP 包时缓存的 tarball 与元数据，用于加速重复安装",
+      "producer": "Composer（composer install / composer update）",
+      "safe_to_delete_because": "纯下载缓存，已安装的 vendor 目录与全局包不受影响；包内容可随时从 Packagist 重新获取",
+      "consequence": "下次 composer install 需重新联网下载包，离线或网络受限时安装变慢；Composer 本身与已装项目均正常工作",
+      "regenerate": "执行任意 composer install 时按需自动重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "composer clear-cache",
+      "dry_run": "composer cache list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度 PHP 开发者常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://getcomposer.org/doc/03-cli.md#clear-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-conda-clean",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/miniconda3/pkgs",
+      "~/anaconda3/pkgs",
+      "~/miniforge3/pkgs"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Conda 包缓存（pkgs 目录）",
+      "what": "Conda 安装/下载包时缓存的 tarball 包（pkgs 目录），用于加速重复安装与离线部署",
+      "producer": "Conda（conda install / conda create）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次 conda install 时重新下载；已安装的环境不受影响（环境中的包已解压到 env 目录）",
+      "consequence": "下次 conda install 需重新下载包（需网络，首次安装变慢）；已安装环境完全不受影响",
+      "regenerate": "conda clean --yes --packages 可手动清理；下次安装自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "conda clean --yes --packages",
+      "dry_run": "conda clean --packages --dry-run",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（Conda 包通常较大）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.conda.io/projects/conda/en/latest/commands/clean.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-deno-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/deno"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Deno 缓存（~/.cache/deno）",
+      "what": "Deno 下载的远程模块缓存（deps）、TypeScript 编译缓存（gen）、TypeScript 类型定义缓存（lang）",
+      "producer": "Deno（deno run / deno cache 等）",
+      "safe_to_delete_because": "纯下载与编译缓存：删除后下次运行 deno 时自动重新下载并编译；项目代码与配置不受影响",
+      "consequence": "下次运行需重新下载远程模块并编译，首次运行变慢；功能与结果完全不受影响",
+      "regenerate": "deno run / deno cache 自动重新下载并编译"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数 GB（多项目/多依赖常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.deno.com/runtime/manual/basics/environment_variables/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-go-build-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/go-build"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Go 构建缓存",
+      "what": "go build / go test / go run 等命令产生的编译中间产物缓存（按内容寻址的包编译结果），Linux 默认存放于 GOCACHE（~/.cache/go-build）。注意：Go 模块源码缓存（GOMODCACHE，~/go/pkg/mod）在别处，本条规则不涉及",
+      "producer": "Go 工具链（go build / go test / go install / go run）",
+      "safe_to_delete_because": "内容全部是可再生的编译缓存，不含源码与用户数据；Go 官方提供 go clean -cache 命令随时清空，清空后仅影响下次编译速度",
+      "consequence": "下次构建/测试需要完整重新编译，首次构建耗时明显变长（大型项目可达数分钟）；功能与结果完全不受影响",
+      "regenerate": "无需手动操作，Go 在下次构建/测试时自动按需重新编译并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "go clean -cache",
+      "dry_run": "go env GOCACHE",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–5 GB（活跃 Go 开发常见量级，重度使用可超过 10 GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pkg.go.dev/cmd/go"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-go-mod-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/go/pkg/mod/cache/download"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Go 模块缓存（GOMODCACHE）",
+      "what": "go mod download 下载的模块 zip 包与校验数据（GOMODCACHE，默认 ~/go/pkg/mod/cache/download）。与 linux-go-build-cache（编译产物缓存）互补不重叠",
+      "producer": "Go 工具链（go mod download / go build 触发模块下载）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 Go 重新从 proxy 下载模块 zip 包；项目 go.mod 与源码不受影响",
+      "consequence": "下次构建需重新下载模块（需网络，首次构建变慢）；功能与结果完全不受影响",
+      "regenerate": "go mod download 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多模块项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pkg.go.dev/cmd/go"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-gradle-caches",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.gradle/caches"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Gradle 构建缓存（~/.gradle/caches）",
+      "what": "Gradle 构建产物缓存（编译输出、依赖下载、构建缓存）与本地 Maven 仓库（build-scan 插件数据等）",
+      "producer": "Gradle（gradle build / gradle test 等）",
+      "safe_to_delete_because": "纯构建缓存：删除后下次构建时 Gradle 重新下载依赖并重新编译；项目源码与配置不受影响",
+      "consequence": "下次构建需重新下载依赖并重新编译，首次构建耗时变长；功能与结果完全不受影响",
+      "regenerate": "下次 gradle build 时自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多版本常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-maven-repository-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.m2/repository"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Maven 本地仓库（~/.m2/repository）",
+      "what": "Maven 从远程仓库下载的依赖（jar、pom、源码等）的本地缓存，按 groupId/artifactId/version 组织",
+      "producer": "Maven（mvn compile / mvn package 等）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 Maven 重新从远程仓库下载依赖；项目源码与 pom.xml 不受影响",
+      "consequence": "下次构建需重新下载所有依赖（需网络，首次构建变慢）；功能与结果完全不受影响",
+      "regenerate": "下次 mvn compile 时自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多依赖常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://maven.apache.org/settings.html",
+      "https://maven.apache.org/guides/introduction/introduction-to-repositories.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-npm-cache",
     "os": "linux",
     "scope": "user",
@@ -108,6 +519,156 @@
     },
     "refs": [
       "https://pnpm.io/cli/store"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-poetry-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/pypoetry"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Poetry 包缓存（~/.cache/pypoetry）",
+      "what": "Poetry 安装/下载 Python 包时缓存的 wheel 包与元数据，用于加速重复安装",
+      "producer": "Poetry（poetry install / poetry add）",
+      "safe_to_delete_because": "纯下载缓存，已安装的虚拟环境与全局包不受影响；包内容可随时从 PyPI 重新获取",
+      "consequence": "下次 poetry install 需重新联网下载包，离线或网络受限时安装变慢；Poetry 本身与已装项目均正常工作",
+      "regenerate": "执行任意 poetry install 时按需自动重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度 Python 开发者常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://python-poetry.org/docs/configuration/#cache-directory",
+      "https://python-poetry.org/docs/cli/#cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-rustup-downloads",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.rustup/downloads"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "rustup 下载缓存（~/.rustup/downloads）",
+      "what": "rustup 下载的 toolchain 与组件安装包缓存（tarball），用于重复安装或离线安装",
+      "producer": "rustup（rustup install / rustup update）",
+      "safe_to_delete_because": "纯下载缓存：删除后 rustup 重新下载；已安装的 toolchain 不受影响",
+      "consequence": "下次 rustup install 需重新下载安装包（需网络）；已安装的 toolchain 完全不受影响",
+      "regenerate": "rustup install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB（多 toolchain 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://rust-lang.github.io/rustup/installation/index.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-uv-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/uv"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "uv 包缓存（~/.cache/uv）",
+      "what": "uv（Astral 的 Python 包管理器）下载的 wheel 包、源包与构建产物缓存，用于加速重复安装",
+      "producer": "uv（uv pip install / uv venv 等）",
+      "safe_to_delete_because": "纯下载与构建缓存：删除后下次 uv 命令重新下载并构建；已安装的虚拟环境不受影响",
+      "consequence": "下次 uv pip install 需重新下载包（需网络，首次安装变慢）；功能与结果完全不受影响",
+      "regenerate": "uv pip install 自动重新下载并构建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多依赖常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.astral.sh/uv/concepts/cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-yarn-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/yarn"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Yarn 包缓存",
+      "what": "Yarn 1.x（classic）安装依赖时下载并解包的 npm 包缓存（v6 缓存格式），用于加速后续 install",
+      "producer": "Yarn 1.x 执行 yarn install / yarn add 时产生",
+      "safe_to_delete_because": "纯下载缓存，不影响项目 node_modules 与已安装依赖；也可用官方命令 yarn cache clean 清理",
+      "consequence": "下次 yarn install 对缓存未命中的包需重新从 registry 下载，首次安装变慢",
+      "regenerate": "执行 yarn install / yarn add 时按需自动重新下载并重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "yarn cache clean",
+      "dry_run": "yarn cache dir",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://classic.yarnpkg.com/en/docs/cli/cache",
+      "https://classic.yarnpkg.com/en/docs/cli/cache/clean"
     ]
   },
   {

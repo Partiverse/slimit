@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-poetry-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/pypoetry"
+semantics:
+  title: "Poetry 包缓存（~/.cache/pypoetry）"
+  what: "Poetry 安装/下载 Python 包时缓存的 wheel 包与元数据，用于加速重复安装"
+  producer: "Poetry（poetry install / poetry add）"
+  safe_to_delete_because: "纯下载缓存，已安装的虚拟环境与全局包不受影响；包内容可随时从 PyPI 重新获取"
+  consequence: "下次 poetry install 需重新联网下载包，离线或网络受限时安装变慢；Poetry 本身与已装项目均正常工作"
+  regenerate: "执行任意 poetry install 时按需自动重新下载并重建缓存"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 至数 GB（重度 Python 开发者常见）"
+  recovery: full
+refs:
+  - https://python-poetry.org/docs/configuration/#cache-directory
+  - https://python-poetry.org/docs/cli/#cache

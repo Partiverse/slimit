@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-go-build-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/go-build"
+semantics:
+  title: "Go 构建缓存"
+  what: "go build / go test / go run 等命令产生的编译中间产物缓存（按内容寻址的包编译结果），Linux 默认存放于 GOCACHE（~/.cache/go-build）。注意：Go 模块源码缓存（GOMODCACHE，~/go/pkg/mod）在别处，本条规则不涉及"
+  producer: "Go 工具链（go build / go test / go install / go run）"
+  safe_to_delete_because: "内容全部是可再生的编译缓存，不含源码与用户数据；Go 官方提供 go clean -cache 命令随时清空，清空后仅影响下次编译速度"
+  consequence: "下次构建/测试需要完整重新编译，首次构建耗时明显变长（大型项目可达数分钟）；功能与结果完全不受影响"
+  regenerate: "无需手动操作，Go 在下次构建/测试时自动按需重新编译并重建缓存"
+risk: green
+action:
+  kind: command
+  command: "go clean -cache"
+  dry_run: "go env GOCACHE"
+estimate:
+  typical_size: "1–5 GB（活跃 Go 开发常见量级，重度使用可超过 10 GB）"
+  recovery: full
+refs:
+  - https://pkg.go.dev/cmd/go
