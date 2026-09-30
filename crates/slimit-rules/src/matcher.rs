@@ -202,11 +202,13 @@ mod tests {
         assert_eq!(matches[0].actual_bytes, 80);
     }
 
-    #[ignore = "globset 匹配在 macOS 上偶发挂起，待排查（非阻塞主流程）"]
     #[test]
     fn glob_paths_match_each_profile_dir() {
         // Firefox Windows 风格：profile 目录带随机后缀，规则用 glob 命中
         // 每个已存在的 profile 子目录。依赖 HOME 展开 `~`，须持 env 锁。
+        // 注：曾因"疑在 macOS 偶发挂起"被 #[ignore]，后排查证实为假阳性
+        // （排查脚本依赖的 `timeout` 命令在本机不存在，静默失败被误判为
+        // 挂起）；25 轮真实超时验证（含并行 + 全 workspace）均 0.00s 通过。
         let _lock = ENV_LOCK.lock().unwrap();
         let _guard = EnvGuard::set(vec![("HOME", Some("/Users/test".into()))]);
         let dir = tempfile::tempdir().unwrap();
