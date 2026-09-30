@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-npm-cache
+os: linux
+scope: user
+paths:
+  - "~/.npm/_cacache"
+semantics:
+  title: "npm 包缓存（npm-cache）"
+  what: "npm 安装/下载包时缓存的 tarball 与元数据内容寻址存储（_cacache），仅用于加速重复安装"
+  producer: "npm（Node.js 包管理器）在 install/update 时自动写入"
+  safe_to_delete_because: "纯下载缓存，已安装的 node_modules 与全局包不受影响；包内容可随时从 registry 重新获取"
+  consequence: "下次 npm install 需重新联网下载包，离线或网络受限时安装变慢；npm 本身与已装项目均正常工作"
+  regenerate: "执行任意 npm install 时按需自动重新下载并重建缓存；npm cache verify 可手动校验与修复"
+risk: green
+action:
+  kind: command
+  command: "npm cache clean --force"
+  dry_run: "npm cache verify"
+estimate:
+  typical_size: "数百 MB 至数 GB（重度使用者可达 10+ GB）"
+  recovery: full
+refs:
+  - https://docs.npmjs.com/cli/commands/npm-cache

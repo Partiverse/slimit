@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: linux-pnpm-store
+os: linux
+scope: user
+paths:
+  - "~/.local/share/pnpm/store"
+semantics:
+  title: "pnpm 内容寻址存储（store）"
+  what: "pnpm 的全局内容寻址存储，所有项目通过硬链接共享包文件，store 本身仅用于加速安装与节省磁盘"
+  producer: "pnpm 在 install/add 时自动写入"
+  safe_to_delete_because: "store 中的包文件通过硬链接被各项目 node_modules 引用，删除 store 中未被引用的包（pnpm store prune 的语义）不影响任何项目；已装项目的 node_modules 不受影响"
+  consequence: "下次 pnpm install 需重新联网下载包；注意：直接删除 store 目录可能使硬链接失效导致项目 node_modules 损坏，因此动作走 pnpm store prune 而非裸删"
+  regenerate: "下次 pnpm install 时自动重建 store 并重新下载"
+risk: green
+action:
+  kind: command
+  command: "pnpm store prune"
+  dry_run: "pnpm store path"
+estimate:
+  typical_size: "1–10 GB（多项目共享时可达 10+ GB）"
+  recovery: full
+refs:
+  - https://pnpm.io/cli/store

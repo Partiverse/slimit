@@ -1,6 +1,117 @@
 [
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-npm-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.npm/_cacache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "npm 包缓存（npm-cache）",
+      "what": "npm 安装/下载包时缓存的 tarball 与元数据内容寻址存储（_cacache），仅用于加速重复安装",
+      "producer": "npm（Node.js 包管理器）在 install/update 时自动写入",
+      "safe_to_delete_because": "纯下载缓存，已安装的 node_modules 与全局包不受影响；包内容可随时从 registry 重新获取",
+      "consequence": "下次 npm install 需重新联网下载包，离线或网络受限时安装变慢；npm 本身与已装项目均正常工作",
+      "regenerate": "执行任意 npm install 时按需自动重新下载并重建缓存；npm cache verify 可手动校验与修复"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "npm cache clean --force",
+      "dry_run": "npm cache verify",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 至数 GB（重度使用者可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.npmjs.com/cli/commands/npm-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-pip-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/pip"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pip 下载缓存",
+      "what": "pip 安装 Python 包时下载的 HTTP 响应（PyPI 页面与 wheel 文件）及本地构建的 wheel 缓存，仅用于加速重复安装",
+      "producer": "pip（Python 官方包管理器）",
+      "safe_to_delete_because": "纯下载缓存，只影响下次安装速度；已安装到虚拟环境/系统 site-packages 的包不受任何影响",
+      "consequence": "下次 pip install 曾缓存过的包需重新从 PyPI 下载，安装变慢、消耗流量，此外无任何损失",
+      "regenerate": "下次 pip install 时自动按需重新下载并重建缓存"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pip cache purge",
+      "dry_run": "pip cache list",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 至数 GB（活跃 Python 开发常见数百 MB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pip.pypa.io/en/stable/cli/pip_cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-pnpm-store",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.local/share/pnpm/store"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "pnpm 内容寻址存储（store）",
+      "what": "pnpm 的全局内容寻址存储，所有项目通过硬链接共享包文件，store 本身仅用于加速安装与节省磁盘",
+      "producer": "pnpm 在 install/add 时自动写入",
+      "safe_to_delete_because": "store 中的包文件通过硬链接被各项目 node_modules 引用，删除 store 中未被引用的包（pnpm store prune 的语义）不影响任何项目；已装项目的 node_modules 不受影响",
+      "consequence": "下次 pnpm install 需重新联网下载包；注意：直接删除 store 目录可能使硬链接失效导致项目 node_modules 损坏，因此动作走 pnpm store prune 而非裸删",
+      "regenerate": "下次 pnpm install 时自动重建 store 并重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "pnpm store prune",
+      "dry_run": "pnpm store path",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10 GB（多项目共享时可达 10+ GB）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pnpm.io/cli/store"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-homebrew-cache",
     "os": "macos",
     "scope": "user",
