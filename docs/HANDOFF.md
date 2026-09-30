@@ -117,7 +117,7 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 ### 6.3 Commands / Hooks / Workflows
 
 - **自定义 commands**：无。
-- **Hooks**：未配置（`.git/hooks/` 全为 sample；开发环境 hook 配置为空）。「发布前重跑安全扫描」是**流程性要求**（SECURITY.md 记录），非 hook 强制。
+- **Hooks**：仓库 `.git/hooks/` 全为 sample；但原开发环境（ZCode）配置了 **mimosa 插件的 commit hook**：每次 `git commit` 时若项目缺完整安全扫描结论（如 callgraph partial）会注入提醒——继续放行但禁止宣称项目安全，并要求尽快重跑完整审计。接手环境等价物：把「发布/重要提交前重跑安全审计（或 `cargo-audit`）并更新 SECURITY.md」作为流程性检查项。
 - **动态 workflow**：`.zcode/workflow-drafts/macOS-规则库批量产出.dwf.ts` 是 ZCode 本地批量生成规则的草稿（未入库，仅本机）；批量产规则的完整纪律以 §5 规则约定为准。
 
 ## 7. 建议的任务池（接手后可立即开工）
