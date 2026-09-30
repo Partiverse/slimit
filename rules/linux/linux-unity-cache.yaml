@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-unity-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/unity3d"
+semantics:
+  title: "Unity 缓存（~/.cache/unity3d）"
+  what: "Unity 编辑器的包缓存、Shader 缓存、Asset Store 下载缓存"
+  producer: "Unity 编辑器（Package Manager / Shader 编译 / Asset Store）"
+  safe_to_delete_because: "纯缓存：删除后 Unity 重新生成；项目源码、Assets、Scene 均不受影响"
+  consequence: "下次打开项目需重新编译 Shader 与下载包（首次变慢）；功能完全不受影响"
+  regenerate: "Unity 自动重新生成"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多项目常见）"
+  recovery: partial
+refs:
+  - https://docs.unity3d.com/Manual/upm-cache.html
