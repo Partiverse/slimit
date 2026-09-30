@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-crash-reports
+os: windows
+scope: user
+paths:
+  - "~/AppData/Local/Diagnostics"
+semantics:
+  title: "Windows 诊断报告（~/AppData/Local/Diagnostics）"
+  what: "Windows 问题报告与解决方案、应用崩溃报告、系统诊断日志"
+  producer: "Windows 错误报告（WER）与应用"
+  safe_to_delete_because: "纯日志：删除后系统自动重新生成；应用配置、数据、用户数据均不受影响"
+  consequence: "历史问题报告丢失，故障排查时无历史记录；系统功能完全不受影响"
+  regenerate: "WER 自动重新生成"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数十 MB 到数百 MB（多应用常见）"
+  recovery: full
+refs:
+  - https://developer.apple.com/documentation/xcode/diagnosing-issues-using-crash-reports-and-device-logs
