@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-pub-cache
+os: linux
+scope: user
+paths:
+  - "~/.pub-cache"
+semantics:
+  title: "Dart/Flutter 包缓存（~/.pub-cache）"
+  what: "Dart/Flutter pub 包管理器下载的包缓存（已下载的包与可执行文件）"
+  producer: "pub（pub get / flutter pub get）"
+  safe_to_delete_because: "纯下载缓存：删除后 pub 重新下载；项目代码与 pubspec.yaml 不受影响"
+  consequence: "下次 pub get 需重新下载包（需网络，首次变慢）；功能完全不受影响"
+  regenerate: "pub get 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 Flutter 项目常见）"
+  recovery: full
+refs:
+  - https://dart.dev/tools/pub/cmd/pub-cache

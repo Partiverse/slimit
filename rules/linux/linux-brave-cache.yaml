@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-brave-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/BraveSoftware/Brave-Browser"
+semantics:
+  title: "Brave 浏览器缓存（~/.cache/BraveSoftware/Brave-Browser）"
+  what: "Brave 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等"
+  producer: "Brave 浏览器"
+  safe_to_delete_because: "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离"
+  consequence: "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢"
+  regenerate: "Brave 运行中按需自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md

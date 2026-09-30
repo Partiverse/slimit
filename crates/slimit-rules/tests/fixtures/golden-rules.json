@@ -38,6 +38,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-brave-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/BraveSoftware/Brave-Browser"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Brave 浏览器缓存（~/.cache/BraveSoftware/Brave-Browser）",
+      "what": "Brave 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Brave 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Brave 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-bun-cache",
     "os": "linux",
     "scope": "user",
@@ -226,6 +263,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-coursier-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/Coursier"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Coursier 缓存（~/.cache/Coursier）",
+      "what": "Coursier（Scala/Java 依赖管理器）下载的 JAR 包与元数据缓存",
+      "producer": "Coursier（cs install / sbt 使用 Coursier 时）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 Coursier 重新下载；项目源码与 build.sbt 不受影响",
+      "consequence": "下次构建需重新下载依赖（需网络，首次构建变慢）；功能与结果完全不受影响",
+      "regenerate": "sbt / cs 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 Scala/Java 项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://get-coursier.io/docs/cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-deno-cache",
     "os": "linux",
     "scope": "user",
@@ -296,6 +370,43 @@
     },
     "refs": [
       "https://support.discord.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-edge-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/microsoft-edge"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Edge 浏览器缓存（~/.cache/microsoft-edge）",
+      "what": "Microsoft Edge 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Microsoft Edge 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Edge 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/deployedge/edge-learnmore-create-user-directory-vars"
     ]
   },
   {
@@ -486,6 +597,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-node-gyp-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.node-gyp"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "node-gyp 编译缓存（~/.node-gyp）",
+      "what": "node-gyp 编译原生 Node 模块时下载的头文件与构建产物缓存",
+      "producer": "node-gyp（npm install 触发原生模块编译时）",
+      "safe_to_delete_because": "纯下载与构建缓存：删除后下次编译时 node-gyp 重新下载头文件；已安装的原生模块不受影响",
+      "consequence": "下次安装原生模块需重新下载头文件并编译（首次变慢）；功能完全不受影响",
+      "regenerate": "node-gyp 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数百 MB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://github.com/nodejs/node-gyp"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-npm-cache",
     "os": "linux",
     "scope": "user",
@@ -523,6 +671,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-opera-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/operasoftware/Opera"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Opera 浏览器缓存（~/.cache/operasoftware/Opera）",
+      "what": "Opera 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Opera 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Opera 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-pip-cache",
     "os": "linux",
     "scope": "user",
@@ -556,6 +741,43 @@
     },
     "refs": [
       "https://pip.pypa.io/en/stable/cli/pip_cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-playwright-browsers",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/ms-playwright"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Playwright 浏览器缓存（~/.cache/ms-playwright）",
+      "what": "Playwright 下载的 Chromium、Firefox、WebKit 浏览器二进制文件缓存",
+      "producer": "Playwright（playwright install）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次运行 Playwright 时自动重新下载；脚本与项目代码不受影响",
+      "consequence": "下次运行需重新下载浏览器（首次变慢，需网络）；功能完全不受影响",
+      "regenerate": "Playwright 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多浏览器）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://playwright.dev/docs/browsers"
     ]
   },
   {
@@ -635,6 +857,80 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-pub-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.pub-cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Dart/Flutter 包缓存（~/.pub-cache）",
+      "what": "Dart/Flutter pub 包管理器下载的包缓存（已下载的包与可执行文件）",
+      "producer": "pub（pub get / flutter pub get）",
+      "safe_to_delete_because": "纯下载缓存：删除后 pub 重新下载；项目代码与 pubspec.yaml 不受影响",
+      "consequence": "下次 pub get 需重新下载包（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "pub get 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 Flutter 项目常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://dart.dev/tools/pub/cmd/pub-cache"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-puppeteer-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/puppeteer"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Puppeteer 浏览器缓存（~/.cache/puppeteer）",
+      "what": "Puppeteer 下载的 Chromium/Firefox 浏览器二进制文件缓存",
+      "producer": "Puppeteer（puppeteer install / puppeteer-browser install）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次运行 Puppeteer 时自动重新下载；脚本与项目代码不受影响",
+      "consequence": "下次运行需重新下载浏览器（首次变慢，需网络）；功能完全不受影响",
+      "regenerate": "Puppeteer 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "100 MB 到 500 MB（单个浏览器）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://pptr.dev/guides/installation"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-rustup-downloads",
     "os": "linux",
     "scope": "user",
@@ -705,6 +1001,43 @@
     },
     "refs": [
       "https://slack.com/help/articles/115004071768"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-spm-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/org.swift.swiftpm"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Swift Package Manager 缓存（~/.cache/org.swift.swiftpm）",
+      "what": "Swift Package Manager 下载的依赖包缓存（预编译二进制与源码）",
+      "producer": "Swift Package Manager（swift build / swift package resolve）",
+      "safe_to_delete_because": "纯下载缓存：删除后下次构建时 SPM 重新下载；项目源码与 Package.swift 不受影响",
+      "consequence": "下次构建需重新下载依赖（需网络，首次构建变慢）；功能与结果完全不受影响",
+      "regenerate": "swift build 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多依赖项目）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://www.swift.org/documentation/package-manager/"
     ]
   },
   {
@@ -890,6 +1223,43 @@
     },
     "refs": [
       "https://docs.astral.sh/uv/concepts/cache/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-vivaldi-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/vivaldi"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Vivaldi 浏览器缓存（~/.cache/vivaldi）",
+      "what": "Vivaldi 浏览器（Chromium 系）的 HTTP 网页资源缓存、图片、脚本、样式表等",
+      "producer": "Vivaldi 浏览器",
+      "safe_to_delete_because": "全部为浏览器自动生成的派生数据；与存放用户数据的文件（书签、历史、密码、Cookie）分离",
+      "consequence": "登录状态、密码、书签、历史均不受影响；之后首次访问网站需重新下载资源，加载略慢",
+      "regenerate": "Vivaldi 运行中按需自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md"
     ]
   },
   {

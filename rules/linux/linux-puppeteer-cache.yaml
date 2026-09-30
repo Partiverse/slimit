@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-puppeteer-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/puppeteer"
+semantics:
+  title: "Puppeteer 浏览器缓存（~/.cache/puppeteer）"
+  what: "Puppeteer 下载的 Chromium/Firefox 浏览器二进制文件缓存"
+  producer: "Puppeteer（puppeteer install / puppeteer-browser install）"
+  safe_to_delete_because: "纯下载缓存：删除后下次运行 Puppeteer 时自动重新下载；脚本与项目代码不受影响"
+  consequence: "下次运行需重新下载浏览器（首次变慢，需网络）；功能完全不受影响"
+  regenerate: "Puppeteer 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "100 MB 到 500 MB（单个浏览器）"
+  recovery: full
+refs:
+  - https://pptr.dev/guides/installation

@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-spm-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/org.swift.swiftpm"
+semantics:
+  title: "Swift Package Manager 缓存（~/.cache/org.swift.swiftpm）"
+  what: "Swift Package Manager 下载的依赖包缓存（预编译二进制与源码）"
+  producer: "Swift Package Manager（swift build / swift package resolve）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 SPM 重新下载；项目源码与 Package.swift 不受影响"
+  consequence: "下次构建需重新下载依赖（需网络，首次构建变慢）；功能与结果完全不受影响"
+  regenerate: "swift build 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多依赖项目）"
+  recovery: full
+refs:
+  - https://www.swift.org/documentation/package-manager/

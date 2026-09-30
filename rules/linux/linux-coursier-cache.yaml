@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-coursier-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/Coursier"
+semantics:
+  title: "Coursier 缓存（~/.cache/Coursier）"
+  what: "Coursier（Scala/Java 依赖管理器）下载的 JAR 包与元数据缓存"
+  producer: "Coursier（cs install / sbt 使用 Coursier 时）"
+  safe_to_delete_because: "纯下载缓存：删除后下次构建时 Coursier 重新下载；项目源码与 build.sbt 不受影响"
+  consequence: "下次构建需重新下载依赖（需网络，首次构建变慢）；功能与结果完全不受影响"
+  regenerate: "sbt / cs 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 Scala/Java 项目常见）"
+  recovery: full
+refs:
+  - https://get-coursier.io/docs/cache
