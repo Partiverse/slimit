@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-user-caches
+os: linux
+scope: user
+paths:
+  - "~/.cache"
+semantics:
+  title: "用户级缓存目录（~/.cache）"
+  what: "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存文件存放在此目录下的子目录中。本条规则仅清理 ~/.cache 顶层（不递归子目录），作为兜底选项"
+  producer: "各应用（浏览器、IDE、包管理器等）"
+  safe_to_delete_because: "XDG 标准明确 ~/.cache 为可删除的缓存目录：删除后各应用按需自动重建；已安装的应用与用户数据均不受影响"
+  consequence: "各应用的缓存需重新下载/生成，首次启动变慢；功能与结果完全不受影响"
+  regenerate: "各应用按需自动重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（多应用常见）"
+  recovery: partial
+refs:
+  - https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html

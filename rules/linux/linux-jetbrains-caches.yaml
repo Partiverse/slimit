@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-jetbrains-caches
+os: linux
+scope: user
+paths:
+  - "~/.cache/JetBrains"
+semantics:
+  title: "JetBrains IDE 缓存（~/.cache/JetBrains）"
+  what: "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的索引、缓存、本地历史与插件数据"
+  producer: "JetBrains IDE（IDE 启动、索引构建、代码分析时）"
+  safe_to_delete_because: "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置、代码、VCS 历史均不受影响"
+  consequence: "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；功能与结果完全不受影响"
+  regenerate: "IDE 启动时自动重新索引"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多项目/多 IDE 常见）"
+  recovery: partial
+refs:
+  - https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html

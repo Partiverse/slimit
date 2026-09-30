@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: linux-telegram-media-cache
+os: linux
+scope: user
+paths:
+  - "~/.cache/telegram"
+semantics:
+  title: "Telegram 媒体缓存（~/.cache/telegram）"
+  what: "Telegram 桌面客户端的图片、视频、文档、语音消息缓存"
+  producer: "Telegram 桌面客户端"
+  safe_to_delete_because: "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响"
+  consequence: "已缓存的媒体需重新下载；聊天记录与功能完全不受影响"
+  regenerate: "Telegram 运行时按需自动重新下载"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多群组/频道常见）"
+  recovery: partial
+refs:
+  - https://telegram.org/faq

@@ -263,6 +263,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-discord-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/discord"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Discord 缓存（~/.cache/discord）",
+      "what": "Discord 客户端的图片、视频、贴纸等媒体缓存",
+      "producer": "Discord 客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/视频需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Discord 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多服务器/多频道常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://support.discord.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-go-build-cache",
     "os": "linux",
     "scope": "user",
@@ -370,6 +407,43 @@
     },
     "refs": [
       "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-jetbrains-caches",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/JetBrains"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "JetBrains IDE 缓存（~/.cache/JetBrains）",
+      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的索引、缓存、本地历史与插件数据",
+      "producer": "JetBrains IDE（IDE 启动、索引构建、代码分析时）",
+      "safe_to_delete_because": "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置、代码、VCS 历史均不受影响",
+      "consequence": "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；功能与结果完全不受影响",
+      "regenerate": "IDE 启动时自动重新索引"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
     ]
   },
   {
@@ -594,6 +668,191 @@
     },
     "refs": [
       "https://rust-lang.github.io/rustup/installation/index.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-slack-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/slack"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Slack 缓存（~/.cache/slack）",
+      "what": "Slack 客户端的图片、文件、Emoji 缓存",
+      "producer": "Slack 客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Slack 自动重新下载；聊天记录、频道设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Slack 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多工作区常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://slack.com/help/articles/115004071768"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-steam-appcache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.local/share/Steam/appcache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Steam 应用缓存（appcache）",
+      "what": "Steam 客户端的网页内容与应用缓存（商店页面、社区、截图等）",
+      "producer": "Steam 客户端",
+      "safe_to_delete_because": "纯网页与应用缓存：删除后 Steam 自动重新下载；已安装游戏与游戏存档不受影响",
+      "consequence": "Steam 商店/社区页面首次加载变慢；已安装游戏完全不受影响",
+      "regenerate": "Steam 启动时自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数十 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://help.steampowered.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-teams-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/teams"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Microsoft Teams 缓存（~/.cache/teams）",
+      "what": "Microsoft Teams 客户端的图片、文件、缓存数据",
+      "producer": "Microsoft Teams 客户端",
+      "safe_to_delete_because": "纯缓存数据：删除后 Teams 自动重新下载；聊天记录、频道设置、用户数据均不受影响",
+      "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Teams 运行时按需自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://learn.microsoft.com/en-us/microsoftteams/new-teams-faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-telegram-media-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/telegram"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Telegram 媒体缓存（~/.cache/telegram）",
+      "what": "Telegram 桌面客户端的图片、视频、文档、语音消息缓存",
+      "producer": "Telegram 桌面客户端",
+      "safe_to_delete_because": "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响",
+      "consequence": "已缓存的媒体需重新下载；聊天记录与功能完全不受影响",
+      "regenerate": "Telegram 运行时按需自动重新下载"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多群组/频道常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://telegram.org/faq"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-user-caches",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "用户级缓存目录（~/.cache）",
+      "what": "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存文件存放在此目录下的子目录中。本条规则仅清理 ~/.cache 顶层（不递归子目录），作为兜底选项",
+      "producer": "各应用（浏览器、IDE、包管理器等）",
+      "safe_to_delete_because": "XDG 标准明确 ~/.cache 为可删除的缓存目录：删除后各应用按需自动重建；已安装的应用与用户数据均不受影响",
+      "consequence": "各应用的缓存需重新下载/生成，首次启动变慢；功能与结果完全不受影响",
+      "regenerate": "各应用按需自动重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多应用常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html"
     ]
   },
   {
