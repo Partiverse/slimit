@@ -298,6 +298,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "linux-cocoapods-cache",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/CocoaPods"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "CocoaPods 缓存（~/.cache/CocoaPods）",
+      "what": "CocoaPods 下载的 pod 包缓存（已下载的 .framework 与源码）",
+      "producer": "CocoaPods（pod install / pod update）",
+      "safe_to_delete_because": "纯下载缓存：删除后 CocoaPods 重新下载；Podfile、项目源码、.xcworkspace 均不受影响",
+      "consequence": "下次 pod install 需重新下载 pod（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "pod install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 pod 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "linux-composer-cache",
     "os": "linux",
     "scope": "user",
@@ -814,6 +851,43 @@
     },
     "refs": [
       "https://docs.haskellstack.org/en/stable/stack_root/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "linux-homebrew-cleanup",
+    "os": "linux",
+    "scope": "user",
+    "paths": [
+      "~/.cache/Homebrew"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Homebrew 缓存（~/.cache/Homebrew）",
+      "what": "Homebrew 下载的 formula 源码、bottle 二进制包、构建产物缓存",
+      "producer": "Homebrew（brew install / brew upgrade）",
+      "safe_to_delete_because": "纯下载缓存：删除后 Homebrew 重新下载；已安装的 formula 不受影响",
+      "consequence": "下次 brew install 需重新下载（需网络，首次变慢）；已安装软件完全不受影响",
+      "regenerate": "brew install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "brew cleanup --prune=all",
+      "dry_run": "brew cleanup --dry-run",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 formula 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.brew.sh/Manpage#cleanup-options"
     ]
   },
   {
@@ -5422,6 +5496,43 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "win-cocoapods-cache",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/.cache/CocoaPods"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "CocoaPods 缓存（~/.cache/CocoaPods）",
+      "what": "CocoaPods 下载的 pod 包缓存（已下载的 .framework 与源码）",
+      "producer": "CocoaPods（pod install / pod update）",
+      "safe_to_delete_because": "纯下载缓存：删除后 CocoaPods 重新下载；Podfile、项目源码、.xcworkspace 均不受影响",
+      "consequence": "下次 pod install 需重新下载 pod（需网络，首次变慢）；功能完全不受影响",
+      "regenerate": "pod install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 pod 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "win-conda-clean",
     "os": "windows",
     "scope": "user",
@@ -5829,6 +5940,43 @@
     },
     "refs": [
       "https://docs.haskellstack.org/en/stable/stack_root/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "win-homebrew-cleanup",
+    "os": "windows",
+    "scope": "user",
+    "paths": [
+      "~/cache/Homebrew"
+    ],
+    "match_": null,
+    "semantics": {
+      "title": "Homebrew 缓存（~/cache/Homebrew）",
+      "what": "Homebrew 下载的 formula 源码、bottle 二进制包、构建产物缓存",
+      "producer": "Homebrew（brew install / brew upgrade）",
+      "safe_to_delete_because": "纯下载缓存：删除后 Homebrew 重新下载；已安装的 formula 不受影响",
+      "consequence": "下次 brew install 需重新下载（需网络，首次变慢）；已安装软件完全不受影响",
+      "regenerate": "brew install 自动重新下载"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "command",
+      "command": "brew cleanup --prune=all",
+      "dry_run": "brew cleanup --dry-run",
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（多 formula 常见）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.brew.sh/Manpage#cleanup-options"
     ]
   },
   {

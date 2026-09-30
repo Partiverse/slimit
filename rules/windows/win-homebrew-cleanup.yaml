@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: win-homebrew-cleanup
+os: windows
+scope: user
+paths:
+  - "~/cache/Homebrew"
+semantics:
+  title: "Homebrew 缓存（~/cache/Homebrew）"
+  what: "Homebrew 下载的 formula 源码、bottle 二进制包、构建产物缓存"
+  producer: "Homebrew（brew install / brew upgrade）"
+  safe_to_delete_because: "纯下载缓存：删除后 Homebrew 重新下载；已安装的 formula 不受影响"
+  consequence: "下次 brew install 需重新下载（需网络，首次变慢）；已安装软件完全不受影响"
+  regenerate: "brew install 自动重新下载"
+risk: green
+action:
+  kind: command
+  command: "brew cleanup --prune=all"
+  dry_run: "brew cleanup --dry-run"
+estimate:
+  typical_size: "数百 MB 到数 GB（多 formula 常见）"
+  recovery: full
+refs:
+  - https://docs.brew.sh/Manpage#cleanup-options

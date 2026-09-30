@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: win-cocoapods-cache
+os: windows
+scope: user
+paths:
+  - "~/.cache/CocoaPods"
+semantics:
+  title: "CocoaPods 缓存（~/.cache/CocoaPods）"
+  what: "CocoaPods 下载的 pod 包缓存（已下载的 .framework 与源码）"
+  producer: "CocoaPods（pod install / pod update）"
+  safe_to_delete_because: "纯下载缓存：删除后 CocoaPods 重新下载；Podfile、项目源码、.xcworkspace 均不受影响"
+  consequence: "下次 pod install 需重新下载 pod（需网络，首次变慢）；功能完全不受影响"
+  regenerate: "pod install 自动重新下载"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB（多 pod 常见）"
+  recovery: full
+refs:
+  - https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean
