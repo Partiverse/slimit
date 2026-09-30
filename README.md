@@ -15,6 +15,7 @@
 | [docs/SECURITY.md](./docs/SECURITY.md) | 安全状态：扫描结果、覆盖缺口、设计级安全不变量 |
 | [docs/BETA.md](./docs/BETA.md) | 内测分发：安装指引（未签名应用通行）、已知限制、回报渠道 |
 | [docs/W8-PLAN.md](./docs/W8-PLAN.md) | W8 计划：notarization 步骤、落地页结构、发布 checklist、W7 核对结论 |
+| [docs/HANDOFF.md](./docs/HANDOFF.md) | 开发现状与工具链交接：进度总览、构建命令、开发约定、技能/MCP/hook 清单（新 AI 开发环境接手入口，配 [AGENTS.md](./AGENTS.md)） |
 | [rules/README.md](./rules/README.md) | 规则库编写规范与执行语义 |
 | [rules/schema-v1.json](./rules/schema-v1.json) | 规则 schema（`slimit.rules/v1`），CI 强制校验 |
 | [rules/macos/](./rules/macos/) | macOS 规则（已建 3 条样例：homebrew-cache / xcode-deriveddata / xcode-archives） |
