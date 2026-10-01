@@ -23,6 +23,10 @@ export interface PlanItem {
   estimated_bytes: number;
   risk: "green" | "yellow" | "red";
   executable: boolean;
+  /** project 规则：目标目录 mtime 距今天数；路径规则为 null。 */
+  age_days: number | null;
+  /** project 规则年龄未达阈值（或 mtime 不可得）⇒ 只提示，executable=false。 */
+  below_min_age: boolean;
 }
 
 export interface ScanPlanResponse {

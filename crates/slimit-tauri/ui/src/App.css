@@ -252,6 +252,22 @@ td.tip {
   color: #c0392b;
 }
 
+/* 年龄徽章（project 规则）：「N 天未动」是清理勇气的证据；守卫态降透明度 */
+.age-badge {
+  display: inline-block;
+  font-size: 11px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: rgba(93, 156, 236, 0.15);
+  color: #2b6cb0;
+}
+
+.age-badge.age-guarded {
+  opacity: 0.55;
+}
+
 @media (prefers-color-scheme: dark) {
   .risk-badge.risk-green {
     color: #5fd0c0;

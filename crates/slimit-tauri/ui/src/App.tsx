@@ -141,7 +141,11 @@ function CleanPanel() {
           ),
         );
         setSelected(
-          new Set(result.plan.filter((p) => p.executable).map((p) => p.path)),
+          new Set(
+            result.plan
+              .filter((p) => p.executable && !p.below_min_age)
+              .map((p) => p.path),
+          ),
         );
       })
       .catch((e) =>
@@ -283,12 +287,6 @@ function CleanPanel() {
               扫描完成；当前规则库没有覆盖该路径下的目标
             </div>
           )}
-          {selectedTask.result.plan.length === 0 && (
-            <div className="empty">
-              <b>未命中任何规则</b>
-              扫描完成；当前规则库没有覆盖该路径下的目标
-            </div>
-          )}
           {selectedTask.result.plan.length > 0 && (
             <>
               <table>
@@ -303,17 +301,23 @@ function CleanPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedTask.result.plan.map((p) => (
-                    <PlanRow
-                      key={p.rule_id + p.path}
-                      item={p}
-                      checked={selected.has(p.path)}
-                      tip={tips[p.path]}
-                      ruleTitle={ruleTitles.get(p.rule_id)}
-                      onToggle={() => toggle(p.path, p.executable)}
-                      onExplain={() => loadTip(p)}
-                    />
-                  ))}
+                  {[...selectedTask.result.plan]
+                    .sort(
+                      (a, b) =>
+                        Number(a.below_min_age) - Number(b.below_min_age) ||
+                        b.estimated_bytes - a.estimated_bytes,
+                    )
+                    .map((p) => (
+                      <PlanRow
+                        key={p.rule_id + p.path}
+                        item={p}
+                        checked={selected.has(p.path)}
+                        tip={tips[p.path]}
+                        ruleTitle={ruleTitles.get(p.rule_id)}
+                        onToggle={() => toggle(p.path, p.executable)}
+                        onExplain={() => loadTip(p)}
+                      />
+                    ))}
                 </tbody>
               </table>
               <div className="row">
@@ -368,6 +372,21 @@ function PlanRow(props: {
         </td>
         <td>
           <span className={`risk-badge risk-${p.risk}`}>{RISK_LABEL[p.risk]}</span>
+          {p.age_days != null && (
+            <span
+              className={`age-badge${p.below_min_age ? " age-guarded" : ""}`}
+              title={
+                p.below_min_age
+                  ? "最近仍有活动，暂不建议清理；等项目稳定一段时间后再看"
+                  : "长时间未动，回收后重新构建的成本有限"
+              }
+            >
+              {p.age_days} 天未动
+            </span>
+          )}
+          {p.below_min_age && (
+            <span className="hint"> 最近仍在使用，暂不提供清理</span>
+          )}
         </td>
         <td>{fmtSize(p.estimated_bytes)}</td>
         <td className="path" title={p.rule_id}>
