@@ -13,6 +13,9 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 | `purge_expired_quarantine` | — | `Manifest[]`（被清理项） | 清理迁入超 14 天（`DEFAULT_RETENTION_DAYS`）的条目，payload + manifest 一并移除；**不可逆**——UI 必须二次确认后调用；每个被清理条目追加 `purge-expired` 审计事件；年龄不可解析的条目跳过不删 |
 | `volume_summary_cmd` | `mount: string` | `VolumeSummary` | `diskutil info -plist` 摘要 |
 | `list_snapshots` | `volume: string` | `SnapshotInfo[]` | `diskutil apfs listSnapshots -plist` |
+| `list_rules` | — | `Rule[]` | 嵌入规则库全量（规则面板展示，不触发执行） |
+| `test_ai` | — | `string` | AI 设置「测试连接」：`/models` 轻量鉴权探测（不耗 token），返回人话结果或错误 |
+| `open_fda_settings` | — | `void` | 打开「完全磁盘访问」系统设置面板（首次使用权限引导） |
 
 错误统一走 `Result<T, String>`。
 
