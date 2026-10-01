@@ -5,16 +5,15 @@ scope: user
 paths:
   - "~/.cache"
 semantics:
-  title: "用户级缓存目录（~/.cache）"
-  what: "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存文件存放在此目录下的子目录中。本条规则仅清理 ~/.cache 顶层（不递归子目录），作为兜底选项"
+  title: "用户级缓存目录（~/.cache，仅提示）"
+  what: "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存存放在此目录下的子目录中。但部分应用在其中存放非纯缓存数据（如 Evolution 的离线邮件副本、部分工具的模型/数据集缓存），整目录清理的误伤面大"
   producer: "各应用（浏览器、IDE、包管理器等）"
-  safe_to_delete_because: "XDG 标准明确 ~/.cache 为可删除的缓存目录：删除后各应用按需自动重建；已安装的应用与用户数据均不受影响"
-  consequence: "各应用的缓存需重新下载/生成，首次启动变慢；功能与结果完全不受影响"
+  safe_to_delete_because: "XDG 标准定义 ~/.cache 为可删除的缓存目录，但标准本身不强制应用把「可安全删除」的数据放这里，个别应用会存离线数据副本，故本规则只提示不代删"
+  consequence: "多数应用缓存需重新下载/生成（首次变慢）；若其中存有离线邮件等数据副本则需重新同步；不主动执行"
   regenerate: "各应用按需自动重建"
 risk: yellow
 action:
-  kind: purge-dir
-  delete_contents_only: true
+  kind: advise
 estimate:
   typical_size: "数 GB 到数十 GB（多应用常见）"
   recovery: partial

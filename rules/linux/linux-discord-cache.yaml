@@ -3,12 +3,12 @@ id: linux-discord-cache
 os: linux
 scope: user
 paths:
-  - "~/.cache/discord"
+  - "~/.config/discord/Cache"
 semantics:
-  title: "Discord 缓存（~/.cache/discord）"
-  what: "Discord 客户端的图片、视频、贴纸等媒体缓存"
+  title: "Discord 缓存（~/.config/discord/Cache）"
+  what: "Discord 客户端（Linux，Electron）用户数据目录下的 HTTP/媒体缓存子目录；Discord 的 Electron userData 位于 ~/.config/discord，缓存（Cache、Code Cache）在其下"
   producer: "Discord 客户端"
-  safe_to_delete_because: "纯媒体缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、用户数据均不受影响"
+  safe_to_delete_because: "纯缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、登录态（存于 ~/.config/discord 其他子目录）均不受影响"
   consequence: "已缓存的图片/视频需重新下载；聊天记录与功能完全不受影响"
   regenerate: "Discord 运行时按需自动重新下载"
 risk: green

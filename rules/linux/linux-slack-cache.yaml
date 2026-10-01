@@ -3,12 +3,12 @@ id: linux-slack-cache
 os: linux
 scope: user
 paths:
-  - "~/.cache/slack"
+  - "~/.config/slack/Cache"
 semantics:
-  title: "Slack 缓存（~/.cache/slack）"
-  what: "Slack 客户端的图片、文件、Emoji 缓存"
+  title: "Slack 缓存（~/.config/slack/Cache）"
+  what: "Slack 客户端（Linux，Electron）用户数据目录下的 HTTP/媒体缓存子目录；Slack 的 Electron userData 位于 ~/.config/slack，缓存（Cache、Code Cache）在其下"
   producer: "Slack 客户端"
-  safe_to_delete_because: "纯媒体缓存：删除后 Slack 自动重新下载；聊天记录、频道设置、用户数据均不受影响"
+  safe_to_delete_because: "纯缓存：删除后 Slack 自动重新下载；聊天记录、工作区设置、登录态（存于 ~/.config/slack 其他子目录）均不受影响"
   consequence: "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响"
   regenerate: "Slack 运行时按需自动重新下载"
 risk: green

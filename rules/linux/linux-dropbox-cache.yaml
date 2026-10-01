@@ -3,14 +3,14 @@ id: linux-dropbox-cache
 os: linux
 scope: user
 paths:
-  - "~/.dropbox.cache"
+  - "~/Dropbox/.dropbox.cache"
 semantics:
-  title: "Dropbox 缓存（~/.dropbox.cache）"
-  what: "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）"
-  producer: "Dropbox 客户端"
-  safe_to_delete_because: "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响"
-  consequence: "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响"
-  regenerate: "Dropbox 自动重新下载"
+  title: "Dropbox 缓存（~/Dropbox/.dropbox.cache）"
+  what: "Dropbox 桌面客户端在 Dropbox 文件夹根下的隐藏缓存：删除或移动文件时先把内容移入此处，防止误删；长期累积可达数 GB。注意路径随 Dropbox 文件夹位置而变，此处为默认位置"
+  producer: "Dropbox 桌面客户端"
+  safe_to_delete_because: "官方文档确认可安全清空该文件夹；已同步到云端的文件不受影响，仅在 3 天恢复窗口内的近期删除会失去本地快速恢复副本"
+  consequence: "近期删除文件的本地恢复副本丢失（云端回收站仍可用）；功能完全不受影响"
+  regenerate: "Dropbox 运行时按需重建"
 risk: yellow
 action:
   kind: purge-dir
@@ -19,4 +19,4 @@ estimate:
   typical_size: "数百 MB 到数 GB（多文件常见）"
   recovery: partial
 refs:
-  - https://help.dropbox.com/syncing-uploads/cache-folder
+  - https://help.dropbox.com/delete-restore/cache-folder

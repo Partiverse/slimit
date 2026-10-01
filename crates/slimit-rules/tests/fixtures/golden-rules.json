@@ -1,80 +1,6 @@
 [
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "linux-adobe-cache",
-    "os": "linux",
-    "scope": "user",
-    "paths": [
-      "~/.cache/Adobe"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Adobe 缓存（~/.cache/Adobe）",
-      "what": "Adobe 应用（Photoshop、Illustrator、Premiere 等）的缓存文件、临时文件、缩略图缓存",
-      "producer": "Adobe 应用",
-      "safe_to_delete_because": "纯缓存：删除后 Adobe 应用自动重新生成；项目文件、设置、用户数据均不受影响",
-      "consequence": "下次启动需重新生成缓存（首次变慢）；功能完全不受影响",
-      "regenerate": "Adobe 应用自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数百 MB 到数 GB（多应用常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "linux-app-logs",
-    "os": "linux",
-    "scope": "user",
-    "paths": [
-      "~/.local/share/logs"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "用户级应用日志（~/.local/share/logs）",
-      "what": "各应用（浏览器、IDE、包管理器等）的运行日志、错误日志、调试日志",
-      "producer": "各应用（应用启动、运行、调试时）",
-      "safe_to_delete_because": "纯日志：删除后应用自动重新生成；应用配置、数据、用户数据均不受影响",
-      "consequence": "历史日志丢失，故障排查时无历史记录；应用功能完全不受影响",
-      "regenerate": "应用自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多应用常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "linux-apt-cache",
     "os": "linux",
     "scope": "user",
@@ -485,43 +411,6 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "linux-crash-reports",
-    "os": "linux",
-    "scope": "user",
-    "paths": [
-      "~/.local/share/xdg-user-dirs/logs"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "用户级崩溃报告（~/.local/share/logs）",
-      "what": "各应用的崩溃报告、诊断报告、错误日志",
-      "producer": "各应用（应用崩溃、错误时）",
-      "safe_to_delete_because": "纯日志：删除后应用自动重新生成；应用配置、数据、用户数据均不受影响",
-      "consequence": "历史崩溃报告丢失，故障排查时无历史记录；应用功能完全不受影响",
-      "regenerate": "应用自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多应用常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/documentation/xcode/diagnosing-issues-using-crash-reports-and-device-logs"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "linux-cypress-cache",
     "os": "linux",
     "scope": "user",
@@ -600,14 +489,14 @@
     "os": "linux",
     "scope": "user",
     "paths": [
-      "~/.cache/discord"
+      "~/.config/discord/Cache"
     ],
     "match_": null,
     "semantics": {
-      "title": "Discord 缓存（~/.cache/discord）",
-      "what": "Discord 客户端的图片、视频、贴纸等媒体缓存",
+      "title": "Discord 缓存（~/.config/discord/Cache）",
+      "what": "Discord 客户端（Linux，Electron）用户数据目录下的 HTTP/媒体缓存子目录；Discord 的 Electron userData 位于 ~/.config/discord，缓存（Cache、Code Cache）在其下",
       "producer": "Discord 客户端",
-      "safe_to_delete_because": "纯媒体缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、用户数据均不受影响",
+      "safe_to_delete_because": "纯缓存：删除后 Discord 自动重新下载；聊天记录、服务器设置、登录态（存于 ~/.config/discord 其他子目录）均不受影响",
       "consequence": "已缓存的图片/视频需重新下载；聊天记录与功能完全不受影响",
       "regenerate": "Discord 运行时按需自动重新下载"
     },
@@ -637,16 +526,16 @@
     "os": "linux",
     "scope": "user",
     "paths": [
-      "~/.dropbox.cache"
+      "~/Dropbox/.dropbox.cache"
     ],
     "match_": null,
     "semantics": {
-      "title": "Dropbox 缓存（~/.dropbox.cache）",
-      "what": "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）",
-      "producer": "Dropbox 客户端",
-      "safe_to_delete_because": "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响",
-      "consequence": "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响",
-      "regenerate": "Dropbox 自动重新下载"
+      "title": "Dropbox 缓存（~/Dropbox/.dropbox.cache）",
+      "what": "Dropbox 桌面客户端在 Dropbox 文件夹根下的隐藏缓存：删除或移动文件时先把内容移入此处，防止误删；长期累积可达数 GB。注意路径随 Dropbox 文件夹位置而变，此处为默认位置",
+      "producer": "Dropbox 桌面客户端",
+      "safe_to_delete_because": "官方文档确认可安全清空该文件夹；已同步到云端的文件不受影响，仅在 3 天恢复窗口内的近期删除会失去本地快速恢复副本",
+      "consequence": "近期删除文件的本地恢复副本丢失（云端回收站仍可用）；功能完全不受影响",
+      "regenerate": "Dropbox 运行时按需重建"
     },
     "risk": "yellow",
     "red_flags": [],
@@ -665,7 +554,7 @@
       "recovery": "partial"
     },
     "refs": [
-      "https://help.dropbox.com/syncing-uploads/cache-folder"
+      "https://help.dropbox.com/delete-restore/cache-folder"
     ]
   },
   {
@@ -1033,43 +922,6 @@
     "estimate": {
       "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
       "recovery": "partial"
-    },
-    "refs": [
-      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "linux-jetbrains-logs",
-    "os": "linux",
-    "scope": "user",
-    "paths": [
-      "~/.local/share/JetBrains/logs"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "JetBrains IDE 日志（~/.local/share/JetBrains/logs）",
-      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的运行日志、插件日志、索引日志",
-      "producer": "JetBrains IDE（IDE 启动、运行、调试时）",
-      "safe_to_delete_because": "纯日志：删除后 IDE 自动重新生成；项目配置、代码、VCS 历史均不受影响",
-      "consequence": "历史日志丢失，故障排查时无历史记录；IDE 功能完全不受影响",
-      "regenerate": "IDE 自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多 IDE/多项目常见）",
-      "recovery": "full"
     },
     "refs": [
       "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
@@ -1527,14 +1379,14 @@
     "os": "linux",
     "scope": "user",
     "paths": [
-      "~/.cache/slack"
+      "~/.config/slack/Cache"
     ],
     "match_": null,
     "semantics": {
-      "title": "Slack 缓存（~/.cache/slack）",
-      "what": "Slack 客户端的图片、文件、Emoji 缓存",
+      "title": "Slack 缓存（~/.config/slack/Cache）",
+      "what": "Slack 客户端（Linux，Electron）用户数据目录下的 HTTP/媒体缓存子目录；Slack 的 Electron userData 位于 ~/.config/slack，缓存（Cache、Code Cache）在其下",
       "producer": "Slack 客户端",
-      "safe_to_delete_because": "纯媒体缓存：删除后 Slack 自动重新下载；聊天记录、频道设置、用户数据均不受影响",
+      "safe_to_delete_because": "纯缓存：删除后 Slack 自动重新下载；聊天记录、工作区设置、登录态（存于 ~/.config/slack 其他子目录）均不受影响",
       "consequence": "已缓存的图片/文件需重新下载；聊天记录与功能完全不受影响",
       "regenerate": "Slack 运行时按需自动重新下载"
     },
@@ -1712,15 +1564,15 @@
     "os": "linux",
     "scope": "user",
     "paths": [
-      "~/.cache/telegram"
+      "~/.local/share/TelegramDesktop/tdata/user_data"
     ],
     "match_": null,
     "semantics": {
-      "title": "Telegram 媒体缓存（~/.cache/telegram）",
-      "what": "Telegram 桌面客户端的图片、视频、文档、语音消息缓存",
-      "producer": "Telegram 桌面客户端",
-      "safe_to_delete_because": "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响",
-      "consequence": "已缓存的媒体需重新下载；聊天记录与功能完全不受影响",
+      "title": "Telegram 媒体缓存（TelegramDesktop/tdata/user_data）",
+      "what": "Telegram 桌面客户端（Linux）下载的图片、视频、文档、语音的本地缓存，位于 ~/.local/share/TelegramDesktop/tdata 下的 user_data 子目录。注意：tdata 本体存放会话密钥与登录态（删除即登出），绝不在本规则清理范围内",
+      "producer": "Telegram 桌面客户端（浏览/下载媒体时）",
+      "safe_to_delete_because": "user_data 是纯媒体缓存：删除后 Telegram 按需自动重新下载；会话密钥在 tdata 本体，不受影响",
+      "consequence": "聊天中的媒体需点击重新加载（耗流量）；聊天记录、登录态、设置完全不受影响",
       "regenerate": "Telegram 运行时按需自动重新下载"
     },
     "risk": "yellow",
@@ -1736,11 +1588,12 @@
       "keep_newest": null
     },
     "estimate": {
-      "typical_size": "数百 MB 到数 GB（多群组/频道常见）",
+      "typical_size": "数百 MB 到数十 GB（多群组/频道常见）",
       "recovery": "partial"
     },
     "refs": [
-      "https://telegram.org/faq"
+      "https://telegram.org/faq",
+      "https://datamoll.com/guides/tdata-vs-json-session"
     ]
   },
   {
@@ -1827,20 +1680,20 @@
     ],
     "match_": null,
     "semantics": {
-      "title": "用户级缓存目录（~/.cache）",
-      "what": "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存文件存放在此目录下的子目录中。本条规则仅清理 ~/.cache 顶层（不递归子目录），作为兜底选项",
+      "title": "用户级缓存目录（~/.cache，仅提示）",
+      "what": "~/.cache 是 XDG 标准指定的用户级缓存目录，各应用（浏览器、IDE、包管理器等）将缓存存放在此目录下的子目录中。但部分应用在其中存放非纯缓存数据（如 Evolution 的离线邮件副本、部分工具的模型/数据集缓存），整目录清理的误伤面大",
       "producer": "各应用（浏览器、IDE、包管理器等）",
-      "safe_to_delete_because": "XDG 标准明确 ~/.cache 为可删除的缓存目录：删除后各应用按需自动重建；已安装的应用与用户数据均不受影响",
-      "consequence": "各应用的缓存需重新下载/生成，首次启动变慢；功能与结果完全不受影响",
+      "safe_to_delete_because": "XDG 标准定义 ~/.cache 为可删除的缓存目录，但标准本身不强制应用把「可安全删除」的数据放这里，个别应用会存离线数据副本，故本规则只提示不代删",
+      "consequence": "多数应用缓存需重新下载/生成（首次变慢）；若其中存有离线邮件等数据副本则需重新同步；不主动执行",
       "regenerate": "各应用按需自动重建"
     },
     "risk": "yellow",
     "red_flags": [],
     "action": {
-      "kind": "purge-dir",
+      "kind": "advise",
       "command": null,
       "dry_run": null,
-      "delete_contents_only": true,
+      "delete_contents_only": null,
       "irreversible": null,
       "requires_root": null,
       "min_age_days": null,
@@ -1934,12 +1787,12 @@
     "os": "linux",
     "scope": "user",
     "paths": [
-      "~/.cache/Code/CachedData"
+      "~/.config/Code/CachedData"
     ],
     "match_": null,
     "semantics": {
-      "title": "VS Code 缓存数据（~/.cache/Code/CachedData）",
-      "what": "VS Code 的扩展缓存、渲染缓存、语言服务缓存",
+      "title": "VS Code 缓存数据（~/.config/Code/CachedData）",
+      "what": "VS Code（Linux）在用户配置目录下的 V8 字节码/编译缓存；Linux 版缓存存在 ~/.config/Code 而非 XDG 缓存目录（官方已知行为），同目录还有 Cache、Code Cache、CachedExtensionVSIXs 等缓存子目录",
       "producer": "VS Code（code 启动、扩展加载、语言服务时）",
       "safe_to_delete_because": "纯缓存：删除后 VS Code 自动重新生成；扩展配置、项目设置、用户数据均不受影响",
       "consequence": "下次启动需重新生成缓存（首次变慢）；功能完全不受影响",
@@ -1962,7 +1815,8 @@
       "recovery": "full"
     },
     "refs": [
-      "https://code.visualstudio.com/docs/setup/uninstall"
+      "https://code.visualstudio.com/docs/setup/uninstall",
+      "https://github.com/microsoft/vscode-remote-release/issues/8847"
     ]
   },
   {
@@ -5458,80 +5312,6 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "win-adobe-cache",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/AppData/Local/Adobe"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Adobe 缓存（~/AppData/Local/Adobe）",
-      "what": "Adobe 应用（Photoshop、Illustrator、Premiere 等）的缓存文件、临时文件、缩略图缓存",
-      "producer": "Adobe 应用",
-      "safe_to_delete_because": "纯缓存：删除后 Adobe 应用自动重新生成；项目文件、设置、用户数据均不受影响",
-      "consequence": "下次启动需重新生成缓存（首次变慢）；功能完全不受影响",
-      "regenerate": "Adobe 应用自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数百 MB 到数 GB（多应用常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "win-app-logs",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/AppData/Local/logs"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "用户级应用日志（~/AppData/Local/logs）",
-      "what": "各应用（浏览器、IDE、包管理器等）的运行日志、错误日志、调试日志",
-      "producer": "各应用（应用启动、运行、调试时）",
-      "safe_to_delete_because": "纯日志：删除后应用自动重新生成；应用配置、数据、用户数据均不受影响",
-      "consequence": "历史日志丢失，故障排查时无历史记录；应用功能完全不受影响",
-      "regenerate": "应用自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多应用常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "win-brave-cache",
     "os": "windows",
     "scope": "user",
@@ -5607,43 +5387,6 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "win-cocoapods-cache",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/.cache/CocoaPods"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "CocoaPods 缓存（~/.cache/CocoaPods）",
-      "what": "CocoaPods 下载的 pod 包缓存（已下载的 .framework 与源码）",
-      "producer": "CocoaPods（pod install / pod update）",
-      "safe_to_delete_because": "纯下载缓存：删除后 CocoaPods 重新下载；Podfile、项目源码、.xcworkspace 均不受影响",
-      "consequence": "下次 pod install 需重新下载 pod（需网络，首次变慢）；功能完全不受影响",
-      "regenerate": "pod install 自动重新下载"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数百 MB 到数 GB（多 pod 常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://guides.cocoapods.org/terminal/commands.html#pod_cache_clean"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "win-conda-clean",
     "os": "windows",
     "scope": "user",
@@ -5687,16 +5430,18 @@
     "os": "windows",
     "scope": "user",
     "paths": [
-      "~/AppData/Local/Diagnostics"
+      "~/AppData/Local/CrashDumps",
+      "~/AppData/Local/Microsoft/Windows/WER/ReportArchive",
+      "~/AppData/Local/Microsoft/Windows/WER/ReportQueue"
     ],
     "match_": null,
     "semantics": {
-      "title": "Windows 诊断报告（~/AppData/Local/Diagnostics）",
-      "what": "Windows 问题报告与解决方案、应用崩溃报告、系统诊断日志",
-      "producer": "Windows 错误报告（WER）与应用",
-      "safe_to_delete_because": "纯日志：删除后系统自动重新生成；应用配置、数据、用户数据均不受影响",
-      "consequence": "历史问题报告丢失，故障排查时无历史记录；系统功能完全不受影响",
-      "regenerate": "WER 自动重新生成"
+      "title": "Windows 崩溃转储与错误报告（CrashDumps / WER）",
+      "what": "应用崩溃时的用户态转储（%LOCALAPPDATA%\\CrashDumps，需应用启用 LocalDumps 才生成）与 Windows 错误报告（WER）的待发送/已归档报告队列",
+      "producer": "Windows 错误报告（WER）与各应用",
+      "safe_to_delete_because": "纯诊断数据：删除后系统按需重新生成；应用配置、用户数据均不受影响",
+      "consequence": "历史崩溃报告丢失，故障排查时无历史记录；系统功能完全不受影响",
+      "regenerate": "WER 与应用按需重新生成"
     },
     "risk": "green",
     "red_flags": [],
@@ -5711,11 +5456,11 @@
       "keep_newest": null
     },
     "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多应用常见）",
+      "typical_size": "数十 MB 到数百 MB",
       "recovery": "full"
     },
     "refs": [
-      "https://developer.apple.com/documentation/xcode/diagnosing-issues-using-crash-reports-and-device-logs"
+      "https://learn.microsoft.com/windows/win32/wer/collecting-user-mode-dumps"
     ]
   },
   {
@@ -5757,57 +5502,20 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "win-docker-builder-cache",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/AppData/Local/docker/buildstore"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Docker 构建缓存（buildstore）",
-      "what": "Docker BuildKit 的构建缓存（中间层镜像、构建产物）",
-      "producer": "Docker（docker build）",
-      "safe_to_delete_because": "纯构建缓存：删除后下次构建时 Docker 重新生成；镜像与容器不受影响",
-      "consequence": "下次构建需重新执行所有步骤（首次变慢）；已构建的镜像完全不受影响",
-      "regenerate": "docker build 自动重新生成"
-    },
-    "risk": "yellow",
-    "red_flags": [],
-    "action": {
-      "kind": "command",
-      "command": "docker builder prune --force",
-      "dry_run": "docker builder ls",
-      "delete_contents_only": null,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数 GB 到数十 GB（多项目/多构建常见）",
-      "recovery": "partial"
-    },
-    "refs": [
-      "https://docs.docker.com/build/cache/"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "win-docker-desktop-logs",
     "os": "windows",
     "scope": "user",
     "paths": [
-      "~/AppData/Local/docker/log"
+      "~/AppData/Local/Docker/log"
     ],
     "match_": null,
     "semantics": {
-      "title": "Docker Desktop 日志（~/AppData/Local/docker/log）",
-      "what": "Docker Desktop 的运行日志、容器日志、WSL 2 虚拟机日志",
+      "title": "Docker Desktop 日志（%LOCALAPPDATA%\\Docker\\log）",
+      "what": "Docker Desktop 的运行日志与诊断日志（虚拟机/WSL 2 后端日志在此汇总）",
       "producer": "Docker Desktop",
       "safe_to_delete_because": "纯日志：删除后 Docker Desktop 自动重新生成；镜像、容器、卷均不受影响",
       "consequence": "历史日志丢失，故障排查时无历史记录；Docker 功能完全不受影响",
-      "regenerate": "Docker Desktop 自动重新生成"
+      "regenerate": "Docker Desktop 运行时自动重新生成"
     },
     "risk": "green",
     "red_flags": [],
@@ -5826,7 +5534,7 @@
       "recovery": "full"
     },
     "refs": [
-      "https://docs.docker.com/desktop/troubleshoot/overview/"
+      "https://docs.docker.com/desktop/troubleshoot-and-support/troubleshoot/overview/"
     ]
   },
   {
@@ -5835,16 +5543,16 @@
     "os": "windows",
     "scope": "user",
     "paths": [
-      "~/AppData/Roaming/Dropbox/user.cache"
+      "~/Dropbox/.dropbox.cache"
     ],
     "match_": null,
     "semantics": {
-      "title": "Dropbox 缓存（~/AppData/Roaming/Dropbox）",
-      "what": "Dropbox 客户端的同步缓存（已下载文件的本地副本，用于离线访问与快速同步）",
-      "producer": "Dropbox 客户端",
-      "safe_to_delete_because": "纯同步缓存：删除后 Dropbox 重新下载；已同步到云端的文件不受影响",
-      "consequence": "已同步到云端的文件不受影响；离线文件需重新下载；功能完全不受影响",
-      "regenerate": "Dropbox 自动重新下载"
+      "title": "Dropbox 缓存（~/Dropbox/.dropbox.cache）",
+      "what": "Dropbox 桌面客户端在 Dropbox 文件夹根下的隐藏缓存：删除或移动文件时先把内容移入此处，防止误删；长期累积可达数 GB。注意路径随 Dropbox 文件夹位置而变，此处为默认位置",
+      "producer": "Dropbox 桌面客户端",
+      "safe_to_delete_because": "官方文档确认可安全清空该文件夹；已同步到云端的文件不受影响，仅在 3 天恢复窗口内的近期删除会失去本地快速恢复副本",
+      "consequence": "近期删除文件的本地恢复副本丢失（云端回收站仍可用）；功能完全不受影响",
+      "regenerate": "Dropbox 运行时按需重建"
     },
     "risk": "yellow",
     "red_flags": [],
@@ -5863,7 +5571,7 @@
       "recovery": "partial"
     },
     "refs": [
-      "https://help.dropbox.com/syncing-uploads/cache-folder"
+      "https://help.dropbox.com/delete-restore/cache-folder"
     ]
   },
   {
@@ -6092,43 +5800,6 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "win-homebrew-cleanup",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/cache/Homebrew"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Homebrew 缓存（~/cache/Homebrew）",
-      "what": "Homebrew 下载的 formula 源码、bottle 二进制包、构建产物缓存",
-      "producer": "Homebrew（brew install / brew upgrade）",
-      "safe_to_delete_because": "纯下载缓存：删除后 Homebrew 重新下载；已安装的 formula 不受影响",
-      "consequence": "下次 brew install 需重新下载（需网络，首次变慢）；已安装软件完全不受影响",
-      "regenerate": "brew install 自动重新下载"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "command",
-      "command": "brew cleanup --prune=all",
-      "dry_run": "brew cleanup --dry-run",
-      "delete_contents_only": null,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数百 MB 到数 GB（多 formula 常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://docs.brew.sh/Manpage#cleanup-options"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "win-huggingface-cache",
     "os": "windows",
     "scope": "user",
@@ -6174,12 +5845,12 @@
     ],
     "match_": null,
     "semantics": {
-      "title": "JetBrains IDE 缓存（~/AppData/Local/JetBrains）",
-      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的索引、缓存、本地历史与插件数据",
+      "title": "JetBrains IDE 缓存与日志（%LOCALAPPDATA%\\JetBrains）",
+      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）2020.1+ 的 system 目录：索引、缓存、编译输出与运行日志（log 子目录），按产品+版本分目录",
       "producer": "JetBrains IDE（IDE 启动、索引构建、代码分析时）",
-      "safe_to_delete_because": "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置、代码、VCS 历史均不受影响",
-      "consequence": "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；功能与结果完全不受影响",
-      "regenerate": "IDE 启动时自动重新索引"
+      "safe_to_delete_because": "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置（~/.config/JetBrains 或 Roaming）与代码、VCS 历史均不受影响。清理前需完全退出所有 JetBrains IDE",
+      "consequence": "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；历史日志丢失；功能与结果完全不受影响",
+      "regenerate": "IDE 启动时自动重新索引与生成日志"
     },
     "risk": "yellow",
     "red_flags": [],
@@ -6196,43 +5867,6 @@
     "estimate": {
       "typical_size": "数百 MB 到数 GB（多项目/多 IDE 常见）",
       "recovery": "partial"
-    },
-    "refs": [
-      "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "win-jetbrains-logs",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/AppData/Local/JetBrains/logs"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "JetBrains IDE 日志（~/AppData/Local/JetBrains/logs）",
-      "what": "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的运行日志、插件日志、索引日志",
-      "producer": "JetBrains IDE（IDE 启动、运行、调试时）",
-      "safe_to_delete_because": "纯日志：删除后 IDE 自动重新生成；项目配置、代码、VCS 历史均不受影响",
-      "consequence": "历史日志丢失，故障排查时无历史记录；IDE 功能完全不受影响",
-      "regenerate": "IDE 自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数百 MB（多 IDE/多项目常见）",
-      "recovery": "full"
     },
     "refs": [
       "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
@@ -6648,43 +6282,6 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
-    "id": "win-steam-appcache",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/AppData/Roaming/Valve/Steam/appcache"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Steam 应用缓存（appcache）",
-      "what": "Steam 客户端的网页内容与应用缓存（商店页面、社区、截图等）",
-      "producer": "Steam 客户端",
-      "safe_to_delete_because": "纯网页与应用缓存：删除后 Steam 自动重新下载；已安装游戏与游戏存档不受影响",
-      "consequence": "Steam 商店/社区页面首次加载变慢；已安装游戏完全不受影响",
-      "regenerate": "Steam 启动时自动重新下载"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数十 MB 到数 GB",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://help.steampowered.com/"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
     "id": "win-teams-cache",
     "os": "windows",
     "scope": "user",
@@ -6726,15 +6323,15 @@
     "os": "windows",
     "scope": "user",
     "paths": [
-      "~/AppData/Roaming/Telegram Desktop/tdata"
+      "~/AppData/Roaming/Telegram Desktop/tdata/user_data"
     ],
     "match_": null,
     "semantics": {
-      "title": "Telegram 媒体缓存（tdata）",
-      "what": "Telegram 桌面客户端的图片、视频、文档、语音消息缓存",
-      "producer": "Telegram 桌面客户端",
-      "safe_to_delete_because": "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响",
-      "consequence": "已缓存的媒体需重新下载；聊天记录与功能完全不受影响",
+      "title": "Telegram 媒体缓存（tdata/user_data）",
+      "what": "Telegram 桌面客户端下载的图片、视频、文档、语音的本地缓存，位于 tdata 下的 user_data 子目录。注意：tdata 本体存放会话密钥与登录态（删除即登出），绝不在本规则清理范围内",
+      "producer": "Telegram 桌面客户端（浏览/下载媒体时）",
+      "safe_to_delete_because": "user_data 是纯媒体缓存：删除后 Telegram 按需自动重新下载；会话密钥在 tdata 本体，不受影响",
+      "consequence": "聊天中的媒体需点击重新加载（耗流量）；聊天记录、登录态、设置完全不受影响",
       "regenerate": "Telegram 运行时按需自动重新下载"
     },
     "risk": "yellow",
@@ -6750,11 +6347,12 @@
       "keep_newest": null
     },
     "estimate": {
-      "typical_size": "数百 MB 到数 GB（多群组/频道常见）",
+      "typical_size": "数百 MB 到数十 GB（多群组/频道常见）",
       "recovery": "partial"
     },
     "refs": [
-      "https://telegram.org/faq"
+      "https://telegram.org/faq",
+      "https://datamoll.com/guides/tdata-vs-json-session"
     ]
   },
   {
@@ -6940,80 +6538,6 @@
     },
     "refs": [
       "https://code.visualstudio.com/docs/setup/uninstall"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "win-xcode-caches",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/Library/Caches/com.apple.dt.Xcode"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Xcode 缓存（~/Library/Caches/com.apple.dt.Xcode）",
-      "what": "Xcode 的索引缓存、预览缓存、Swift 模块缓存等",
-      "producer": "Xcode（IDE 启动、索引构建、预览时）",
-      "safe_to_delete_because": "纯缓存：删除后 Xcode 重新索引并生成；项目源码、.xcodeproj、Scheme 均不受影响",
-      "consequence": "下次启动 Xcode 需重新索引（首次变慢）；功能与结果完全不受影响",
-      "regenerate": "Xcode 自动重新生成"
-    },
-    "risk": "green",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数百 MB 到数 GB（多项目常见）",
-      "recovery": "full"
-    },
-    "refs": [
-      "https://developer.apple.com/documentation/xcode"
-    ]
-  },
-  {
-    "apiVersion": "slimit.rules/v1",
-    "id": "win-xcode-deriveddata",
-    "os": "windows",
-    "scope": "user",
-    "paths": [
-      "~/Library/Developer/Xcode/DerivedData"
-    ],
-    "match_": null,
-    "semantics": {
-      "title": "Xcode DerivedData（~/Library/Developer/Xcode/DerivedData）",
-      "what": "Xcode 的构建产物、索引、调试符号缓存（每个项目的 DerivedData 子目录）",
-      "producer": "Xcode（xcodebuild / Xcode IDE 构建时）",
-      "safe_to_delete_because": "纯构建缓存：删除后 Xcode 重新构建并索引；项目源码、.xcodeproj、Scheme 均不受影响",
-      "consequence": "下次构建需重新编译（首次变慢，大型项目可达数分钟）；功能与结果完全不受影响",
-      "regenerate": "xcodebuild 自动重新构建"
-    },
-    "risk": "yellow",
-    "red_flags": [],
-    "action": {
-      "kind": "purge-dir",
-      "command": null,
-      "dry_run": null,
-      "delete_contents_only": true,
-      "irreversible": null,
-      "requires_root": null,
-      "min_age_days": null,
-      "keep_newest": null
-    },
-    "estimate": {
-      "typical_size": "数 GB 到数十 GB（多项目常见）",
-      "recovery": "partial"
-    },
-    "refs": [
-      "https://developer.apple.com/documentation/xcode"
     ]
   },
   {

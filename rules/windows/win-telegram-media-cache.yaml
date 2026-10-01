@@ -3,20 +3,21 @@ id: win-telegram-media-cache
 os: windows
 scope: user
 paths:
-  - "~/AppData/Roaming/Telegram Desktop/tdata"
+  - "~/AppData/Roaming/Telegram Desktop/tdata/user_data"
 semantics:
-  title: "Telegram 媒体缓存（tdata）"
-  what: "Telegram 桌面客户端的图片、视频、文档、语音消息缓存"
-  producer: "Telegram 桌面客户端"
-  safe_to_delete_because: "纯媒体缓存：删除后 Telegram 自动重新下载；聊天记录、联系人、群组均不受影响"
-  consequence: "已缓存的媒体需重新下载；聊天记录与功能完全不受影响"
+  title: "Telegram 媒体缓存（tdata/user_data）"
+  what: "Telegram 桌面客户端下载的图片、视频、文档、语音的本地缓存，位于 tdata 下的 user_data 子目录。注意：tdata 本体存放会话密钥与登录态（删除即登出），绝不在本规则清理范围内"
+  producer: "Telegram 桌面客户端（浏览/下载媒体时）"
+  safe_to_delete_because: "user_data 是纯媒体缓存：删除后 Telegram 按需自动重新下载；会话密钥在 tdata 本体，不受影响"
+  consequence: "聊天中的媒体需点击重新加载（耗流量）；聊天记录、登录态、设置完全不受影响"
   regenerate: "Telegram 运行时按需自动重新下载"
 risk: yellow
 action:
   kind: purge-dir
   delete_contents_only: true
 estimate:
-  typical_size: "数百 MB 到数 GB（多群组/频道常见）"
+  typical_size: "数百 MB 到数十 GB（多群组/频道常见）"
   recovery: partial
 refs:
   - https://telegram.org/faq
+  - https://datamoll.com/guides/tdata-vs-json-session

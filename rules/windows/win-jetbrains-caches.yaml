@@ -5,12 +5,12 @@ scope: user
 paths:
   - "~/AppData/Local/JetBrains"
 semantics:
-  title: "JetBrains IDE 缓存（~/AppData/Local/JetBrains）"
-  what: "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）的索引、缓存、本地历史与插件数据"
+  title: "JetBrains IDE 缓存与日志（%LOCALAPPDATA%\\JetBrains）"
+  what: "JetBrains IDE（IntelliJ、PyCharm、GoLand、CLion 等）2020.1+ 的 system 目录：索引、缓存、编译输出与运行日志（log 子目录），按产品+版本分目录"
   producer: "JetBrains IDE（IDE 启动、索引构建、代码分析时）"
-  safe_to_delete_because: "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置、代码、VCS 历史均不受影响"
-  consequence: "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；功能与结果完全不受影响"
-  regenerate: "IDE 启动时自动重新索引"
+  safe_to_delete_because: "缓存与索引可再生：删除后 IDE 启动时重新索引项目，首次索引耗时较长；项目配置（~/.config/JetBrains 或 Roaming）与代码、VCS 历史均不受影响。清理前需完全退出所有 JetBrains IDE"
+  consequence: "下次启动 IDE 需重新索引项目（大型项目可达数分钟）；历史日志丢失；功能与结果完全不受影响"
+  regenerate: "IDE 启动时自动重新索引与生成日志"
 risk: yellow
 action:
   kind: purge-dir

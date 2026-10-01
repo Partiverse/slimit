@@ -3,10 +3,10 @@ id: linux-vscode-cached-data
 os: linux
 scope: user
 paths:
-  - "~/.cache/Code/CachedData"
+  - "~/.config/Code/CachedData"
 semantics:
-  title: "VS Code 缓存数据（~/.cache/Code/CachedData）"
-  what: "VS Code 的扩展缓存、渲染缓存、语言服务缓存"
+  title: "VS Code 缓存数据（~/.config/Code/CachedData）"
+  what: "VS Code（Linux）在用户配置目录下的 V8 字节码/编译缓存；Linux 版缓存存在 ~/.config/Code 而非 XDG 缓存目录（官方已知行为），同目录还有 Cache、Code Cache、CachedExtensionVSIXs 等缓存子目录"
   producer: "VS Code（code 启动、扩展加载、语言服务时）"
   safe_to_delete_because: "纯缓存：删除后 VS Code 自动重新生成；扩展配置、项目设置、用户数据均不受影响"
   consequence: "下次启动需重新生成缓存（首次变慢）；功能完全不受影响"
@@ -20,3 +20,4 @@ estimate:
   recovery: full
 refs:
   - https://code.visualstudio.com/docs/setup/uninstall
+  - https://github.com/microsoft/vscode-remote-release/issues/8847
