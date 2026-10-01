@@ -109,6 +109,7 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 3. **体验打磨**：种子反馈「交互一般、语义模板化」的后续迭代（UI 与解释文案质量），配合云端 AI 使用率观察。
 4. **签名 + 公证（notarization）**：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. **v0.2 差异化**：本地模型（~3B）AI 解释，保持「默认全离线」承诺。
+6. **开发者大额回收（v0.2 主打候选，优先级待用户定夺）**：项目感知规则（schema v2 `project-artifact`）+ 扫描器 marker 探测 + 净回收持久度评级 + 重建成本披露——直击「竞品只会清 2GB 浏览器缓存，80GB target/ 无人敢碰」的真空地带，方案见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md)。
 
 ## 8. 文档索引
 
@@ -122,5 +123,6 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 | [BETA.md](./BETA.md) | 内测分发：未签名应用安装指引、已知限制 |
 | [W8-PLAN.md](./W8-PLAN.md) | 发布计划：notarization、落地页、发布 checklist、W7 核对结论 |
 | [SEED-INVITE.md](./SEED-INVITE.md) | 种子用户邀请文案与分发材料 |
+| [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) | 深度回收策略调研：竞品为什么清不动大头、A/B/C 分类学、项目感知方案（v0.2 主打候选） |
 | [rules/README.md](../rules/README.md) | 规则编写规范与执行语义 |
 | 本文档 | 现状/进度/工具链交接 |
