@@ -150,6 +150,11 @@ pub fn expand_tilde(template: &str) -> Option<PathBuf> {
         let home = home_dir()?;
         return Some(Path::new(&home).join(rest));
     }
+    // Windows 惯用手写 `~\...`（扫描根由用户直接输入，规则库统一 `~/`）。
+    if let Some(rest) = template.strip_prefix("~\\") {
+        let home = home_dir()?;
+        return Some(Path::new(&home).join(rest));
+    }
     Some(PathBuf::from(template))
 }
 

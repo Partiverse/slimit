@@ -235,7 +235,8 @@ function CleanPanel() {
         <input
           value={root}
           onChange={(e) => setRoot(e.target.value)}
-          placeholder="绝对路径，可先后提交多个扫描任务并发执行"
+          placeholder="文件夹路径，支持 ~（如 ~/code 或 ~/Library/Caches）"
+          aria-label="扫描路径"
         />
         <button onClick={startScan} disabled={!root.trim()}>
           开始扫描

@@ -25,6 +25,30 @@ use tauri::{AppHandle, Emitter, Manager};
 /// 事件序号：区分先后两次扫描，前端丢弃过期序号的进度事件。
 static SCAN_SEQ: AtomicU64 = AtomicU64::new(0);
 
+/// 扫描根解析：先做 `~` 展开（与规则路径同一套展开语义），再校验存在。
+///
+/// 手测发现（2026-10-01）：直接输入 `~/Library/Caches` 报 "root does not exist"
+/// ——此前只有规则路径走 tilde 展开，扫描根要求绝对路径，而 `~` 是小白最顺手的
+/// 写法。展开失败或路径不存在时给中文可操作提示，而不是英文 Err 原文。
+fn resolve_scan_root(input: &str) -> Result<std::path::PathBuf, String> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return Err("请输入要扫描的路径".into());
+    }
+    let expanded = slimit_rules::matcher::expand_tilde(trimmed)
+        .ok_or_else(|| "无法展开 ~：系统未设置主目录环境变量（HOME / USERPROFILE）".to_string())?;
+    if !expanded.exists() {
+        return Err(format!("路径不存在：{}", expanded.display()));
+    }
+    if !expanded.is_dir() {
+        return Err(format!(
+            "这是一个文件不是文件夹，请指定文件夹：{}",
+            expanded.display()
+        ));
+    }
+    Ok(expanded)
+}
+
 /// 扫描 + 计划的合并响应：一次遍历产出聚合视图与规则命中计划。
 #[derive(Debug, serde::Serialize)]
 pub struct ScanPlanResponse {
@@ -40,7 +64,7 @@ fn scan_and_plan(
     top: Option<usize>,
 ) -> Result<ScanPlanResponse, String> {
     let seq = SCAN_SEQ.fetch_add(1, Ordering::Relaxed);
-    let root = PathBuf::from(&root);
+    let root = resolve_scan_root(&root)?;
     let result = {
         let app = app.clone();
         slimit_core::scan_with_progress(&root, &move |p| {
@@ -317,5 +341,84 @@ mod tests {
         req.nearest_rule_hits = vec!["macos-homebrew-cache".into()];
         let e = rules_explanation(&req).unwrap();
         assert!(!e.consequence.contains("天未动"), "got: {}", e.consequence);
+    }
+
+    // 扫描根 tilde 展开（手测发现 `~/Library/Caches` 报 root does not exist）。
+    // HOME 是进程全局变量，动它的测试全部串行。
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    struct HomeGuard(Option<std::ffi::OsString>);
+    impl HomeGuard {
+        fn set(v: Option<&str>) -> Self {
+            let old = std::env::var_os("HOME");
+            match v {
+                Some(x) => std::env::set_var("HOME", x),
+                None => std::env::remove_var("HOME"),
+            }
+            Self(old)
+        }
+    }
+    impl Drop for HomeGuard {
+        fn drop(&mut self) {
+            match &self.0 {
+                Some(v) => std::env::set_var("HOME", v),
+                None => std::env::remove_var("HOME"),
+            }
+        }
+    }
+
+    #[test]
+    fn scan_root_expands_tilde_and_validates() {
+        let _lock = ENV_LOCK.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let home = tmp.path().join("home");
+        std::fs::create_dir_all(home.join("code/proj")).unwrap();
+        std::fs::create_dir_all(&home.join("code/proj/target")).unwrap();
+        let _guard = HomeGuard::set(Some(home.to_str().unwrap()));
+
+        // 绝对路径原样通过
+        assert_eq!(
+            resolve_scan_root(home.join("code/proj").to_str().unwrap()).unwrap(),
+            home.join("code/proj")
+        );
+        // ~ 与 ~/ 展开
+        assert_eq!(resolve_scan_root("~").unwrap(), home);
+        assert_eq!(
+            resolve_scan_root("~/code/proj").unwrap(),
+            home.join("code/proj")
+        );
+        // 两侧空白容错
+        assert_eq!(
+            resolve_scan_root("  ~/code/proj  ").unwrap(),
+            home.join("code/proj")
+        );
+        // 空输入 / 不存在 / 是文件不是目录 —— 都要中文可操作提示
+        assert!(resolve_scan_root("   ").unwrap_err().contains("请输入"));
+        assert!(resolve_scan_root("~/nope")
+            .unwrap_err()
+            .contains("路径不存在"));
+        let f = home.join("a.txt");
+        std::fs::write(&f, b"x").unwrap();
+        assert!(resolve_scan_root("~/a.txt")
+            .unwrap_err()
+            .contains("不是文件夹"));
+    }
+
+    #[test]
+    fn scan_root_reports_unset_home_instead_of_passing_through() {
+        // HOME 与 USERPROFILE 都缺失时必须报错——绝不能把字面 `~/x` 当
+        // 相对路径传进扫描（会扫到当前工作目录，静默给出错误结果）。
+        let _lock = ENV_LOCK.lock().unwrap();
+        let _guard = (HomeGuard::set(None), {
+            let old = std::env::var_os("USERPROFILE");
+            std::env::remove_var("USERPROFILE");
+            move || {
+                if let Some(v) = old {
+                    std::env::set_var("USERPROFILE", v);
+                }
+            }
+        });
+        let err = resolve_scan_root("~/code").unwrap_err();
+        assert!(err.contains("无法展开"), "got: {err}");
     }
 }

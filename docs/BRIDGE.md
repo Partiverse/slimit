@@ -4,7 +4,7 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 
 | 命令 | 参数 | 返回 | 说明 |
 |---|---|---|---|
-| `scan_and_plan` | `root: string`, `top?: number`（默认 20） | `ScanPlanResponse { summary, plan }` | 扫描 + 嵌入规则匹配一次完成；进度经 `scan-progress` 事件推送；可多任务并发（事件带 seq 区分） |
+| `scan_and_plan` | `root: string`, `top?: number`（默认 20） | `ScanPlanResponse { summary, plan }` | 扫描 + 嵌入规则匹配一次完成；进度经 `scan-progress` 事件推送；可多任务并发（事件带 seq 区分）。`root` 支持 `~` 展开（`~`、`~/x`、Windows `~\x`，取 HOME → USERPROFILE）；空/不存在/非目录返回中文可操作错误，不静默按相对路径扫描 |
 | `explain` | `req: ExplanationRequest` | `Explanation` | 解释优先级：云端 AI（显式启用）→ 规则库语义（source=rules）→ 启发式降级（source=heuristic）；**永不影响执行授权** |
 | `get_settings` / `set_settings` | `AiSettings` | `AiSettings` | 云端 AI 设置（enabled/base_url/api_key/model），持久化 `<app_data>/config.json`；enabled=false 时全部离线 |
 | `apply_plan` | `items: PlanItem[]` | `ApplyReport[]` | 仅 `executable` 项迁入隔离区（app data 目录），逐项报告 |
@@ -29,9 +29,20 @@ core（`slimit-core`）、执行（`slimit-exec`）、AI（`slimit-ai`）的 ser
 ```ts
 interface DirStat { path: string; apparent: number; actual: number; file_count: number }
 interface ScanSummary { root: string; file_count: number; actual: number; apparent: number; top_dirs: DirStat[] }
-interface PlanItem { rule_id: string; path: string; estimated_bytes: number; risk: 'green'|'yellow'|'red'; executable: boolean }
+interface PlanItem { rule_id: string; path: string; estimated_bytes: number; risk: 'green'|'yellow'|'red';
+  executable: boolean;
+  /** project 规则：目标目录 mtime 距今天数；路径规则为 null */
+  age_days?: number|null;
+  /** project 规则年龄未达 max_age_days（或 mtime 不可得）⇒ 不可执行，只提示 */
+  below_min_age?: boolean;
+  /** 净回收持久度：one-shot=A 类一次性大额 / regenerating=B 类会再生 / user-data=C 类用户数据 */
+  durability?: 'one-shot'|'regenerating'|'user-data' }
 interface ScanPlanResponse { summary: ScanSummary; plan: PlanItem[] }
-interface ExplanationRequest { path: string; actual_bytes: number; apparent_bytes: number; owner_bundle: string|null; nearest_rule_hits: string[] }
+interface ExplanationRequest { path: string; actual_bytes: number; apparent_bytes: number; owner_bundle: string|null;
+  nearest_rule_hits: string[];
+  /** project 规则：目标目录 mtime 距今天数 */
+  age_days?: number|null;
+  below_min_age?: boolean }
 interface Explanation { what: string; producer: string; consequence: string; suggested_risk: 'green'|'yellow'|'red'; confidence: number }
 interface ApplyReport { item: PlanItem; quarantine_id: string|null; error: string|null }
 interface Manifest { id: string; original_path: string; rule_id: string; quarantined_at: string; actual_bytes: number }
@@ -53,5 +64,5 @@ interface VolumeSummary { volume_name: string | null; device_identifier: string 
 ## 已知限制
 
 - 扫描为阻塞命令（tauri 同步命令在独立线程执行，不卡 UI 事件循环），但输入框/按钮仍建议扫描期间禁用。
-- 长路径输入需绝对路径，前端不做 `~` 展开。
+- 扫描根的 `~` 展开在**后端** `scan_and_plan` 入口完成（`resolve_scan_root`），前端不做展开——避免两套 HOME 解析逻辑。规则路径模板的展开在 `slimit-rules::matcher::expand_tilde`。
 - 跨卷目标（EXDEV）apply 直接报错不执行，UI 提示（v1.1 做 copy+delete fallback）。

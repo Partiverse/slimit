@@ -3235,6 +3235,7 @@ dependencies = [
  "slimit-rules",
  "tauri",
  "tauri-build",
+ "tempfile",
 ]
 
 [[package]]

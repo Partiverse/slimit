@@ -31,6 +31,8 @@ SlimIt（取自 "slim it"）是跨 macOS / Windows / Linux 的存储瘦身工具
 
 W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项目名 `slimit`）；rc1 → rc2 → **rc3** 常驻 pre-release（rc3 含体验打磨 + 安全修复 + 规则库收口，DMG SHA256 往返校验一致）；种子用户分发材料 [SEED-INVITE.md](./SEED-INVITE.md) 已更新至 rc3；**首批种子反馈 4 条全部落地并随 rc2 发布**——① 云端 AI 解释（OpenAI 兼容端点、用户自备 Key、默认关闭全离线，解释优先级 云端→规则库→启发式，UI 标来源）② 扫描实时进度（条目数/当前目录/速率/用时）③ 多任务并发扫描列表 ④ 规则 81→90 条。**体验打磨**（随 rc3 发布）：Tab 导航（4 组 6 面板）、自动加载、Plan 表格中文化、空状态、规则面板（list_rules）。**安全收口**：cargo-audit 0 漏洞、人工审计 Tauri command 层与 executor 路径，修复 2 个问题（`restore` id 路径穿越、`apply` 信任前端 `executable`）＋手测追加 1 个（`restore` 未写审计，已修），详见 [SECURITY.md](./SECURITY.md)。
 
+**手测发现并修复（2026-10-01）**：GUI 手测 rc4 时输入 `~/Library/Caches` 报 `root does not exist`——扫描根从未做 `~` 展开（只有规则路径模板走 `expand_tilde`）。已在 `scan_and_plan` 入口加 `resolve_scan_root`：后端统一展开（`~`、`~/x`，并补 Windows `~\x`）+ 空/不存在/非目录的中文可操作错误提示（HOME 缺失时报错，绝不把字面 `~/x` 当相对路径静默扫错地方）；UI placeholder 改为「支持 ~」。5 个 tauri 单测覆盖（绝对路径/~/~/空白容错/不存在/是文件/HOME 缺失）。**BRIDGE.md 同步**：PlanItem 与 ExplanationRequest 新增 age_days/below_min_age/durability 字段，删除「前端不做 `~` 展开」的旧表述。
+
 **project-artifact 全链路 GUI 手测（2026-10-01，通过）**：造 `oldproj`（`target/` mtime 拨至 2020-01-01，24MB）与 `freshproj`（当日，12MB）两个假 Rust 项目，扫 `/tmp/slimit-e2e` 验证——旧 target 显示「2465 天未动」默认勾选可执行，新 target 显示「0 天未动 · 最近仍在使用，暂不提供清理」且勾选框禁用、沉底排序，执行按钮只计 24MB（守卫项未计入）；两段式确认后 oldproj 的 24MB 完整迁入隔离区、freshproj 的 12MB 零改动、audit.jsonl 落 `quarantine` 事件；UI 恢复后字节级一致（25165824 B），隔离区清空。**抓到并修复 1 个真 bug**：`restore` 从未写审计日志（audit.rs 契约要求 apply/restore 都记），已把 `AuditLog` 收进 `restore()` 签名与 apply 同层，单测断言覆盖。**遗留观察**：`delete_contents_only: true` 时目标目录本身也被 rename 走（原子性优先于留空壳，executor 有注释与 restore 兜底），非 bug；应用热重启后 computer-use 的 app_ref 绑定会失效（自动化层问题，与产品无关），重测需重启绑定。
 
 W8 剩余 / 已决策事项：
