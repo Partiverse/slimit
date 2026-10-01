@@ -275,6 +275,24 @@ fn list_rules() -> Result<Vec<Rule>, String> {
     slimit_rules::embedded_rules().map_err(|e| e.to_string())
 }
 
+/// AI 设置「测试连接」：轻量探测 /models 端点（不发对话、不耗 token）。
+#[tauri::command]
+fn test_ai(app: AppHandle) -> Result<String, String> {
+    let s = load_settings(&app)?;
+    slimit_ai::test_connection(&s)
+}
+
+/// 打开「完全磁盘访问」系统设置面板（权限引导用；种子反馈：扫描时才
+/// 发现缺权限，希望一开始就引导到位）。
+#[tauri::command]
+fn open_fda_settings() -> Result<(), String> {
+    std::process::Command::new("open")
+        .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("无法打开系统设置: {e}"))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -288,10 +306,23 @@ pub fn run() {
             purge_expired_quarantine,
             list_snapshots,
             volume_summary_cmd,
-            list_rules
+            list_rules,
+            test_ai,
+            open_fda_settings
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // 种子反馈：点 Dock 图标偶发无法回到窗口（应用运行但窗口未聚焦）。
+            // macOS 的 reopen 事件（点 Dock/再次启动）必须显式唤起主窗口。
+            if let tauri::RunEvent::Reopen { .. } = event {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.unminimize();
+                    let _ = w.set_focus();
+                }
+            }
+        });
 }
 
 #[cfg(test)]

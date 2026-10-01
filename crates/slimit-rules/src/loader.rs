@@ -55,6 +55,9 @@ pub struct ProjectCfg {
     /// 目录 mtime 距今天数低于该值 ⇒ below_min_age（不可执行，只提示）。
     #[serde(default)]
     pub max_age_days: Option<u32>,
+    /// 反向匹配：父目录**不存在**任何 markers 才命中（项目已删、产物残留）。
+    #[serde(default)]
+    pub orphan: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

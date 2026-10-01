@@ -168,3 +168,13 @@ export interface RuleInfo {
 export function listRules(): Promise<RuleInfo[]> {
   return invoke("list_rules");
 }
+
+/** 测试云端 AI 连通性（/models 轻量探测，不耗 token）。返回人话结果或错误。 */
+export function testAi(): Promise<string> {
+  return invoke("test_ai");
+}
+
+/** 打开「完全磁盘访问」系统设置面板（权限引导）。 */
+export function openFdaSettings(): Promise<void> {
+  return invoke("open_fda_settings");
+}

@@ -41,6 +41,11 @@
           "type": "integer",
           "minimum": 1,
           "description": "目录 mtime 距今天数低于该值时 below_min_age=true（不可执行，只提示）"
+        },
+        "orphan": {
+          "type": "boolean",
+          "default": false,
+          "description": "true = 反向匹配：父目录不存在任何 markers 时才命中（项目已删除、产物残留场景，如孤儿 node_modules）。默认 false（存在 marker 才命中）"
         }
       }
     },

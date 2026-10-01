@@ -16,24 +16,27 @@
 
 ## 安装指引（未签名应用的 Gatekeeper 通行方式）
 
-内测包没有 Developer ID 签名，首次打开 macOS 会拦截，两种通行方式：
+内测包没有 Developer ID 签名，首次打开 macOS 会拦截。**种子用户实测：部分系统版本上「右键打开」无效**——如果方式一/二都失败，直接用方式三（一条命令，必成功）：
 
-**方式一（推荐）：右键打开**
+**方式三（最可靠）：终端移除隔离属性**
+
+```sh
+xattr -dr com.apple.quarantine /Applications/SlimIt.app
+```
+
+执行后即可正常双击打开（需先把 SlimIt 拖入 Applications；路径不同请对应修改）。
+
+**方式一：右键打开**
 
 1. 挂载 DMG，把 SlimIt 拖入 Applications（或直接使用 .app）。
 2. 在 Finder 中**右键点击 SlimIt → 打开**，再点弹窗中的「打开」。
 3. 此后系统记住许可，以后双击正常启动。
+   （注：部分系统版本此方式可能无效，请改用方式三。）
 
 **方式二：系统设置放行**
 
 若双击后提示"无法打开，因为无法验证开发者"：
 系统设置 → 隐私与安全性 → 底部「仍要打开」按钮。
-
-**彻底移除隔离属性（备用）**：
-
-```sh
-xattr -dr com.apple.quarantine /Applications/SlimIt.app
-```
 
 ## 内测范围与红线
 

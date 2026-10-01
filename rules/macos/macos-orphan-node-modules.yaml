@@ -1,0 +1,32 @@
+apiVersion: slimit.rules/v1
+id: macos-orphan-node-modules
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - package.json
+    - package-lock.json
+    - yarn.lock
+    - pnpm-lock.yaml
+  rel_paths:
+    - node_modules
+  max_age_days: 30
+  orphan: true
+semantics:
+  title: "孤儿 node_modules（项目已删除）"
+  what: "node_modules 依赖目录，但旁边没有 package.json 等项目标记文件——对应的项目多半已被删除或移动，这是残留的孤儿依赖（常见于删项目只删了源码、或 git 操作后残留）"
+  producer: "npm/pnpm/yarn install（项目还在时装的，项目删除后遗留）"
+  safe_to_delete_because: "项目标记文件已不在，无法再被任何项目引用；万一误判（如自定义了依赖路径），npm install 可随时重装回来"
+  consequence: "无项目受影响；若之后发现某项目缺依赖，在该项目目录重新 npm install 即可"
+  regenerate: "npm install（在原项目目录）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB 到数 GB（每个孤儿项目）"
+  recovery: partial
+refs:
+  - https://docs.npmjs.com/cli/v10/commands/npm-install

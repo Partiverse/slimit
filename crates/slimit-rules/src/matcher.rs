@@ -57,7 +57,9 @@ pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
                 let Some(root) = d.path.parent() else {
                     continue;
                 };
-                if !proj.markers.iter().any(|m| root.join(m).exists()) {
+                let has_marker = proj.markers.iter().any(|m| root.join(m).exists());
+                // orphan=true 反向匹配：项目已删（无 marker）才算遗留产物。
+                if has_marker == proj.orphan {
                     continue;
                 }
                 let age_days = std::fs::metadata(&d.path)
@@ -143,19 +145,26 @@ fn home_dir() -> Option<std::ffi::OsString> {
 
 /// `~` 与 `~/` 展开；其余原样返回（相对路径相对 cwd）。
 pub fn expand_tilde(template: &str) -> Option<PathBuf> {
-    if template == "~" {
+    // 中文输入法会打出全角 `～`（U+FF5E）；种子反馈「~ 路径全部无效」的
+    // 疑点之一。统一归一为 ASCII `~` 再展开，其余场景不受影响。
+    let normalized = if template.contains('～') {
+        template.replace('～', "~")
+    } else {
+        template.to_string()
+    };
+    if normalized == "~" {
         return home_dir().map(PathBuf::from);
     }
-    if let Some(rest) = template.strip_prefix("~/") {
+    if let Some(rest) = normalized.strip_prefix("~/") {
         let home = home_dir()?;
         return Some(Path::new(&home).join(rest));
     }
     // Windows 惯用手写 `~\...`（扫描根由用户直接输入，规则库统一 `~/`）。
-    if let Some(rest) = template.strip_prefix("~\\") {
+    if let Some(rest) = normalized.strip_prefix("~\\") {
         let home = home_dir()?;
         return Some(Path::new(&home).join(rest));
     }
-    Some(PathBuf::from(template))
+    Some(PathBuf::from(normalized))
 }
 
 /// 同一 rule+path 只保留一条。
@@ -289,6 +298,42 @@ mod tests {
             "old target must be executable-candidate"
         );
         assert!(old.age_days.unwrap() > 100);
+    }
+
+    #[test]
+    fn project_orphan_matches_only_without_marker() {
+        // 孤儿产物（种子反馈：项目删了 node_modules 还躺在磁盘上）：
+        // 父目录没有 package.json 才命中；项目还在（有 marker）不命中。
+        let dir = tempfile::tempdir().unwrap();
+        let rules_dir = dir.path().join("rules");
+        std::fs::create_dir_all(rules_dir.join("macos")).unwrap();
+        std::fs::write(
+            rules_dir.join("macos/test-orphan.yaml"),
+            "apiVersion: slimit.rules/v1\nid: macos-project-test-orphan\nos: macos\npaths: []\nproject:\n  markers:\n    - package.json\n  rel_paths:\n    - node_modules\n  max_age_days: 30\n  orphan: true\nsemantics:\n  title: t\n  what: w\n  producer: p\n  consequence: c\nrisk: yellow\naction:\n  kind: purge-dir\nrefs:\n  - https://example.com\n",
+        )
+        .unwrap();
+        let rules = load_rules(&rules_dir).unwrap();
+        assert_eq!(rules.len(), 1);
+
+        let orphan_root = dir.path().join("deleted-proj");
+        std::fs::create_dir_all(orphan_root.join("node_modules")).unwrap();
+        let live_root = dir.path().join("live-proj");
+        std::fs::create_dir_all(live_root.join("node_modules")).unwrap();
+        std::fs::write(live_root.join("package.json"), b"{}").unwrap();
+
+        let matches = match_rules(
+            &rules,
+            &[
+                DirSnapshot::new(&orphan_root.join("node_modules"), 100, 80),
+                DirSnapshot::new(&live_root.join("node_modules"), 100, 80),
+            ],
+        );
+        assert_eq!(matches.len(), 1, "live project must not match orphan rule");
+        assert_eq!(matches[0].path, orphan_root.join("node_modules"));
+        assert!(
+            matches[0].below_min_age,
+            "fresh orphan is still age-guarded"
+        );
     }
 
     #[test]

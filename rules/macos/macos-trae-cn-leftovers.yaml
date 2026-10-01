@@ -1,0 +1,21 @@
+apiVersion: slimit.rules/v1
+id: macos-trae-cn-leftovers
+os: macos
+scope: user
+paths:
+  - "~/.trae-cn"
+semantics:
+  title: "Trae CN（字节跳动 AI IDE）数据目录"
+  what: "Trae CN 桌面版/CLI 在主目录下的数据目录（内置扩展、worktree、MCP 配置等）。注意：这里不是纯缓存——包含扩展与配置"
+  producer: "Trae CN（字节跳动的 AI 编程 IDE，VS Code 分支）"
+  safe_to_delete_because: "若 Trae CN 已卸载，这是纯遗留数据，删除无影响；若仍在使用，删除会丢失已装扩展与 MCP 配置（可重装恢复），不影响项目源码"
+  consequence: "Trae CN 已卸载：无影响。仍在使用：已装扩展/MCP 配置丢失，需重新安装配置"
+  regenerate: "重装 Trae CN 及其扩展后重建"
+risk: yellow
+action:
+  kind: advise
+estimate:
+  typical_size: "数百 MB 到数 GB（扩展多时）"
+  recovery: partial
+refs:
+  - https://forum.trae.cn/

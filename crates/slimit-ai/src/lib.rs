@@ -328,6 +328,43 @@ confidence(number 0-1)。\
     })
 }
 
+/// 设置页「测试连接」：用 `/models` 端点做一次轻量鉴权探测（不发对话、
+/// 不消耗 token）。成功返回可用模型数摘要；失败返回人话错误（密钥无效/
+/// 端点不可达/超时），供 UI 直接展示。
+pub fn test_connection(s: &AiSettings) -> Result<String, String> {
+    if s.base_url.trim().is_empty() {
+        return Err("Base URL 为空".into());
+    }
+    if s.api_key.trim().is_empty() {
+        return Err("API Key 为空".into());
+    }
+    let url = format!("{}/models", s.base_url.trim_end_matches('/'));
+    let resp = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP 客户端初始化失败: {e}"))?
+        .get(&url)
+        .bearer_auth(&s.api_key)
+        .send()
+        .map_err(|e| format!("无法连接端点（检查 Base URL 与网络）: {e}"))?;
+    let status = resp.status();
+    if status == reqwest::StatusCode::UNAUTHORIZED || status == reqwest::StatusCode::FORBIDDEN {
+        return Err(format!("鉴权失败（{status}）：API Key 无效或无权限"));
+    }
+    if !status.is_success() {
+        return Err(format!("端点返回 {status}"));
+    }
+    let v: serde_json::Value = resp.json().map_err(|_| {
+        "端点可连但 /models 响应不是标准 OpenAI 格式——对话接口仍可能可用，可保存后直接试用"
+            .to_string()
+    })?;
+    let count = v["data"].as_array().map(|a| a.len()).unwrap_or(0);
+    Ok(format!(
+        "连接成功：/models 返回 {count} 个模型。当前配置模型「{}」请确认在列表内",
+        s.model
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

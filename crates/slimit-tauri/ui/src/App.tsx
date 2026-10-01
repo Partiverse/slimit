@@ -7,8 +7,10 @@ import {
   listQuarantine,
   listRules,
   listSnapshots,
+  openFdaSettings,
   purgeExpiredQuarantine,
   restoreItem,
+  testAi,
   scanAndPlan,
   setSettings,
   volumeSummary,
@@ -213,14 +215,21 @@ function CleanPanel() {
   };
 
   // 新手档隐藏 B 类（会再生的缓存类）；expert 为完整清单。
-  const visiblePlan = selectedTask?.result
-    ? noviceMode
-      ? selectedTask.result.plan.filter(
-          (p) => p.durability === undefined || p.durability !== "regenerating",
-        )
-      : selectedTask.result.plan
-    : [];
-  const hiddenB = (selectedTask?.result?.plan.length ?? 0) - visiblePlan.length;
+  // 大小阈值筛选（种子反馈：<1MB 的条目列表太噪）：仅影响展示与选择范围。
+  const [minSize, setMinSize] = useState(0);
+  const sizeVisible = selectedTask?.result?.plan.filter(
+    (p) => p.estimated_bytes >= minSize,
+  ) ?? [];
+  const visiblePlan = noviceMode
+    ? sizeVisible.filter(
+        (p) => p.durability === undefined || p.durability !== "regenerating",
+      )
+    : sizeVisible;
+  const hiddenB =
+    sizeVisible.filter(
+      (p) => p.durability !== undefined && p.durability === "regenerating",
+    ).length +
+    ((selectedTask?.result?.plan.length ?? 0) - sizeVisible.length);
 
   const planBytes = selectedTask?.result
     ? selectedTask.result.plan
@@ -248,6 +257,18 @@ function CleanPanel() {
             onChange={(e) => setNoviceMode(e.target.checked)}
           />
           新手档（只显示大额可回收与危险提示）
+        </label>
+        <label className="hint mode-toggle">
+          只看 ≥{" "}
+          <select
+            value={minSize}
+            onChange={(e) => setMinSize(Number(e.target.value))}
+          >
+            <option value={0}>全部</option>
+            <option value={10485760}>10 MB</option>
+            <option value={104857600}>100 MB</option>
+            <option value={1073741824}>1 GB</option>
+          </select>
         </label>
       </div>
       {err && <p className="error">{err}</p>}
@@ -319,6 +340,18 @@ function CleanPanel() {
           )}
           {visiblePlan.length > 0 && (
             <>
+              <div className="row">
+                <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.filter((p) => p.executable).map((p) => p.path)))}>
+                  全选可执行
+                </button>
+                <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.map((p) => p.path).filter((x) => !selected.has(x))))}>
+                  反选
+                </button>
+                <button className="ghost" onClick={() => setSelected(new Set())}>
+                  全不选
+                </button>
+                <span className="hint">只作用于当前显示的条目</span>
+              </div>
               <table>
                 <thead>
                   <tr>
@@ -477,6 +510,40 @@ function ApplyReports({ reports }: { reports: ApplyReport[] }) {
   );
 }
 
+function AdvancedPanel() {
+  const [openErr, setOpenErr] = useState("");
+  return (
+    <section>
+      <h2>高级</h2>
+      <div className="fda-card">
+        <b>权限引导：完全磁盘访问（推荐先做）</b>
+        <p className="hint">
+          扫描 ~/Library、代码目录等位置需要「完全磁盘访问」权限；没有授权时扫描
+          也能运行，但很多目录会被系统挡住（结果偏小、部分条目看不到）。建议第一
+          次使用时就授权，避免扫到一半再补权限。
+        </p>
+        <button
+          onClick={async () => {
+            try {
+              await openFdaSettings();
+            } catch (e) {
+              setOpenErr(String(e));
+            }
+          }}
+        >
+          打开系统设置 → 完全磁盘访问
+        </button>
+        <p className="hint">
+          在列表里勾选 SlimIt（或「+」手动添加 /Applications/SlimIt.app），然后
+          重启 SlimIt。扫描时若弹出权限请求，也请点允许。
+        </p>
+        {openErr && <p className="error">{openErr}</p>}
+      </div>
+      <AiSettingsPanel />
+    </section>
+  );
+}
+
 function AiSettingsPanel() {
   const [s, setS] = useState<AiSettings | null>(null);
   const [msg, setMsg] = useState("");
@@ -538,6 +605,19 @@ function AiSettingsPanel() {
               placeholder="API Key（仅存本机 config.json）"
             />
             <button onClick={save}>保存</button>
+            <button
+              className="ghost"
+              onClick={async () => {
+                setMsg("测试中…");
+                try {
+                  setMsg(await testAi());
+                } catch (e) {
+                  setMsg(`❌ ${e}`);
+                }
+              }}
+            >
+              测试连接
+            </button>
             {msg && <span className="hint">{msg}</span>}
           </div>
         </>
@@ -568,11 +648,6 @@ function QuarantinePanel() {
       setErr(String(e));
     }
   };
-
-  // 面板随 tab 激活挂载，进入即自动加载（保留刷新按钮手动重取）。
-  useEffect(() => {
-    run();
-  }, []);
 
   // 面板随 tab 激活挂载，进入即自动加载（保留刷新按钮手动重取）。
   useEffect(() => {
@@ -737,11 +812,6 @@ function RulesPanel() {
     run();
   }, []);
 
-  // 面板随 tab 激活挂载，进入即自动加载（规则库为进程内嵌数据，廉价）。
-  useEffect(() => {
-    run();
-  }, []);
-
   const filtered = (rules ?? []).filter((r) => {
     if (os !== "all" && r.os !== os) return false;
     if (risk !== "all" && r.risk !== risk) return false;
@@ -768,6 +838,11 @@ function RulesPanel() {
   return (
     <section>
       <h2>规则库（{rules ? rules.length : "?"} 条）</h2>
+      <p className="hint">
+        这里不是装饰页：每一行都写明「这是什么、删了会怎样」，这是执行授权的唯一
+        来源——你看到的每一条可清理项，都对应这里的一条规则。发现漏了什么目录？
+        提 issue，下个版本就进来。
+      </p>
       <div className="row">
         <button onClick={run}>刷新</button>
         {rules && (
@@ -956,9 +1031,9 @@ export default function App() {
       {tab === "rules" && <RulesPanel />}
       {tab === "advanced" && (
         <>
+          <AdvancedPanel />
           <VolumePanel />
           <SnapshotsPanel />
-          <AiSettingsPanel />
         </>
       )}
     </main>
