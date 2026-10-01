@@ -2,6 +2,19 @@ use slimit_rules::matcher::{DirSnapshot, Match};
 use slimit_rules::{ActionKind, Risk, Rule};
 use std::collections::HashSet;
 
+/// 净回收持久度（RECLAIM-STRATEGY §3 的 A/B/C 分类，UI 排序与新手档的依据）。
+/// 纯分类信息，不参与执行授权——红线由 risk + action.kind 决定。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Durability {
+    /// A 类：一次性大额（项目构建产物等），回收后不复发。
+    OneShot,
+    /// B 类：周期性再生（缓存/日志等），清完会回来。
+    Regenerating,
+    /// C 类：用户数据，只提示不代删。
+    UserData,
+}
+
 /// 清理计划单项。确认前不产生任何副作用。
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct PlanItem {
@@ -18,6 +31,25 @@ pub struct PlanItem {
     /// project 规则年龄低于 max_age_days ⇒ true ⇒ 不可执行（只提示）。
     #[serde(default)]
     pub below_min_age: bool,
+    /// 净回收持久度分类（UI 排序/新手档用；旧前端缺省为 regenerating）。
+    #[serde(default = "default_durability")]
+    pub durability: Durability,
+}
+
+fn default_durability() -> Durability {
+    Durability::Regenerating
+}
+
+/// 按规则属性推导持久度分类：red ⇒ C 类用户数据；project 规则 ⇒ A 类
+/// 一次性大额；其余路径规则 ⇒ B 类会再生。
+fn durability_of(rule: &Rule) -> Durability {
+    if rule.risk == Risk::Red {
+        Durability::UserData
+    } else if rule.project.is_some() {
+        Durability::OneShot
+    } else {
+        Durability::Regenerating
+    }
 }
 
 /// 从规则命中生成执行计划。
@@ -46,10 +78,27 @@ pub fn plan(rules: &[Rule], matches: &[Match]) -> Vec<PlanItem> {
             executable,
             age_days: m.age_days,
             below_min_age: m.below_min_age,
+            durability: durability_of(rule),
         });
     }
-    items.sort_by(|a, b| b.estimated_bytes.cmp(&a.estimated_bytes));
+    // 排序：不可执行的守卫项沉底，其余按净收益（A 类优先于 B 类，同档按字节）。
+    items.sort_by(|a, b| {
+        a.below_min_age
+            .cmp(&b.below_min_age)
+            .then_with(|| tier_rank(a.durability).cmp(&tier_rank(b.durability)))
+            .then_with(|| b.estimated_bytes.cmp(&a.estimated_bytes))
+    });
     items
+}
+
+/// 排序权重：A 类(0) < B 类(1) < C 类(2)。C 类恒不可执行，已被
+/// below_min_age 之外的 executable 规则挡在执行之外，仅影响展示顺序。
+fn tier_rank(d: Durability) -> u8 {
+    match d {
+        Durability::OneShot => 0,
+        Durability::Regenerating => 1,
+        Durability::UserData => 2,
+    }
 }
 
 /// 便捷转换：目录快照 + 规则 → 计划（matcher → planner 的一步封装）。
@@ -194,6 +243,7 @@ mod tests {
             executable: true,
             age_days: None,
             below_min_age: false,
+            durability: crate::plan::Durability::Regenerating,
         };
         // 伪造项：executable=true 但路径不在规则库 paths 内。
         let forged_path = tmp.path().join("documents");
@@ -206,6 +256,7 @@ mod tests {
             executable: true,
             age_days: None,
             below_min_age: false,
+            durability: crate::plan::Durability::Regenerating,
         };
 
         let out = authorize_items(vec![legit_item, forged], &rules);
@@ -235,6 +286,7 @@ mod tests {
             executable: true,
             age_days: None,
             below_min_age: false,
+            durability: crate::plan::Durability::Regenerating,
         };
         // red 规则永不执行（plan 的红线经 authorize_items 重新落地）。
         let red = PlanItem {
@@ -245,10 +297,61 @@ mod tests {
             executable: true,
             age_days: None,
             below_min_age: false,
+            durability: crate::plan::Durability::Regenerating,
         };
 
         let out = authorize_items(vec![unknown, red], &rules);
         assert!(!out[0].executable, "unknown rule_id must be downgraded");
         assert!(!out[1].executable, "red rule must never be executable");
+    }
+
+    #[test]
+    fn durability_classifies_and_orders_above_b_tier() {
+        // A/B/C 分类（RECLAIM-STRATEGY §3）：project 规则=A 一次性大额，
+        // red=C 用户数据，路径规则=B 会再生。排序把 A 类提到 B 类之前——
+        // 一次 80GB 比每周 2GB 安慰剂更值钱。
+        let tmp = tempfile::tempdir().unwrap();
+        let proj = tmp.path().join("proj");
+        let cache = tmp.path().join("caches");
+        std::fs::create_dir_all(proj.join("target")).unwrap();
+        std::fs::write(proj.join("Cargo.toml"), b"x").unwrap();
+        std::fs::create_dir_all(&cache).unwrap();
+
+        let project_rule: Rule = serde_json::from_value(serde_json::json!({
+            "apiVersion": "slimit.rules/v1",
+            "id": "macos-project-cargo-target",
+            "os": "macos",
+            "paths": [],
+            "project": { "markers": ["Cargo.toml"], "rel_paths": ["target"] },
+            "risk": "yellow",
+            "action": { "kind": "purge-dir" },
+            "refs": ["https://example.com"]
+        }))
+        .unwrap();
+        // 路径规则体积更大——排序仍须把 A 类放前面。
+        let path_rule = rule(
+            "macos-test-cache",
+            Risk::Green,
+            ActionKind::PurgeDir,
+            &cache,
+        );
+
+        let items = plan_from_snapshots(
+            &[project_rule, path_rule],
+            &[
+                DirSnapshot::new(&proj.join("target"), 10_000, 8_000),
+                DirSnapshot::new(&cache, 50_000, 40_000),
+            ],
+        );
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].path, proj.join("target"), "A class ranks first");
+        assert_eq!(items[0].durability, Durability::OneShot);
+        assert_eq!(items[1].durability, Durability::Regenerating);
+
+        // red 规则恒为 C 类。
+        let red_rule = rule("macos-red-test", Risk::Red, ActionKind::Advise, &cache);
+        let red_items = plan_from_snapshots(&[red_rule], &[DirSnapshot::new(&cache, 1, 1)]);
+        assert_eq!(red_items[0].durability, Durability::UserData);
+        assert!(!red_items[0].executable);
     }
 }

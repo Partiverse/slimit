@@ -106,6 +106,31 @@ fn rules_explanation(req: &ExplanationRequest) -> Option<Explanation> {
         .into_iter()
         .find(|r| &r.id == rule_id)?;
     let s = rule.semantics.as_ref()?;
+    // project 规则：把年龄证据与重建成本写进「删除后果」——这是小白
+    // 敢不敢点执行的关键信息（RECLAIM-STRATEGY §4「把担保做进语义」）。
+    let age_note = match (rule.project.as_ref(), req.age_days) {
+        (Some(proj), Some(age)) => {
+            let base = s
+                .consequence
+                .clone()
+                .or_else(|| s.safe_to_delete_because.clone())
+                .unwrap_or_else(|| "删除后果见规则库描述".to_string());
+            if req.below_min_age {
+                let need = proj
+                    .max_age_days
+                    .map(|m| format!("（规则要求闲置满 {m} 天）"))
+                    .unwrap_or_default();
+                format!("{base}。⚠️ 距上次构建/使用已 {age} 天，仍在活跃使用中，建议暂不清理{need}")
+            } else {
+                format!("{base}。已 {age} 天未动，回收收益是一次性的（不会像缓存那样反复长回来）")
+            }
+        }
+        _ => s
+            .consequence
+            .clone()
+            .or_else(|| s.safe_to_delete_because.clone())
+            .unwrap_or_else(|| "规则库未描述删除后果".to_string()),
+    };
     Some(Explanation {
         what: format!(
             "{}（规则库 {}）",
@@ -113,11 +138,7 @@ fn rules_explanation(req: &ExplanationRequest) -> Option<Explanation> {
             rule.id
         ),
         producer: s.producer.clone().unwrap_or_else(|| "未知".to_string()),
-        consequence: s
-            .consequence
-            .clone()
-            .or_else(|| s.safe_to_delete_because.clone())
-            .unwrap_or_else(|| "规则库未描述删除后果".to_string()),
+        consequence: age_note,
         suggested_risk: match rule.risk {
             slimit_rules::Risk::Green => slimit_ai::RiskHint::Green,
             slimit_rules::Risk::Yellow => slimit_ai::RiskHint::Yellow,

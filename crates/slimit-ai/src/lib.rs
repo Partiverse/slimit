@@ -17,6 +17,12 @@ pub struct ExplanationRequest {
     pub owner_bundle: Option<String>,
     /// 最近命中的规则 id（有规则命中时 AI 仅补充语气，不另判风险）。
     pub nearest_rule_hits: Vec<String>,
+    /// project 规则：目标目录 mtime 距今天数（小白清理决策的关键证据）。
+    #[serde(default)]
+    pub age_days: Option<u64>,
+    /// project 规则年龄未达阈值 ⇒ 解释需明示「暂不建议清理」。
+    #[serde(default)]
+    pub below_min_age: bool,
 }
 
 /// 解释输出。`suggested_risk` 仅作 UI 提示；执行器永不读取本结构。
@@ -333,6 +339,8 @@ mod tests {
             apparent_bytes: 1 << 30,
             owner_bundle: None,
             nearest_rule_hits: vec![],
+            age_days: None,
+            below_min_age: false,
         }
     }
 

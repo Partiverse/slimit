@@ -82,6 +82,9 @@ function CleanPanel() {
   const [reports, setReports] = useState<ApplyReport[] | null>(null);
   const [tips, setTips] = useState<Record<string, Explanation>>({});
   const [ruleTitles, setRuleTitles] = useState<Map<string, string>>(new Map());
+  // 新手档：只展示 A 类（一次性大额）与 C 类（用户数据提示），隐藏会再生的
+  // B 类缓存——「清完又长回来」是清理工具失去信任的主因。默认新手档。
+  const [noviceMode, setNoviceMode] = useState(true);
   const seqRef = useRef(0);
 
   // 规则 id → 人类可读标题（进程内嵌数据，廉价；失败不影响主流程）。
@@ -200,12 +203,24 @@ function CleanPanel() {
         apparent_bytes: p.estimated_bytes,
         owner_bundle: null,
         nearest_rule_hits: [p.rule_id],
+        age_days: p.age_days,
+        below_min_age: p.below_min_age,
       });
       setTips((t) => ({ ...t, [p.path]: e }));
     } catch (err) {
       setErr(String(err));
     }
   };
+
+  // 新手档隐藏 B 类（会再生的缓存类）；expert 为完整清单。
+  const visiblePlan = selectedTask?.result
+    ? noviceMode
+      ? selectedTask.result.plan.filter(
+          (p) => p.durability === undefined || p.durability !== "regenerating",
+        )
+      : selectedTask.result.plan
+    : [];
+  const hiddenB = (selectedTask?.result?.plan.length ?? 0) - visiblePlan.length;
 
   const planBytes = selectedTask?.result
     ? selectedTask.result.plan
@@ -225,6 +240,14 @@ function CleanPanel() {
         <button onClick={startScan} disabled={!root.trim()}>
           开始扫描
         </button>
+        <label className="hint mode-toggle">
+          <input
+            type="checkbox"
+            checked={noviceMode}
+            onChange={(e) => setNoviceMode(e.target.checked)}
+          />
+          新手档（只显示大额可回收与危险提示）
+        </label>
       </div>
       {err && <p className="error">{err}</p>}
       {tasks.length > 0 && (
@@ -287,7 +310,13 @@ function CleanPanel() {
               扫描完成；当前规则库没有覆盖该路径下的目标
             </div>
           )}
-          {selectedTask.result.plan.length > 0 && (
+          {noviceMode && hiddenB > 0 && (
+            <p className="hint">
+              已折叠 {hiddenB} 项「缓存类」目标（清完很快会再长回来，净收益低）。
+              切换到专家档可查看全部。
+            </p>
+          )}
+          {visiblePlan.length > 0 && (
             <>
               <table>
                 <thead>
@@ -301,7 +330,7 @@ function CleanPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...selectedTask.result.plan]
+                  {[...visiblePlan]
                     .sort(
                       (a, b) =>
                         Number(a.below_min_age) - Number(b.below_min_age) ||

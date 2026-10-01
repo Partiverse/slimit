@@ -27,6 +27,8 @@ export interface PlanItem {
   age_days: number | null;
   /** project 规则年龄未达阈值（或 mtime 不可得）⇒ 只提示，executable=false。 */
   below_min_age: boolean;
+  /** 净回收持久度：one-shot=一次性大额 / regenerating=会再生 / user-data=用户数据。 */
+  durability?: "one-shot" | "regenerating" | "user-data";
 }
 
 export interface ScanPlanResponse {
@@ -40,6 +42,10 @@ export interface ExplanationRequest {
   apparent_bytes: number;
   owner_bundle: string | null;
   nearest_rule_hits: string[];
+  /** project 规则：目标目录 mtime 距今天数；路径规则为 null。 */
+  age_days?: number | null;
+  /** project 规则年龄未达阈值 ⇒ 解释会明示「暂不建议清理」。 */
+  below_min_age?: boolean;
 }
 
 export interface Explanation {
