@@ -43,6 +43,18 @@ pub struct ScanSummary {
     pub apparent: u64,
     /// 按 actual 降序的前 N 个目录（含根自身）。
     pub top_dirs: Vec<DirStat>,
+    /// 按 actual 降序的前 N 个大文件（手动清理大安装包 .dmg/.zip/.pkg 场景，
+    /// 目录聚合看不到单文件）。
+    #[serde(default)]
+    pub top_files: Vec<FileStat>,
+}
+
+/// 单文件聚合条目（大文件列表）。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileStat {
+    pub path: PathBuf,
+    pub apparent: u64,
+    pub actual: u64,
 }
 
 /// 扫描进度事件。总量未知——这是进度而非百分比；`current_dir` 是
@@ -56,7 +68,7 @@ pub struct ScanProgress {
 }
 
 impl ScanResult {
-    /// 从完整扫描结果生成前端聚合视图；`top` 截断 top_dirs。
+    /// 从完整扫描结果生成前端聚合视图；`top` 截断 top_dirs/top_files。
     pub fn summarize(&self, top: usize) -> ScanSummary {
         let mut dirs = self.dirs.clone();
         dirs.sort_unstable_by(|a, b| b.actual.cmp(&a.actual).then(a.path.cmp(&b.path)));
@@ -66,12 +78,26 @@ impl ScanResult {
             .find(|d| d.path == self.root)
             .map(|d| (d.actual, d.apparent))
             .unwrap_or((0, 0));
+        // 大文件：非 shared 硬链接按 actual 降序取前 N（排除 0 字节与 symlink 级碎项）。
+        let mut files: Vec<FileStat> = self
+            .files
+            .iter()
+            .filter(|f| !f.shared && f.actual > 0)
+            .map(|f| FileStat {
+                path: f.path.clone(),
+                apparent: f.apparent,
+                actual: f.actual,
+            })
+            .collect();
+        files.sort_unstable_by(|a, b| b.actual.cmp(&a.actual).then(a.path.cmp(&b.path)));
+        files.truncate(top);
         ScanSummary {
             root: self.root.clone(),
             file_count: self.file_count,
             actual,
             apparent,
             top_dirs: dirs.into_iter().take(top).collect(),
+            top_files: files,
         }
     }
 }
@@ -107,6 +133,37 @@ mod tests {
         assert_eq!(s.top_dirs.len(), 2);
         assert_eq!(s.top_dirs[0].path, PathBuf::from("/r"));
         assert_eq!(s.top_dirs[1].path, PathBuf::from("/r/b"));
+    }
+
+    #[test]
+    fn summarize_lists_top_files_deduped_and_sorted() {
+        // 大文件列表（手动清理 .dmg 场景）：硬链接共享文件只计一次，
+        // 0 字节文件剔除，按 actual 降序。
+        let f = |p: &str, actual: u64, shared: bool| FileEntry {
+            path: PathBuf::from(p),
+            dev: 1,
+            ino: 1,
+            apparent: actual,
+            actual,
+            shared,
+        };
+        let res = ScanResult {
+            root: PathBuf::from("/r"),
+            file_count: 4,
+            files: vec![
+                f("/r/setup.dmg", 5000, false),
+                f("/r/hardlink", 9000, true), // shared：与别处同 inode，剔除
+                f("/r/tiny", 0, false),       // 0 字节剔除
+                f("/r/movie.mp4", 9000, false),
+            ],
+            dirs: vec![dir("/r", 14000)],
+        };
+        let s = res.summarize(10);
+        let paths: Vec<_> = s.top_files.iter().map(|x| x.path.clone()).collect();
+        assert_eq!(
+            paths,
+            vec![PathBuf::from("/r/movie.mp4"), PathBuf::from("/r/setup.dmg")]
+        );
     }
 }
 

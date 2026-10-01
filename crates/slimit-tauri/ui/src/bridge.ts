@@ -15,6 +15,14 @@ export interface ScanSummary {
   actual: number;
   apparent: number;
   top_dirs: DirStat[];
+  /** 大文件列表（手动清理 .dmg/.pkg 等安装包场景）。 */
+  top_files?: FileStat[];
+}
+
+export interface FileStat {
+  path: string;
+  apparent: number;
+  actual: number;
 }
 
 export interface PlanItem {
@@ -29,6 +37,8 @@ export interface PlanItem {
   below_min_age: boolean;
   /** 净回收持久度：one-shot=一次性大额 / regenerating=会再生 / user-data=用户数据。 */
   durability?: "one-shot" | "regenerating" | "user-data";
+  /** 授权来源：rule=规则命中；user-manual=用户手动选择（服务端强制隔离区+保护名单）。 */
+  origin?: "rule" | "user-manual";
 }
 
 export interface ScanPlanResponse {
@@ -177,4 +187,16 @@ export function testAi(): Promise<string> {
 /** 打开「完全磁盘访问」系统设置面板（权限引导）。 */
 export function openFdaSettings(): Promise<void> {
   return invoke("open_fda_settings");
+}
+
+/** 手动清理探测：返回路径存在性与真实占用（目录=聚合全部内容）。 */
+export interface ManualProbe {
+  path: string;
+  is_dir: boolean;
+  actual_bytes: number;
+  apparent_bytes: number;
+}
+
+export function probeManual(path: string): Promise<ManualProbe> {
+  return invoke("probe_manual", { path });
 }

@@ -8,6 +8,7 @@ import {
   listRules,
   listSnapshots,
   openFdaSettings,
+  probeManual,
   purgeExpiredQuarantine,
   restoreItem,
   testAi,
@@ -170,11 +171,49 @@ function CleanPanel() {
     });
   };
 
+  // 手动清理（2026-10-02）：用户自选条目。授权在用户点击；服务端
+  // authorize 仍会重写自证字段并强制保护名单 + 隔离区。
+  const [manualItems, setManualItems] = useState<PlanItem[]>([]);
+  const [manualBusy, setManualBusy] = useState(false);
+
+  const addManual = async (rawPath: string) => {
+    const p = rawPath.trim();
+    if (!p || manualBusy) return;
+    setManualBusy(true);
+    setErr("");
+    try {
+      const probe = await probeManual(p);
+      if (manualItems.some((m) => m.path === probe.path)) {
+        setErr("该路径已在计划中");
+        return;
+      }
+      const item: PlanItem = {
+        rule_id: "user-manual",
+        path: probe.path,
+        estimated_bytes: probe.actual_bytes,
+        risk: "yellow",
+        executable: true,
+        age_days: null,
+        below_min_age: false,
+        durability: "one-shot",
+        origin: "user-manual",
+      };
+      setManualItems((ms) => [...ms, item]);
+      setSelected((s) => new Set(s).add(probe.path));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setManualBusy(false);
+    }
+  };
+
   const runApply = async (confirmed: boolean) => {
-    if (!selectedTask?.result || applying) return;
-    const items = selectedTask.result.plan.filter(
+    if ((!selectedTask?.result && manualItems.length === 0) || applying) return;
+    const ruleItems = (selectedTask?.result?.plan ?? []).filter(
       (p) => p.executable && selected.has(p.path),
     );
+    const manual = manualItems.filter((m) => selected.has(m.path));
+    const items = [...ruleItems, ...manual];
     if (items.length === 0) {
       setConfirming(false);
       return;
@@ -189,6 +228,7 @@ function CleanPanel() {
     try {
       setReports(await applyPlan(items));
       setSelected(new Set());
+      setManualItems([]);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -231,11 +271,15 @@ function CleanPanel() {
     ).length +
     ((selectedTask?.result?.plan.length ?? 0) - sizeVisible.length);
 
-  const planBytes = selectedTask?.result
-    ? selectedTask.result.plan
-        .filter((p) => p.executable && selected.has(p.path))
-        .reduce((a, p) => a + p.estimated_bytes, 0)
-    : 0;
+  const planBytes =
+    (selectedTask?.result
+      ? selectedTask.result.plan
+          .filter((p) => p.executable && selected.has(p.path))
+          .reduce((a, p) => a + p.estimated_bytes, 0)
+      : 0) +
+    manualItems
+      .filter((m) => selected.has(m.path))
+      .reduce((a, m) => a + m.estimated_bytes, 0);
 
   return (
     <section>
@@ -299,6 +343,7 @@ function CleanPanel() {
                   <td>
                     {t.status === "running" && (
                       <span className="progress">
+                        <span className="progress-bar" aria-hidden="true" />
                         ⏳ {t.filesDone.toLocaleString()} 条 · 正在扫 {dirName}
                         {rate}
                       </span>
@@ -326,6 +371,124 @@ function CleanPanel() {
             占用 {fmtSize(selectedTask.result.summary.actual)} · 规则命中{" "}
             {selectedTask.result.plan.length} 项
           </p>
+          {/* 手动清理（种子反馈「没命中规则就不能删吗」）：用户自选任意路径
+              进隔离区。授权在用户；服务端仍强制保护名单 + 可恢复 + 审计。 */}
+          <div className="row">
+            <input
+              placeholder="手动加入：粘贴任意文件/文件夹路径（支持 ~），如 ~/Downloads/xxx.dmg"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addManual((e.target as HTMLInputElement).value);
+              }}
+              id="manual-path-input"
+            />
+            <button
+              className="ghost"
+              disabled={manualBusy}
+              onClick={() => {
+                const el = document.getElementById("manual-path-input") as HTMLInputElement | null;
+                if (el) {
+                  addManual(el.value);
+                  el.value = "";
+                }
+              }}
+            >
+              {manualBusy ? "探测中…" : "加入计划"}
+            </button>
+            <span className="hint">手动条目同样进隔离区可恢复；系统路径受保护</span>
+          </div>
+          {manualItems.length > 0 && (
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>类型</th>
+                  <th>可回收</th>
+                  <th>路径</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {manualItems.map((m) => (
+                  <tr key={m.path}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(m.path)}
+                        onChange={() => toggle(m.path, true)}
+                      />
+                    </td>
+                    <td>
+                      <span className="risk-badge risk-yellow manual-badge">手动</span>
+                    </td>
+                    <td>{fmtSize(m.estimated_bytes)}</td>
+                    <td className="path">{m.path}</td>
+                    <td>
+                      <button
+                        className="ghost"
+                        onClick={() => {
+                          setManualItems((ms) => ms.filter((x) => x.path !== m.path));
+                          setSelected((s) => {
+                            const n = new Set(s);
+                            n.delete(m.path);
+                            return n;
+                          });
+                        }}
+                      >
+                        移除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {/* 空间透镜 lite：大文件与大目录 Top 榜，一键加入手动计划。 */}
+          {selectedTask.result.summary.top_files &&
+            selectedTask.result.summary.top_files.length > 0 && (
+              <details>
+                <summary className="hint">
+                  大文件 Top {selectedTask.result.summary.top_files.length}（安装包/影片等，可加入手动计划）
+                </summary>
+                <table>
+                  <tbody>
+                    {selectedTask.result.summary.top_files.map((f) => (
+                      <tr key={f.path}>
+                        <td className="path">{f.path}</td>
+                        <td>{fmtSize(f.actual)}</td>
+                        <td>
+                          <button className="ghost" onClick={() => addManual(f.path)}>
+                            加入计划
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </details>
+            )}
+          {selectedTask.result.summary.top_dirs.length > 1 && (
+            <details>
+              <summary className="hint">大目录 Top 10（先清哪里，可加入手动计划）</summary>
+              <table>
+                <tbody>
+                  {selectedTask.result.summary.top_dirs
+                    .filter((d) => d.path !== selectedTask.result!.summary.root)
+                    .slice(0, 10)
+                    .map((d) => (
+                      <tr key={d.path}>
+                        <td className="path">{d.path}</td>
+                        <td>{fmtSize(d.actual)}</td>
+                        <td>
+                          <button className="ghost" onClick={() => addManual(d.path)}>
+                            加入计划
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </details>
+          )}
           {selectedTask.result.plan.length === 0 && (
             <div className="empty">
               <b>未命中任何规则</b>

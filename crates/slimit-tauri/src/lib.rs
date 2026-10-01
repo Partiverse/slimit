@@ -282,6 +282,49 @@ fn test_ai(app: AppHandle) -> Result<String, String> {
     slimit_ai::test_connection(&s)
 }
 
+/// 手动清理探测（2026-10-02）：用户在 UI 里点「加入计划」前先探一次——
+/// 返回存在性与真实占用（UI 展示用）；不存在返回错误。
+#[derive(Debug, serde::Serialize)]
+pub struct ManualProbe {
+    pub path: PathBuf,
+    pub is_dir: bool,
+    /// 真实占用字节（目录 = 聚合全部内容）。
+    pub actual_bytes: u64,
+    pub apparent_bytes: u64,
+}
+
+#[tauri::command]
+fn probe_manual(path: String) -> Result<ManualProbe, String> {
+    let expanded = slimit_rules::matcher::expand_tilde(path.trim())
+        .ok_or_else(|| "无法展开 ~：系统未设置主目录环境变量".to_string())?;
+    if !expanded.exists() {
+        return Err(format!("路径不存在：{}", expanded.display()));
+    }
+    use std::os::unix::fs::MetadataExt;
+    let meta = std::fs::metadata(&expanded).map_err(|e| format!("读取元数据失败: {e}"))?;
+    let is_dir = meta.is_dir();
+    // 单文件直接取 metadata；目录做一次轻量聚合（复用扫描器，目录可能很大，
+    // 但 probe 是用户显式动作，可接受；超大目录进度不推送——秒级内一般完成）。
+    let (actual, apparent) = if is_dir {
+        let r = slimit_core::scan(&expanded).map_err(|e| e.to_string())?;
+        let root = r
+            .dirs
+            .iter()
+            .find(|d| d.path == expanded)
+            .map(|d| (d.actual, d.apparent))
+            .unwrap_or((0, 0));
+        root
+    } else {
+        (meta.blocks() * 512, meta.len())
+    };
+    Ok(ManualProbe {
+        path: expanded,
+        is_dir,
+        actual_bytes: actual,
+        apparent_bytes: apparent,
+    })
+}
+
 /// 打开「完全磁盘访问」系统设置面板（权限引导用；种子反馈：扫描时才
 /// 发现缺权限，希望一开始就引导到位）。
 #[tauri::command]
@@ -308,7 +351,8 @@ pub fn run() {
             volume_summary_cmd,
             list_rules,
             test_ai,
-            open_fda_settings
+            open_fda_settings,
+            probe_manual
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -58,6 +58,7 @@ pub fn apply(
                 audit.record(&serde_json::json!({
                     "event": "quarantine",
                     "rule_id": item.rule_id,
+                    "origin": item.origin,
                     "path": item.path,
                     "bytes": item.estimated_bytes,
                     "quarantine_id": id,
@@ -72,6 +73,7 @@ pub fn apply(
                 audit.record(&serde_json::json!({
                     "event": "quarantine-failed",
                     "rule_id": item.rule_id,
+                    "origin": item.origin,
                     "path": item.path,
                     "error": e.to_string(),
                 }));

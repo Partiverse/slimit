@@ -321,3 +321,36 @@ td.tip {
 .fda-card button {
   margin: 6px 0;
 }
+
+/* 扫描中不确定进度条（总量未知，条纹动画表达"活着且在扫"） */
+.progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  display: inline-block;
+  width: 120px;
+  height: 8px;
+  border-radius: 4px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(93, 156, 236, 0.15) 0%,
+      rgba(93, 156, 236, 0.6) 40%,
+      rgba(93, 156, 236, 0.15) 80%
+    );
+  background-size: 200% 100%;
+  animation: slimit-progress 1.2s linear infinite;
+}
+
+@keyframes slimit-progress {
+  from { background-position: 200% 0; }
+  to { background-position: -60% 0; }
+}
+
+/* 手动清理条目徽章 */
+.manual-badge {
+  outline: 1px dashed currentColor;
+}

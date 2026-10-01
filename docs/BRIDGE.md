@@ -16,6 +16,7 @@ Rust 侧命令定义于 `crates/slimit-tauri/src/lib.rs`，前端类型化封装
 | `list_rules` | — | `Rule[]` | 嵌入规则库全量（规则面板展示，不触发执行） |
 | `test_ai` | — | `string` | AI 设置「测试连接」：`/models` 轻量鉴权探测（不耗 token），返回人话结果或错误 |
 | `open_fda_settings` | — | `void` | 打开「完全磁盘访问」系统设置面板（首次使用权限引导） |
+| `probe_manual` | `path: string` | `ManualProbe { path, is_dir, actual_bytes, apparent_bytes }` | 手动清理探测：`~` 展开 + 存在性 + 真实占用（目录=聚合）。不存在返回错误 |
 
 错误统一走 `Result<T, String>`。
 
@@ -39,7 +40,9 @@ interface PlanItem { rule_id: string; path: string; estimated_bytes: number; ris
   /** project 规则年龄未达 max_age_days（或 mtime 不可得）⇒ 不可执行，只提示 */
   below_min_age?: boolean;
   /** 净回收持久度：one-shot=A 类一次性大额 / regenerating=B 类会再生 / user-data=C 类用户数据 */
-  durability?: 'one-shot'|'regenerating'|'user-data' }
+  durability?: 'one-shot'|'regenerating'|'user-data';
+  /** 授权来源：rule=规则命中；user-manual=用户手动选择（服务端强制隔离区+保护名单，2026-10-02） */
+  origin?: 'rule'|'user-manual' }
 interface ScanPlanResponse { summary: ScanSummary; plan: PlanItem[] }
 interface ExplanationRequest { path: string; actual_bytes: number; apparent_bytes: number; owner_bundle: string|null;
   nearest_rule_hits: string[];
