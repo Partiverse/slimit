@@ -269,3 +269,53 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn project_req(age: Option<u64>, below: bool) -> ExplanationRequest {
+        ExplanationRequest {
+            path: "/Users/x/proj/target".into(),
+            actual_bytes: 5 << 30,
+            apparent_bytes: 5 << 30,
+            owner_bundle: None,
+            nearest_rule_hits: vec!["macos-project-cargo-target".into()],
+            age_days: age,
+            below_min_age: below,
+        }
+    }
+
+    /// R4：年龄证据必须进入解释文案（GUI 手测时 UI 表格会把长文案截断，
+    /// 断言只能落在后端输出上）。
+    #[test]
+    fn project_explanation_includes_age_evidence() {
+        let e = rules_explanation(&project_req(Some(1200), false)).unwrap();
+        assert!(
+            e.consequence.contains("1200 天未动"),
+            "got: {}",
+            e.consequence
+        );
+        assert!(e.consequence.contains("一次性"), "got: {}", e.consequence);
+        assert!(!e.consequence.contains("暂不清理"));
+    }
+
+    #[test]
+    fn guarded_project_explanation_warns_and_cites_threshold() {
+        let e = rules_explanation(&project_req(Some(3), true)).unwrap();
+        assert!(e.consequence.contains("暂不清理"), "got: {}", e.consequence);
+        assert!(
+            e.consequence.contains("14 天"),
+            "threshold must be cited: {}",
+            e.consequence
+        );
+    }
+
+    #[test]
+    fn path_rule_explanation_has_no_age_note() {
+        let mut req = project_req(None, false);
+        req.nearest_rule_hits = vec!["macos-homebrew-cache".into()];
+        let e = rules_explanation(&req).unwrap();
+        assert!(!e.consequence.contains("天未动"), "got: {}", e.consequence);
+    }
+}

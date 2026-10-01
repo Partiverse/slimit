@@ -111,7 +111,7 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 3. **体验打磨**：种子反馈「交互一般、语义模板化」的后续迭代（UI 与解释文案质量），配合云端 AI 使用率观察。
 4. **签名 + 公证（notarization）**：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. **v0.2 差异化**：本地模型（~3B）AI 解释，保持「默认全离线」承诺。
-6. **开发者大额回收（v0.2 主打候选，优先级待用户定夺）**：项目感知规则（schema `project` 扩展 + 3 条试点：cargo target / node_modules / python venv，年龄守卫 below_min_age）**R1 已实装**；R3–R5（UI 净收益排序与年龄徽章、project 解释模板、新手/专家档）与 walker 短路优化待做——直击「竞品只会清 2GB 浏览器缓存，80GB target/ 无人敢碰」的真空地带，方案见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) 与 [PROJECT-ARTIFACT-DESIGN.md](./PROJECT-ARTIFACT-DESIGN.md)。
+6. **开发者大额回收（v0.2 主打候选，优先级待用户定夺）**：R1（schema `project` 扩展 + 3 条试点规则 + 年龄守卫）、R3（UI 年龄徽章/守卫沉底）、R4（explain 年龄证据模板）、R5（durability A/B/C 分类 + A 类优先排序 + 新手/专家档）**均已实装并随 rc4 发布**；未做：Windows/Linux walker（规则库已就绪）、跨平台镜像试点规则、R2' walker 短路优化。方案见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) 与 [PROJECT-ARTIFACT-DESIGN.md](./PROJECT-ARTIFACT-DESIGN.md)。
 
 ## 8. 文档索引
 

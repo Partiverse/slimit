@@ -41,7 +41,7 @@ cargo tauri dev                           # GUI（tauri.conf.json cwd 已指向 
 3. 体验打磨：种子反馈「交互一般、语义模板化」的后续迭代。
 4. 签名 + 公证（notarization）：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. v0.2 差异化：本地模型（~3B）AI 解释，保持「默认全离线」。
-6. 开发者大额回收（v0.2 主打候选，优先级待用户定夺）：R1 项目感知规则已实装（docs/PROJECT-ARTIFACT-DESIGN.md），R3–R5 UI/解释/档位待做，背景见 docs/RECLAIM-STRATEGY.md。
+6. 开发者大额回收（v0.2 主打候选，优先级待用户定夺）：R1/R3/R4/R5 已实装（随 rc4 发布），未做：Windows/Linux walker、跨平台镜像规则、R2' 短路优化。背景见 docs/RECLAIM-STRATEGY.md。
 
 ## 关键文档
 

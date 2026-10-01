@@ -431,6 +431,17 @@ function PlanRow(props: {
       {tip && (
         <tr>
           <td colSpan={6} className="tip">
+            {p.age_days != null && (
+              <>
+                <b>闲置时长：</b>
+                {p.age_days} 天未动（
+                {p.below_min_age
+                  ? "仍在活跃使用，建议暂不清理"
+                  : "回收收益一次性，不会反复长回来"}
+                ）
+                <br />
+              </>
+            )}
             <b>这是什么：</b>
             {tip.what}
             <br />
