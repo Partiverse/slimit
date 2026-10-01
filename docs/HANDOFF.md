@@ -29,7 +29,7 @@ SlimIt（取自 "slim it"）是跨 macOS / Windows / Linux 的存储瘦身工具
 | W7 | 收尾：规则 81 条、性能回归基线、内测包、SPEC 逐项核对 | ✅ 合成树 50k 折算 1M 热 ≈10–18s（达标）；4 项偏差如实记录于 [W8-PLAN.md](./W8-PLAN.md) §4 |
 | W8 | 发布准备 | 🔶 见下 |
 
-W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项目名 `slimit`）；rc1 → rc2 → rc3 常驻 pre-release（DMG+SHA256+安装说明）；种子用户分发材料 [SEED-INVITE.md](./SEED-INVITE.md)；**首批种子反馈 4 条全部落地并随 rc2 发布**——① 云端 AI 解释（OpenAI 兼容端点、用户自备 Key、默认关闭全离线，解释优先级 云端→规则库→启发式，UI 标来源）② 扫描实时进度（条目数/当前目录/速率/用时）③ 多任务并发扫描列表 ④ 规则 81→90 条。**rc3 完成体验打磨**：Tab 导航（4 组 6 面板）、自动加载、Plan 表格中文化、空状态、规则卡片样式修复。**安全收口完成**：cargo-audit 0 漏洞、人工审计 Tauri command 层与 executor 路径，发现 2 个问题已修复（`restore` id 路径穿越、`apply` 信任前端 `executable`），详见 [SECURITY.md](./SECURITY.md)。
+W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项目名 `slimit`）；rc1 → rc2 常驻 pre-release（DMG+SHA256+安装说明；**体验打磨与安全修复已提交但尚未发包，rc3 不存在**，下一版发包时随包带上）；种子用户分发材料 [SEED-INVITE.md](./SEED-INVITE.md)；**首批种子反馈 4 条全部落地并随 rc2 发布**——① 云端 AI 解释（OpenAI 兼容端点、用户自备 Key、默认关闭全离线，解释优先级 云端→规则库→启发式，UI 标来源）② 扫描实时进度（条目数/当前目录/速率/用时）③ 多任务并发扫描列表 ④ 规则 81→90 条。**体验打磨已提交（未发包）**：Tab 导航（4 组 6 面板）、自动加载、Plan 表格中文化、空状态、规则面板（list_rules）。**安全收口完成**：cargo-audit 0 漏洞、人工审计 Tauri command 层与 executor 路径，发现 2 个问题已修复（`restore` id 路径穿越、`apply` 信任前端 `executable`），详见 [SECURITY.md](./SECURITY.md)。
 
 W8 剩余 / 已决策事项：
 
@@ -38,7 +38,7 @@ W8 剩余 / 已决策事项：
 - **签名 + 公证（notarization）**：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动（安装指引见 [BETA.md](./BETA.md)）；可执行脚本已备好 [scripts/release/sign-notarize.sh](../scripts/release/sign-notarize.sh)（凭据只走环境变量），证书到位后即可用。**公开发布/收费前必须补公证。**
 - **域名**：非必须，暂用 slimit.pages.dev；收费/投放前再买。
 - **安全扫描**：cargo-audit 0 漏洞（460 crate）；人工审计已覆盖全部 11 个 Tauri command 入口与 executor 路径，发现 2 个问题已修复。详见 [SECURITY.md](./SECURITY.md)。
-- v0.2 差异化项：本地模型 AI 解释；Windows/Linux 平台迁移已启动（规则库 55+43 条，walker 多平台就绪）。
+- v0.2 差异化项：本地模型 AI 解释；Windows/Linux 平台迁移已启动（规则库 51+34 条已就绪并经首轮收口核查，walker 未实现）。
 
 ## 3. 架构与代码导览
 
@@ -52,7 +52,7 @@ Rust workspace，五 crate（[Cargo.toml](../Cargo.toml)，license `Apache-2.0 W
 | `crates/slimit-ai` | AI 解释 | `AiSettings` + 云端解释（OpenAI 兼容端点，用户自备 Key，config.json 存储，默认关闭）；规则命中优先返回规则库 semantics（confidence 0.95），启发式仅兜底 |
 | `crates/slimit-tauri` | Tauri 2 壳 + UI | 命令 `scan_and_plan` / `explain` / `apply_plan` / `restore_item` / `list_quarantine`，进度事件 `scan-progress`（带 seq 防乱序）；UI 在 `crates/slimit-tauri/ui/`（手写 Vite React-TS），桥接契约 [BRIDGE.md](./BRIDGE.md)，前端类型化镜像 `ui/src/bridge.ts` |
 
-规则库：`rules/macos/` 共 **90 条**、`rules/linux/` 共 **55 条**、`rules/windows/` 共 **43 条**，合计 **188 条**，契约 `slimit.rules/v1`（[schema-v1.json](../rules/schema-v1.json)，CI 强制校验），一规则一文件，文件名 = 规则 id，`_` 前缀不参与校验。red/advise 双层保险（前端不可勾选 + apply 再拒）。
+规则库：`rules/macos/` 共 **90 条**、`rules/linux/` 共 **51 条**、`rules/windows/` 共 **34 条**，合计 **175 条**（CodeArts 批量扩充至 188 后经平台核查收口：删除 13 条平台错配/无可靠来源规则，修复 11 条路径与风险错标——含 Telegram `tdata` 会话密钥误标为可清缓存这一严重项；收口明细见 [COMPLETION-REPORT.md](../COMPLETION-REPORT.md)），契约 `slimit.rules/v1`（[schema-v1.json](../rules/schema-v1.json)，CI 强制校验），一规则一文件，文件名 = 规则 id，`_` 前缀不参与校验。red/advise 双层保险（前端不可勾选 + apply 再拒）。
 
 ## 4. 构建与验证命令
 
@@ -105,7 +105,7 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 ## 7. 建议的任务池（接手后可立即开工）
 
 1. **干净机验收**：按 [W8-PLAN.md](./W8-PLAN.md) §3 发布 checklist 在第二台 Mac 上走完（需用户提供机器）。
-2. **Windows/Linux 规则库持续扩充**：55+43 条起步，按 §5 纪律逐条事实核查（建议同步核对 slimit-core 的 Windows/Linux walker 缺口）。
+2. **Windows/Linux 规则库持续扩充与剩余核查**：现 51+34 条（首轮收口后）；低置信条目（win-teams / win-spotify / win-unity、linux-zoom / linux-teams / linux-spotify）与全部批量生成规则的 refs 链接待逐条核查；Windows/Linux walker 未实现（规则库已就绪），建议同步核对缺口。
 3. **体验打磨**：种子反馈「交互一般、语义模板化」的后续迭代（UI 与解释文案质量），配合云端 AI 使用率观察。
 4. **签名 + 公证（notarization）**：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. **v0.2 差异化**：本地模型（~3B）AI 解释，保持「默认全离线」承诺。
