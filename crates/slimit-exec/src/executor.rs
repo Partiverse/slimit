@@ -17,6 +17,8 @@ pub enum ApplyError {
     Json(#[from] serde_json::Error),
     #[error("restore: original gone and manifest unreadable: {0}")]
     Unrestorable(String),
+    #[error("invalid quarantine id: {0}")]
+    InvalidId(String),
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -109,8 +111,19 @@ fn purge_into_quarantine(item: &PlanItem, q: &Quarantine) -> Result<String, Appl
     Ok(id)
 }
 
+/// 隔离条目 id 合法性：`build_manifest` 生成的 simple UUID（32 位 hex）。
+/// `restore` 的 id 来自 IPC 外部输入——`Path::join` 遇绝对路径/`..` 会逃逸
+/// 隔离区根，随后 read_manifest 与 remove_dir_all 都作用在逃逸路径上。
+/// 非 UUID id 一律拒绝（destructive-path 校验：拒绝即止，不回退更宽路径）。
+fn is_valid_entry_id(id: &str) -> bool {
+    id.len() == 32 && id.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
 /// 按 manifest 完整恢复。原路径已存在时生成带后缀的新路径，绝不覆盖。
 pub fn restore(quarantine: &Quarantine, id: &str) -> Result<std::path::PathBuf, ApplyError> {
+    if !is_valid_entry_id(id) {
+        return Err(ApplyError::InvalidId(id.to_string()));
+    }
     let manifest: Manifest = quarantine.read_manifest(id)?;
     let payload = quarantine.entry_dir(id).join("payload");
     if !payload.exists() {
@@ -270,6 +283,51 @@ mod tests {
         let reports = apply(&[item], &q, &mut audit);
         assert!(reports[0].error.is_some());
         assert!(reports[0].quarantine_id.is_none());
+    }
+
+    #[test]
+    fn restore_rejects_ids_that_escape_quarantine() {
+        // 安全不变量：restore 的 id 来自 IPC 外部输入。entry_dir 的 join 遇
+        // `../` 或绝对路径会逃逸隔离区根，随后 read_manifest + remove_dir_all
+        // 都作用在逃逸路径上。非 UUID 条目 id 必须被拒绝，隔离区外零写入。
+        let tmp = tempfile::tempdir().unwrap();
+        let q = Quarantine::new(&tmp.path().join("slimit"));
+        // entry_root = tmp/slimit/quarantine；id "../victim" 逃逸到 tmp/slimit/victim。
+        let victim_rel = tmp.path().join("slimit").join("victim");
+        // 绝对路径 id：join 直接替换整个 base。
+        let victim_abs = tmp.path().join("victim-abs");
+        for (id, dir) in [("../victim", &victim_rel), (victim_abs.to_str().unwrap(), &victim_abs)] {
+            std::fs::create_dir_all(dir).unwrap();
+            std::fs::write(dir.join("payload"), b"payload").unwrap();
+            std::fs::write(
+                dir.join("manifest.json"),
+                serde_json::json!({
+                    "id": id,
+                    "original_path": dir.to_string_lossy(),
+                    "rule_id": "macos-test-cache",
+                    "quarantined_at": "0 (unix-seconds)",
+                    "actual_bytes": 7
+                })
+                .to_string(),
+            )
+            .unwrap();
+        }
+
+        for evil in ["../victim", victim_abs.to_str().unwrap()] {
+            let err = restore(&q, evil).unwrap_err();
+            assert!(
+                matches!(err, ApplyError::InvalidId(_)),
+                "id {evil:?} must be rejected as InvalidId"
+            );
+        }
+        assert!(
+            victim_rel.join("payload").exists(),
+            "relative-escape target must be untouched"
+        );
+        assert!(
+            victim_abs.join("payload").exists(),
+            "absolute-escape target must be untouched"
+        );
     }
 
     #[test]

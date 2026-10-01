@@ -283,6 +283,12 @@ function CleanPanel() {
               扫描完成；当前规则库没有覆盖该路径下的目标
             </div>
           )}
+          {selectedTask.result.plan.length === 0 && (
+            <div className="empty">
+              <b>未命中任何规则</b>
+              扫描完成；当前规则库没有覆盖该路径下的目标
+            </div>
+          )}
           {selectedTask.result.plan.length > 0 && (
             <>
               <table>
@@ -508,6 +514,11 @@ function QuarantinePanel() {
     run();
   }, []);
 
+  // 面板随 tab 激活挂载，进入即自动加载（保留刷新按钮手动重取）。
+  useEffect(() => {
+    run();
+  }, []);
+
   const restore = async (id: string) => {
     setErr("");
     try {
@@ -660,6 +671,11 @@ function RulesPanel() {
       setErr(String(e));
     }
   };
+
+  // 面板随 tab 激活挂载，进入即自动加载（规则库为进程内嵌数据，廉价）。
+  useEffect(() => {
+    run();
+  }, []);
 
   // 面板随 tab 激活挂载，进入即自动加载（规则库为进程内嵌数据，廉价）。
   useEffect(() => {

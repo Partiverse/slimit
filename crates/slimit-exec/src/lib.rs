@@ -11,5 +11,5 @@ pub mod quarantine;
 
 pub use audit::AuditLog;
 pub use executor::{apply, restore, ApplyError, ApplyReport};
-pub use plan::{plan, plan_from_snapshots, PlanItem};
+pub use plan::{authorize_items, plan, plan_from_snapshots, PlanItem};
 pub use quarantine::{Manifest, Quarantine, DEFAULT_RETENTION_DAYS};

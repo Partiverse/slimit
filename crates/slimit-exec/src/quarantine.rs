@@ -14,7 +14,7 @@ pub struct Manifest {
     /// 原始路径（rename 回去的唯一依据）。
     pub original_path: PathBuf,
     pub rule_id: String,
-    /// 迁入时间（RFC 3339）。
+    /// 迁入时间（MVP：unix 秒串，见 `now_rfc3339`；用于审计与到期清理）。
     pub quarantined_at: String,
     /// 迁入时真实占用字节（用于审计与到期清理优先级）。
     pub actual_bytes: u64,
@@ -68,7 +68,7 @@ impl Quarantine {
         })
     }
 
-    /// 生成 manifest 并返回可写入的临时路径（executor 在 rename 之后落盘，
+    /// 生成 manifest 并返回条目 id 与 manifest（executor 在 rename 之后落盘，
     /// 避免"先写 manifest 后 rename 失败"留下孤儿 manifest）。
     pub(crate) fn build_manifest(
         &self,

@@ -163,7 +163,13 @@ fn apply_plan(app: AppHandle, items: Vec<PlanItem>) -> Result<Vec<ApplyReport>, 
         .map_err(|e| format!("resolve app data dir: {e}"))?;
     let q = quarantine(&app)?;
     let mut audit = slimit_exec::AuditLog::new(&data).map_err(|e| e.to_string())?;
-    Ok(slimit_exec::apply(&items, &q, &mut audit))
+    // 红线（SPEC §5）：执行授权只来自规则库。前端传来的 PlanItem 来自 IPC——
+    // `executable` 是客户端自证。按规则库重新推导可执行性（复用 canonical
+    // `match_rules`+`plan` 逻辑），伪造、未知 rule_id 或 red 规则命中的项
+    // 一律降级为不可执行。
+    let rules = slimit_rules::embedded_rules().map_err(|e| e.to_string())?;
+    let authorized = slimit_exec::authorize_items(items, &rules);
+    Ok(slimit_exec::apply(&authorized, &q, &mut audit))
 }
 
 #[tauri::command]

@@ -37,9 +37,9 @@ cargo tauri dev                           # GUI（tauri.conf.json cwd 已指向 
 ## 下一步工作（建议起点，详情见 docs/HANDOFF.md §7）
 
 1. 干净机验收：按 docs/W8-PLAN.md §3 发布 checklist 在第二台 Mac 走完。
-2. Windows 规则库起步：建 `rules/windows/`，schema/验证器/模板已就绪，逐条事实核查。
+2. Windows/Linux 规则库持续扩充：55+43 条起步，按 rules/README.md 纪律逐条事实核查。
 3. 体验打磨：种子反馈「交互一般、语义模板化」的后续迭代。
-4. 发布前安全收口：重跑深度安全扫描至 complete 或人工审计 Tauri command 层，更新 docs/SECURITY.md。
+4. 签名 + 公证（notarization）：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. v0.2 差异化：本地模型（~3B）AI 解释，保持「默认全离线」。
 
 ## 关键文档
