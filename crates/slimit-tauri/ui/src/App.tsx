@@ -81,7 +81,15 @@ function CleanPanel() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reports, setReports] = useState<ApplyReport[] | null>(null);
   const [tips, setTips] = useState<Record<string, Explanation>>({});
+  const [ruleTitles, setRuleTitles] = useState<Map<string, string>>(new Map());
   const seqRef = useRef(0);
+
+  // 规则 id → 人类可读标题（进程内嵌数据，廉价；失败不影响主流程）。
+  useEffect(() => {
+    listRules()
+      .then((rs) => setRuleTitles(new Map(rs.map((r) => [r.id, r.title]))))
+      .catch(() => {});
+  }, []);
 
   const anyRunning = tasks.some((t) => t.status === "running");
   useTick(anyRunning);
@@ -209,7 +217,6 @@ function CleanPanel() {
           value={root}
           onChange={(e) => setRoot(e.target.value)}
           placeholder="绝对路径，可先后提交多个扫描任务并发执行"
-          disabled={anyRunning && false}
         />
         <button onClick={startScan} disabled={!root.trim()}>
           开始扫描
@@ -270,16 +277,22 @@ function CleanPanel() {
             占用 {fmtSize(selectedTask.result.summary.actual)} · 规则命中{" "}
             {selectedTask.result.plan.length} 项
           </p>
+          {selectedTask.result.plan.length === 0 && (
+            <div className="empty">
+              <b>未命中任何规则</b>
+              扫描完成；当前规则库没有覆盖该路径下的目标
+            </div>
+          )}
           {selectedTask.result.plan.length > 0 && (
             <>
               <table>
                 <thead>
                   <tr>
                     <th></th>
-                    <th>risk</th>
+                    <th>风险</th>
                     <th>可回收</th>
-                    <th>rule</th>
-                    <th>path</th>
+                    <th>规则</th>
+                    <th>路径</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -290,6 +303,7 @@ function CleanPanel() {
                       item={p}
                       checked={selected.has(p.path)}
                       tip={tips[p.path]}
+                      ruleTitle={ruleTitles.get(p.rule_id)}
                       onToggle={() => toggle(p.path, p.executable)}
                       onExplain={() => loadTip(p)}
                     />
@@ -329,10 +343,11 @@ function PlanRow(props: {
   item: PlanItem;
   checked: boolean;
   tip: Explanation | undefined;
+  ruleTitle: string | undefined;
   onToggle: () => void;
   onExplain: () => void;
 }) {
-  const { item: p, checked, tip, onToggle, onExplain } = props;
+  const { item: p, checked, tip, ruleTitle, onToggle, onExplain } = props;
   return (
     <>
       <tr>
@@ -342,11 +357,16 @@ function PlanRow(props: {
             checked={checked}
             disabled={!p.executable}
             onChange={onToggle}
+            aria-label={`选择 ${p.path}`}
           />
         </td>
-        <td>{RISK_LABEL[p.risk]}</td>
+        <td>
+          <span className={`risk-badge risk-${p.risk}`}>{RISK_LABEL[p.risk]}</span>
+        </td>
         <td>{fmtSize(p.estimated_bytes)}</td>
-        <td className="path">{p.rule_id}</td>
+        <td className="path" title={p.rule_id}>
+          {ruleTitle ?? p.rule_id}
+        </td>
         <td className="path">{p.path}</td>
         <td>
           <button className="ghost" onClick={onExplain} disabled={!!tip}>
@@ -483,6 +503,11 @@ function QuarantinePanel() {
     }
   };
 
+  // 面板随 tab 激活挂载，进入即自动加载（保留刷新按钮手动重取）。
+  useEffect(() => {
+    run();
+  }, []);
+
   const restore = async (id: string) => {
     setErr("");
     try {
@@ -514,7 +539,7 @@ function QuarantinePanel() {
     <section>
       <h2>隔离区</h2>
       <div className="row">
-        <button onClick={run}>列出隔离条目</button>
+        <button onClick={run}>刷新</button>
         <button
           onClick={() => (purgeConfirming ? purge() : setPurgeConfirming(true))}
           disabled={purging}
@@ -538,7 +563,13 @@ function QuarantinePanel() {
           已清理 {purged.length} 个过期条目（payload + manifest 一并移除，审计已记录）
         </p>
       )}
-      {items && (
+      {items && items.length === 0 && (
+        <div className="empty">
+          <b>隔离区为空</b>
+          执行清理后条目会迁入此处，14 天内可随时恢复
+        </div>
+      )}
+      {items && items.length > 0 && (
         <>
           <p>{items.length} 个条目</p>
           <table>
@@ -546,8 +577,8 @@ function QuarantinePanel() {
               <tr>
                 <th>原路径</th>
                 <th>大小</th>
-                <th>rule</th>
-                <th>时间</th>
+                <th>规则</th>
+                <th>隔离时间</th>
                 <th></th>
               </tr>
             </thead>
@@ -630,6 +661,11 @@ function RulesPanel() {
     }
   };
 
+  // 面板随 tab 激活挂载，进入即自动加载（规则库为进程内嵌数据，廉价）。
+  useEffect(() => {
+    run();
+  }, []);
+
   const filtered = (rules ?? []).filter((r) => {
     if (os !== "all" && r.os !== os) return false;
     if (risk !== "all" && r.risk !== risk) return false;
@@ -657,7 +693,7 @@ function RulesPanel() {
     <section>
       <h2>规则库（{rules ? rules.length : "?"} 条）</h2>
       <div className="row">
-        <button onClick={run}>加载规则</button>
+        <button onClick={run}>刷新</button>
         {rules && (
           <>
             <select value={os} onChange={(e) => setOs(e.target.value as any)}>
@@ -687,11 +723,19 @@ function RulesPanel() {
             共 {filtered.length} 条规则（{rules.length} 条总库）。规则库是可信输入，
             任何失败即整体报错；UI 仅展示，不触发执行。
           </p>
+          {filtered.length === 0 && (
+            <div className="empty">
+              <b>无匹配规则</b>
+              试试放宽平台 / 风险筛选，或清空搜索词
+            </div>
+          )}
           <div className="rules-list">
             {filtered.map((r) => (
               <details key={r.id} className="rule-card">
                 <summary>
-                  <span className="risk-tag">{RISK_LABEL[r.risk]}</span>
+                  <span className={`risk-badge risk-${r.risk}`}>
+                    {RISK_LABEL[r.risk]}
+                  </span>
                   <span className="rule-id">{r.id}</span>
                   <span className="rule-os">{r.os}</span>
                 </summary>
@@ -801,19 +845,46 @@ function SnapshotsPanel() {
   );
 }
 
+/** Tab 分组：6 面板收进 4 个 tab，消除面板墙。 */
+const TABS = [
+  { id: "clean", label: "清理" },
+  { id: "quarantine", label: "隔离区" },
+  { id: "rules", label: "规则库" },
+  { id: "advanced", label: "高级" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
 export default function App() {
+  const [tab, setTab] = useState<TabId>("clean");
   return (
     <main>
       <h1>SlimIt</h1>
       <p className="hint">
         扫描 → 规则计划 → 隔离执行 → 可恢复；AI 解释仅作提示，永不影响执行
       </p>
-      <CleanPanel />
-      <QuarantinePanel />
-      <VolumePanel />
-      <SnapshotsPanel />
-      <RulesPanel />
-      <AiSettingsPanel />
+      <nav className="tabs" aria-label="功能面板">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            aria-selected={tab === t.id}
+            className={tab === t.id ? "active" : ""}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      {tab === "clean" && <CleanPanel />}
+      {tab === "quarantine" && <QuarantinePanel />}
+      {tab === "rules" && <RulesPanel />}
+      {tab === "advanced" && (
+        <>
+          <VolumePanel />
+          <SnapshotsPanel />
+          <AiSettingsPanel />
+        </>
+      )}
     </main>
   );
 }

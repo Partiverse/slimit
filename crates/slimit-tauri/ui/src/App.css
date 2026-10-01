@@ -200,86 +200,83 @@ td.tip {
   word-break: break-all;
 }
 
-.rules-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.rule-card {
-  border: 1px solid rgba(128, 128, 128, 0.2);
-  border-radius: 6px;
-  padding: 8px 12px;
-  background: rgba(128, 128, 128, 0.04);
-}
-
-.rule-card > summary {
-  cursor: pointer;
+/* Tab 导航：6 面板分 4 组，消除面板墙 */
+.tabs {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
+  margin-top: 16px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.tabs button {
+  background: transparent;
+  color: rgba(128, 128, 128, 0.9);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px 6px 0 0;
+  padding: 6px 14px;
   font-size: 13px;
 }
 
-.rule-card > summary::-webkit-details-marker {
-  display: none;
+.tabs button:hover {
+  color: #2f9e8f;
 }
 
-.rule-card > summary::before {
-  content: "▶";
-  font-size: 10px;
-  color: rgba(128, 128, 128, 0.6);
-  transition: transform 0.15s;
-}
-
-.rule-card[open] > summary::before {
-  transform: rotate(90deg);
-}
-
-.risk-tag {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(128, 128, 128, 0.1);
-}
-
-.rule-id {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
+.tabs button.active {
+  color: #2f9e8f;
   font-weight: 600;
+  border-bottom-color: #2f9e8f;
 }
 
-.rule-os {
+/* 风险徽章：色彩 + 文字双通道（不单靠颜色传达状态） */
+.risk-badge {
+  display: inline-block;
   font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.risk-badge.risk-green {
   background: rgba(47, 158, 143, 0.15);
-  color: #2f9e8f;
+  color: #1d7a6d;
 }
 
-.rule-title {
-  margin: 6px 0 2px;
-  font-weight: 500;
+.risk-badge.risk-yellow {
+  background: rgba(230, 167, 32, 0.18);
+  color: #9a6b00;
 }
 
-.rule-what {
-  margin: 2px 0 6px;
+.risk-badge.risk-red {
+  background: rgba(192, 57, 43, 0.15);
+  color: #c0392b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .risk-badge.risk-green {
+    color: #5fd0c0;
+  }
+  .risk-badge.risk-yellow {
+    color: #e6a720;
+  }
+  .risk-badge.risk-red {
+    color: #ff7a6b;
+  }
+}
+
+/* 空状态：不显示空白区域 */
+.empty {
+  margin-top: 12px;
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed rgba(128, 128, 128, 0.3);
+  border-radius: 6px;
   color: rgba(128, 128, 128, 0.9);
-  font-size: 12px;
-  line-height: 1.6;
 }
 
-.rule-paths {
-  margin: 4px 0 2px;
-}
-
-.rule-refs {
-  margin: 2px 0 0;
-  font-size: 11px;
-}
-
-.rule-refs a {
-  color: #2f9e8f;
-  word-break: break-all;
+.empty b {
+  display: block;
+  margin-bottom: 4px;
+  color: inherit;
 }
 
