@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlimIt</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+    .app { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 20px; 
+    }
+    h1 { 
+      font-size: 28px; 
+      margin-bottom: 8px; 
+      color: #fff;
+    }
+    .subtitle { 
+      color: #888; 
+      margin-bottom: 24px; 
+      font-size: 14px;
+    }
+    .tabs { 
+      display: flex; 
+      gap: 4px; 
+      margin-bottom: 20px; 
+      border-bottom: 1px solid #333; 
+      padding-bottom: 0;
+    }
+    .tab { 
+      padding: 12px 20px; 
+      background: none; 
+      border: none; 
+      color: #888; 
+      cursor: pointer; 
+      font-size: 14px; 
+      border-bottom: 2px solid transparent; 
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #fff; }
+    .tab.active { 
+      color: #4fc3f7; 
+      border-bottom-color: #4fc3f7; 
+    }
+    .panel { 
+      display: none; 
+      animation: fadeIn 0.3s; 
+    }
+    .panel.active { 
+      display: block; 
+    }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    .section { 
+      background: #16213e; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin-bottom: 16px; 
+    }
+    .section h2 { 
+      font-size: 18px; 
+      margin-bottom: 12px; 
+      color: #4fc3f7;
+    }
+    .section h3 { 
+      font-size: 14px; 
+      margin-bottom: 12px; 
+      color: #888;
+    }
+    .row { 
+      display: flex; 
+      gap: 12px; 
+      align-items: center; 
+      margin-bottom: 12px; 
+      flex-wrap: wrap;
+    }
+    input, select { 
+      padding: 10px 12px; 
+      background: #0f3460; 
+      border: 1px solid #333; 
+      border-radius: 6px; 
+      color: #fff; 
+      font-size: 14px; 
+      flex: 1; 
+      min-width: 200px;
+    }
+    input:focus, select:focus { 
+      outline: none; 
+      border-color: #4fc3f7; 
+    }
+    button { 
+      padding: 10px 20px; 
+      background: #4fc3f7; 
+      border: none; 
+      border-radius: 6px; 
+      color: #1a1a2e; 
+      font-weight: 600; 
+      cursor: pointer; 
+      font-size: 14px; 
+      transition: all 0.2s;
+    }
+    button:hover { 
+      background: #3aa8d8; 
+      transform: translateY(-1px); 
+    }
+    button:disabled { 
+      background: #555; 
+      cursor: not-allowed; 
+      transform: none;
+    }
+    button.ghost { 
+      background: transparent; 
+      border: 1px solid #4fc3f7; 
+      color: #4fc3f7; 
+    }
+    button.ghost:hover { 
+      background: rgba(79, 195, 247, 0.1); 
+    }
+    .error { 
+      color: #ff6b6b; 
+      padding: 12px; 
+      background: rgba(255, 107, 107, 0.1); 
+      border-radius: 6px; 
+      margin-bottom: 12px; 
+      font-size: 14px;
+    }
+    .ok { 
+      color: #69f0ae; 
+      padding: 12px; 
+      background: rgba(105, 240, 174, 0.1); 
+      border-radius: 6px; 
+      margin-bottom: 12px; 
+      font-size: 14px;
+    }
+    .hint { 
+      color: #888; 
+      font-size: 12px; 
+      margin-bottom: 12px; 
+    }
+    .totals { 
+      color: #aaa; 
+      font-size: 14px; 
+      margin-bottom: 12px; 
+    }
+    .empty { 
+      text-align: center; 
+      padding: 40px; 
+      color: #666; 
+    }
+    .empty b { 
+      display: block; 
+      margin-bottom: 8px; 
+      color: #888; 
+      font-size: 16px;
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 12px; 
+    }
+    th, td { 
+      padding: 12px; 
+      text-align: left; 
+      border-bottom: 1px solid #333; 
+      font-size: 14px;
+    }
+    th { 
+      color: #888; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      font-size: 12px; 
+      letter-spacing: 0.5px;
+    }
+    tr:hover td { 
+      background: rgba(79, 195, 247, 0.05); 
+    }
+    .path { 
+      font-family: 'SF Mono', Monaco, monospace; 
+      font-size: 13px; 
+      color: #4fc3f7; 
+      word-break: break-all;
+    }
+    .risk-badge { 
+      padding: 4px 10px; 
+      border-radius: 12px; 
+      font-size: 12px; 
+      font-weight: 600;
+    }
+    .risk-green { 
+      background: rgba(105, 240, 174, 0.2); 
+      color: #69f0ae; 
+    }
+    .risk-yellow { 
+      background: rgba(255, 235, 59, 0.2); 
+      color: #ffeb3b; 
+    }
+    .risk-red { 
+      background: rgba(255, 107, 107, 0.2); 
+      color: #ff6b6b; 
+    }
+    .rule-card { 
+      background: #0f3460; 
+      border-radius: 8px; 
+      margin-bottom: 12px; 
+      border: 1px solid #333;
+    }
+    .rule-card summary { 
+      padding: 16px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      list-style: none;
+    }
+    .rule-card summary::-webkit-details-marker { 
+      display: none; 
+    }
+    .rule-card .rule-id { 
+      color: #4fc3f7; 
+      font-family: 'SF Mono', Monaco, monospace; 
+      font-size: 13px; 
+      flex: 1;
+    }
+    .rule-card .rule-os { 
+      color: #666; 
+      font-size: 12px; 
+    }
+    .rule-card > div { 
+      padding: 0 16px 16px; 
+      border-top: 1px solid #333; 
+      margin-top: 8px;
+    }
+    .rule-card p { 
+      margin-bottom: 8px; 
+      font-size: 14px; 
+      line-height: 1.6;
+    }
+    .rule-card strong { 
+      color: #4fc3f7; 
+    }
+    .rule-what { 
+      color: #ccc; 
+    }
+    .rule-title { 
+      color: #fff; 
+      font-weight: 600; 
+      margin-bottom: 8px !important;
+    }
+    .rule-paths { 
+      list-style: none; 
+      margin-top: 8px; 
+    }
+    .rule-paths li { 
+      padding: 4px 0; 
+      font-family: 'SF Mono', Monaco, monospace; 
+      font-size: 13px; 
+      color: #4fc3f7;
+    }
+    .progress { 
+      color: #4fc3f7; 
+      font-size: 14px;
+    }
+    .task-selected td { 
+      background: rgba(79, 195, 247, 0.1) !important; 
+    }
+    .tip { 
+      background: rgba(79, 195, 247, 0.1); 
+      border-left: 3px solid #4fc3f7; 
+      padding: 12px; 
+      color: #ccc; 
+      font-size: 13px; 
+    }
+    .tip b { 
+      color: #4fc3f7; 
+    }
+    .reports { 
+      margin-top: 16px; 
+      padding: 16px; 
+      background: rgba(105, 240, 174, 0.1); 
+      border-radius: 8px;
+    }
+    details > summary { 
+      cursor: pointer; 
+      padding: 12px; 
+      background: #0f3460; 
+      border-radius: 6px; 
+      margin-bottom: 8px; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px;
+    }
+    details[open] > summary { 
+      margin-bottom: 0; 
+      border-bottom-left-radius: 0; 
+      border-bottom-right-radius: 0;
+    }
+    details > div { 
+      padding: 16px; 
+      background: #0f3460; 
+      border-radius: 0 0 6px 6px; 
+      margin-top: 0;
+    }
+    code { 
+      background: #0a1628; 
+      padding: 2px 6px; 
+      border-radius: 4px; 
+      font-family: 'SF Mono', Monaco, monospace; 
+      font-size: 13px; 
+    }
+    .reject-list { 
+      margin: 8px 0; 
+      padding-left: 20px; 
+      text-align: left; 
+    }
+    .reject-list li { 
+      margin-bottom: 6px; 
+      line-height: 1.5; 
+    }
+    .error b { 
+      display: block; 
+      margin-bottom: 6px; 
+    }
+    .error code { 
+      background: rgba(0, 0, 0, 0.3); 
+      color: #ff9f9f; 
+    }
+    .error .hint { 
+      margin-top: 8px; 
+      margin-bottom: 0; 
+      color: #cc9999; 
+    }
+    .risk-badge.risk-blue { background: rgba(79,145,247,0.2); color: #4f91f7; }
+    .risk-badge.risk-gray { background: rgba(150,150,150,0.2); color: #999; }
+    button.danger { 
+      background: #ff6b6b; 
+      color: #fff; 
+    }
+    .warn { 
+      color: #ffb84d; 
+      padding: 12px; 
+      background: rgba(255, 184, 77, 0.1); 
+      border-radius: 6px; 
+      margin-bottom: 12px; 
+      font-size: 14px; 
+      line-height: 1.6;
+    }
+    .warn b { 
+      display: block; 
+      margin-bottom: 4px; 
+    }
+    .warn .hint { 
+      margin: 8px 0 0; 
+      color: #ccaa88; 
+    }
+    .ok b, .warn b { 
+      display: block; 
+    }
+    h3 { 
+      font-size: 14px; 
+      color: #aaa; 
+      margin: 16px 0 8px; 
+      font-weight: 600;
+    }
+    .reject-list { 
+      margin: 8px 0; 
+      padding-left: 20px; 
+      text-align: left; 
+    }
+    .reject-list li { 
+      margin-bottom: 6px; 
+      line-height: 1.5; 
+    }
+    .error b { 
+      display: block; 
+      margin-bottom: 6px; 
+    }
+    .error code { 
+      background: rgba(0, 0, 0, 0.3); 
+      color: #ff9f9f; 
+    }
+    .error .hint { 
+      margin-top: 8px; 
+      margin-bottom: 0; 
+      color: #cc9999; 
+    }
+    button.danger { 
+      background: #ff6b6b; 
+      color: #fff; 
+    }
+    .warn { 
+      color: #ffb84d; 
+      padding: 12px; 
+      background: rgba(255, 184, 77, 0.1); 
+      border-radius: 6px; 
+      margin-bottom: 12px; 
+      font-size: 14px; 
+      line-height: 1.6;
+    }
+    .warn b { 
+      display: block; 
+      margin-bottom: 4px; 
+    }
+    .warn .hint { 
+      margin: 8px 0 0; 
+      color: #ccaa88; 
+    }
+    .ok b, .warn b { 
+      display: block; 
+    }
+    h3 { 
+      font-size: 14px; 
+      color: #aaa; 
+      margin: 16px 0 8px; 
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>SlimIt</h1>
+    <p class="subtitle">扫描 → 规则计划 → 隔离执行 → 可恢复</p>
+    
+    <nav class="tabs">
+      <button class="tab active" data-tab="clean">清理</button>
+      <button class="tab" data-tab="quarantine">隔离区</button>
+      <button class="tab" data-tab="rules">规则库</button>
+      <button class="tab" data-tab="provenance">来源追踪</button>
+      <button class="tab" data-tab="advanced">高级</button>
+    </nav>
+    
+    <div id="content"></div>
+  </div>
+
+  <script>
+    // Tauri 2 global API（tauri.conf.json 已设 withGlobalTauri）。
+    // 无 React / 无构建步骤：改完刷新即可。
+    const invoke = (cmd, args) => window.__TAURI__.core.invoke(cmd, args);
+
+    const GIB = 1024 ** 3, MIB = 1024 ** 2;
+    const fmtSize = (b) =>
+      b == null ? "—"
+        : b >= GIB ? (b / GIB).toFixed(2) + " GiB"
+        : b >= MIB ? (b / MIB).toFixed(1) + " MiB"
+        : b + " B";
+
+    const esc = (s) =>
+      String(s ?? "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    // 五态语义（对齐 docs/POSITIONING.md 与 OpenDiskTree 的分类）：
+    //   review 刻意**不**写成"可考虑删除"——证据不足不是建议。
+    const RISK = {
+      green: "🟢 可安全清理",
+      yellow: "🟡 可清理·有代价",
+      red: "🔴 请勿删除",
+      "delete-via-app": "🔵 请用应用清理",
+      review: "⚪️ 信息不足",
+    };
+    const RISK_CLASS = {
+      green: "risk-green",
+      yellow: "risk-yellow",
+      red: "risk-red",
+      "delete-via-app": "risk-blue",
+      review: "risk-gray",
+    };
+    // 用户点"改用全量扫描"时置位，仅影响下一次调用。
+    let forceFull = false;
+    const el = (id) => document.getElementById(id);
+
+    function status(msg, kind = "hint") {
+      const c = el("status");
+      if (!c) return;
+      c.className = kind === "err" ? "error" : kind === "ok" ? "ok" : "hint";
+      c.textContent = msg ?? "";
+    }
+
+    // 规则加载摘要：把"被拒的文件 + 原因"直接摊开给用户。
+    // 静默失效（字段名写错、id 重复）是此类工具最难排查的失败。
+    function reportHTML(rep) {
+      if (!rep) return "";
+      const parts = [
+        `<p class="hint">生效 ${rep.total} 条（其中用户规则 ${rep.user_count} 条）</p>`,
+        `<p class="hint">用户规则目录：<code>${esc(rep.rules_dir)}</code></p>`,
+      ];
+      if (rep.rejected.length) {
+        parts.push(
+          `<div class="error"><b>${rep.rejected.length} 个规则文件未生效</b>` +
+          `<ul class="reject-list">` +
+          rep.rejected
+            .map((r) => `<li><code>${esc(r.file)}</code> — ${esc(r.reason)}</li>`)
+            .join("") +
+          `</ul>
+           <p class="hint">字段名须与 schema 完全一致（如 <code>delete_contents_only</code>，
+           非 <code>deleteContentsOnly</code>）；修正后点「热重载规则」即可，无需重启。</p></div>`
+        );
+      }
+      return parts.join("");
+    }
+
+    // 规则加载摘要：把"被拒的文件 + 原因"直接摊开给用户。
+    // 静默失效（字段名写错、id 重复）是此类工具最难排查的失败。
+    function reportHTML(rep) {
+      if (!rep) return "";
+      const parts = [
+        `<p class="hint">生效 ${rep.total} 条（其中用户规则 ${rep.user_count} 条）</p>`,
+        `<p class="hint">用户规则目录：<code>${esc(rep.rules_dir)}</code></p>`,
+      ];
+      if (rep.rejected.length) {
+        parts.push(
+          `<div class="error"><b>${rep.rejected.length} 个规则文件未生效</b>` +
+          `<ul class="reject-list">` +
+          rep.rejected
+            .map((r) => `<li><code>${esc(r.file)}</code> — ${esc(r.reason)}</li>`)
+            .join("") +
+          `</ul>
+           <p class="hint">字段名须与 schema 完全一致（如 <code>delete_contents_only</code>，
+           非 <code>deleteContentsOnly</code>）；修正后点「热重载规则」即可，无需重启。</p></div>`
+        );
+      }
+      return parts.join("");
+    }
+
+    // ── 面板渲染 ──────────────────────────────────────────────
+    const PANELS = {
+      clean: () => `
+        <section class="section">
+          <h2>清理</h2>
+          <div class="row">
+            <input id="root" placeholder="绝对路径，如 ~/Downloads" />
+            <button id="scan">开始扫描</button>
+            <label style="white-space:nowrap">
+              <input type="checkbox" id="dup" /> 检测重复文件
+            </label>
+          </div>
+          <div id="status"></div>
+          <div id="out"></div>
+        </section>`,
+      quarantine: () => `
+        <section class="section">
+          <h2>隔离区</h2>
+          <div class="row">
+            <button id="refresh">刷新</button>
+            <button id="purge">清理已过期条目（14 天）</button>
+          </div>
+          <div id="status"></div>
+          <div id="out"></div>
+        </section>`,
+      rules: () => `
+        <section class="section">
+          <h2>规则库</h2>
+          <div class="row">
+            <button id="refresh">刷新</button>
+            <button id="reload">热重载规则</button>
+          </div>
+          <div id="status"></div>
+          <div id="out"></div>
+        </section>`,
+      provenance: () => `
+        <section class="section">
+          <h2>文件来源追踪</h2>
+          <p class="hint">
+            SlimIt 是唯一能实证告诉你「这个文件是谁创建的」的清理工具：
+            macOS 上用 Endpoint Security 读取进程的签名信息，别的工具只能靠路径猜。<br/>
+            进程级归因需要完全磁盘访问权限；<b>不需要任何权限</b>的「快照 diff 模式」
+            同样能定位数据位置，只是归因是路径启发式而非签名实证。
+          </p>
+          <div id="cap"></div>
+          <h3>① 监控模式（需授权，签名级归因）</h3>
+          <div class="row">
+            <button id="pmon">启动监控</button>
+            <button id="pstop">停止监控</button>
+          </div>
+          <h3>② 快照模式（无需权限，路径启发式）</h3>
+          <div class="row">
+            <button id="snap">1. 建立 baseline 快照</button>
+            <button id="diff">2. 与当前状态 diff</button>
+            <button id="learn">3. 生成规则候选</button>
+          </div>
+          <p class="hint">
+            用法：先建立快照 → 运行目标软件 → 再 diff。新增目录即它产生的数据位置。
+          </p>
+          <div id="status"></div>
+          <div id="out"></div>
+        </section>`,
+      advanced: () => `
+        <section class="section">
+          <h2>卷容量</h2>
+          <div class="row">
+            <input id="mount" value="/System/Volumes/Data" />
+            <button id="vol">查询</button>
+          </div>
+          <div id="status"></div>
+          <div id="out"></div>
+        </section>`,
+    };
+
+    const TABLE = (heads, rows) => `
+      <table><thead><tr>${heads.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.length
+        ? rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")
+        : `<tr><td colspan="${heads.length}" class="empty">无数据</td></tr>`}</tbody></table>`;
+
+    // ── 加载器：切 tab 时按需拉数据 ──────────────────────────
+    const LOADERS = {
+      async clean() {
+        el("scan").onclick = async () => {
+          const root = el("root").value.trim();
+          if (!root) return status("请输入路径", "err");
+          status("扫描中…");
+          el("scan").disabled = true;
+          try {
+            const dup = el("dup")?.checked ?? false;
+            status(dup ? "扫描中…（含重复文件检测，需读取候选文件内容）" : "扫描中…");
+            const r = await invoke("scan_and_plan", {
+              root,
+              top: 50,
+              force_full: forceFull,
+              find_duplicates: dup,
+              max_dup_groups: 200,
+            });
+            const s = r.summary, p = r.plan, inc = r.incremental;
+            // 增量诚实度：部分结果里的占用数字来自上次扫描，必须先讲清再谈清理。
+            const incHTML =
+              inc && !inc.complete
+                ? `<div class="warn"><b>增量结果（${(inc.elapsed_ms / 1000).toFixed(1)}s，复用 ${(inc.reuse_ratio * 100).toFixed(0)}% 目录）</b>
+                   ${esc(inc.caveat || "")}
+                   <div class="row" style="margin-top:8px">
+                     <button class="ghost" id="forcefull">改用全量扫描</button>
+                   </div></div>`
+                : inc
+                  ? `<p class="hint">全量扫描，${(inc.elapsed_ms / 1000).toFixed(1)}s</p>`
+                  : "";
+            el("out").innerHTML =
+              incHTML +
+              `<p class="totals">${esc(root)} — ${s.file_count.toLocaleString()} 个文件 ·
+               实际 ${fmtSize(s.actual)} · 表观 ${fmtSize(s.apparent)} · 规则命中 ${p.length} 项</p>` +
+              (p.length
+                ? TABLE(["风险", "可回收", "规则", "路径"], p.map((i) => [
+                    `<span class="risk-badge ${RISK_CLASS[i.risk] ?? "risk-gray"}">${RISK[i.risk] ?? i.risk}</span>`,
+                    fmtSize(i.estimated_bytes),
+                    `<span class="rule-id" title="${esc(i.rule_id)}">${esc(i.rule_id)}</span>`,
+                    `<span class="path">${esc(i.path)}</span>`,
+                  ]))
+                : `<div class="empty"><b>未命中任何规则</b>当前规则库没有覆盖该路径下的目标</div>`);
+            const ff = el("forcefull");
+            if (ff) ff.onclick = () => { forceFull = true; el("scan").click(); forceFull = false; };
+
+            const dups = r.duplicates || [];
+            if (dups.length) {
+              const reclaim = dups.reduce((a, x) => a + x.reclaimable_bytes, 0);
+              el("out").insertAdjacentHTML("beforeend",
+                `<h3>重复文件（${dups.length} 组，可回收 ${fmtSize(reclaim)}）</h3>` +
+                (r.duplicates_truncated
+                  ? `<div class="warn">已达展示上限，数据不完整</div>` : "") +
+                TABLE(["单份大小", "份数", "可回收", "示例文件"],
+                  dups.slice(0, 50).map((g) => [
+                    fmtSize(g.size),
+                    String(g.paths.length),
+                    fmtSize(g.reclaimable_bytes),
+                    `<span class="path" title="${esc(g.paths.join("\n"))}">${esc(g.paths[0].split("/").pop())}</span>`,
+                  ])) +
+                `<p class="hint">仅列出，重复文件不由 SlimIt 自动删除——请自行确认哪一份需要保留。</p>`);
+            }
+            status(p.length ? `${p.length} 项可清理（仅 green/yellow）` : "无规则命中",
+                   p.length ? "ok" : "hint");
+          } catch (e) {
+            status(String(e), "err");
+          } finally {
+            el("scan").disabled = false;
+          }
+        };
+      },
+
+      async quarantine() {
+        const load = async () => {
+          try {
+            const items = await invoke("list_quarantine");
+            el("out").innerHTML = items.length
+              ? `<p class="totals">${items.length} 个条目</p>` +
+                TABLE(["原路径", "大小", "规则", "隔离时间", ""], items.map((m) => [
+                  `<span class="path">${esc(m.original_path)}</span>`,
+                  fmtSize(m.actual_bytes),
+                  `<span class="path">${esc(m.rule_id)}</span>`,
+                  esc(m.quarantined_at),
+                  `<button class="ghost" data-reveal="${esc(m.id)}">Finder 中查看</button>`,
+                ]))
+              : `<div class="empty"><b>隔离区为空</b>执行清理后条目会迁入此处，14 天内可随时恢复</div>`;
+            status("");
+          } catch (e) { status(String(e), "err"); }
+        };
+        el("refresh").onclick = load;
+        // 「Finder 中查看」：先由用户亲眼确认被隔离的是什么，再决定去留。
+        el("out").addEventListener("click", async (ev) => {
+          const id = ev.target?.dataset?.reveal;
+          if (!id) return;
+          try {
+            const p = await invoke("reveal_in_finder", { id });
+            status(`已在 Finder 中定位：${p}`, "ok");
+          } catch (e) { status(String(e), "err"); }
+        });
+        el("purge").onclick = async (ev) => {
+          // 两段式确认：不可逆删除
+          if (!ev.target.dataset.confirm) {
+            ev.target.dataset.confirm = "1";
+            ev.target.textContent = "✅ 确认清理（不可恢复）";
+            ev.target.classList.add("danger");
+            return;
+          }
+          try {
+            const purged = await invoke("purge_expired_quarantine");
+            status(`已清理 ${purged.length} 个过期条目（审计已记录）`, "ok");
+            await load();
+          } catch (e) { status(String(e), "err"); }
+        };
+        load();
+      },
+
+      async rules() {
+        const load = async () => {
+          try {
+            const [rs, rep] = await Promise.all([
+              invoke("list_rules"),
+              invoke("rule_load_status"),
+            ]);
+            el("out").innerHTML =
+              reportHTML(rep) +
+              rs.map((r) => `
+                <details class="rule-card">
+                  <summary>
+                    <span class="risk-badge ${RISK_CLASS[r.risk] ?? "risk-gray"}">${RISK[r.risk] ?? r.risk}</span>
+                    <span class="rule-id">${esc(r.id)}</span>
+                    <span class="rule-os">${esc(r.os)}</span>
+                  </summary>
+                  <div>
+                    <p class="rule-title">${esc(r.semantics?.title ?? r.id)}</p>
+                    <p class="rule-what">${esc(r.semantics?.what ?? "")}</p>
+                    <p><strong>产生方：</strong>${esc(r.semantics?.producer ?? "—")}</p>
+                    <p><strong>删除后果：</strong>${esc(r.semantics?.consequence ?? "—")}</p>
+                    <p><strong>自动重建：</strong>${esc(r.semantics?.regenerate ?? "—")}</p>
+                    <p><strong>路径：</strong></p>
+                    <ul class="rule-paths">${r.paths.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+                  </div>
+                </details>`).join("");
+            status("");
+          } catch (e) { status(String(e), "err"); }
+        };
+        el("refresh").onclick = load;
+        el("reload").onclick = async () => {
+          try {
+            const rep = await invoke("reload_rules");
+            await load();
+            status(
+              rep.rejected.length
+                ? `已重载：生效 ${rep.total} 条，${rep.rejected.length} 个文件被拒（见下方）`
+                : `已重载：生效 ${rep.total} 条（用户规则 ${rep.user_count} 条）`,
+              rep.rejected.length ? "err" : "ok"
+            );
+          } catch (e) { status(String(e), "err"); }
+        };
+        load();
+      },
+
+      async provenance() {
+        // 能力探测：诚实展示进程归因能否用，并始终给出无需权限的降级路径。
+        invoke("provenance_capability")
+          .then((c) => {
+            el("cap").innerHTML =
+              (c.process_attribution
+                ? `<div class="ok"><b>进程级归因可用</b>${esc(c.summary)}</div>`
+                : `<div class="warn"><b>进程级归因不可用</b>${esc(c.summary)}` +
+                  (c.remedy ? `<p class="hint">${esc(c.remedy)}</p>` : "") +
+                  `</div>`);
+            el("pmon").disabled = !c.process_attribution;
+            el("pmon").title = c.process_attribution ? "" : c.summary;
+          })
+          .catch((e) => {
+            el("cap").innerHTML = `<div class="error">能力探测失败：${esc(String(e))}</div>`;
+          });
+
+        el("pmon").onclick = async () => {
+          try { status(await invoke("start_provenance_monitor"), "ok"); }
+          catch (e) { status(String(e), "err"); }
+        };
+        el("pstop").onclick = async () => {
+          try { status(await invoke("stop_provenance_monitor"), "ok"); }
+          catch (e) { status(String(e), "err"); }
+        };
+        el("snap").onclick = async () => {
+          status("快照中…（首次扫描用户数据目录，需数十秒）");
+          try { status(await invoke("take_snapshot"), "ok"); }
+          catch (e) { status(String(e), "err"); }
+        };
+        el("diff").onclick = async () => {
+          try {
+            const d = await invoke("diff_snapshot");
+            const rows = (c) => c.map((x) => [
+              `<span class="path">${esc(x.path)}</span>`,
+              fmtSize(x.size), x.file_count.toLocaleString(),
+            ]);
+            el("out").innerHTML =
+              `<p class="totals">新增 ${d.added.length} · 变更 ${d.modified.length} · 删除 ${d.removed.length}</p>` +
+              (d.added.length
+                ? `<h3>新增目录（数据位置候选）</h3>` +
+                  TABLE(["路径", "大小", "文件数"], rows(d.added.slice(0, 30)))
+                : "") +
+              (d.modified.length
+                ? `<h3>变更目录</h3>` +
+                  TABLE(["路径", "大小", "文件数"], rows(d.modified.slice(0, 30)))
+                : "");
+            status("", "ok");
+          } catch (e) { status(String(e), "err"); }
+        };
+        el("learn").onclick = async () => {
+          try {
+            const cs = await invoke("learn_candidates");
+            el("out").innerHTML = cs.length
+              ? `<p class="hint">学习规则一律 risk: yellow，须用户确认后才进规则库。</p>` +
+                cs.map((c) => `
+                  <details class="rule-card">
+                    <summary>
+                      <span class="risk-badge risk-yellow">🟡 注意</span>
+                      <span class="rule-id">${esc(c.software_name)}</span>
+                      <span class="hint">置信度 ${(c.confidence * 100).toFixed(0)}% · 来源 ${esc(c.source)}</span>
+                    </summary>
+                    <div>
+                      <p><strong>归因依据：</strong>${esc(c.attribution)}</p>
+                      <p><strong>实测大小：</strong>${fmtSize(c.total_size)} · ${c.file_count.toLocaleString()} 个文件</p>
+                      <p><strong>路径：</strong></p>
+                      <ul class="rule-paths">${c.paths.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+                      <button class="apply" data-idx="${c.id}">确认并应用</button>
+                    </div>
+                  </details>`).join("")
+              : `<div class="empty"><b>无规则候选</b>请先建立 baseline 快照并运行软件，或启动监控</div>`;
+            el("out").querySelectorAll("button.apply").forEach((b) => {
+              b.onclick = async () => {
+                const c = cs.find((x) => x.id === b.dataset.idx);
+                try {
+                  const os = navigator.userAgent.toLowerCase().includes("linux") ? "linux" : "macos";
+                  const rule = await invoke("apply_candidate", { candidate: c, os });
+                  status(`已应用 ${rule.id}`, "ok");
+                  b.disabled = true;
+                } catch (e) { status(String(e), "err"); }
+              };
+            });
+            status("");
+          } catch (e) { status(String(e), "err"); }
+        };
+      },
+
+      async advanced() {
+        el("vol").onclick = async () => {
+          try {
+            const v = await invoke("volume_summary_cmd", { mount: el("mount").value.trim() });
+            el("out").innerHTML = `<ul>
+              <li>卷：${esc(v.volume_name ?? "?")}（${esc(v.device_identifier ?? "?")}）</li>
+              <li>文件系统剩余：${fmtSize(v.free_space)}</li>
+              <li>APFS 容器：${fmtSize(v.apfs_container_size)}，剩余 ${fmtSize(v.apfs_container_free)}</li>
+              ${v.system_snapshot_name ? `<li>系统密封快照：${esc(v.system_snapshot_name)}</li>` : ""}
+            </ul>`;
+            status("");
+          } catch (e) { status(String(e), "err"); }
+        };
+      },
+    };
+
+    // ── Tab 切换 ──────────────────────────────────────────────
+    function show(id) {
+      document.querySelectorAll(".tab").forEach((b) =>
+        b.classList.toggle("active", b.dataset.tab === id));
+      const c = el("content");
+      c.innerHTML = PANELS[id]();
+      LOADERS[id]?.().catch((e) => status(String(e), "err"));
+    }
+
+    document.querySelectorAll(".tab").forEach((b) => {
+      b.onclick = () => show(b.dataset.tab);
+    });
+
+    show("clean");
+  </script>
+</body>
+</html>
