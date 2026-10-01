@@ -1,13 +1,13 @@
 # 种子用户内测包（分发材料）
 
-> 2026-10-02 更新至 rc6（回应种子反馈第一批：~ 全角兼容 / 权限引导 / Dock 聚焦 / 孤儿 node_modules / trae-cn 规则 / 全选反选 / 大小筛选 / AI 测试连接 / xattr 打开指引）。分发动作由用户执行；本文件是随附文案与操作清单。
+> 2026-10-02 更新至 rc7（手动清理模式：没命中规则也能删了——你自选的文件/文件夹直接进隔离区，附大文件/大目录榜单一键加入）。分发动作由用户执行；本文件是随附文案与操作清单。
 
 ## 分发物
 
 | 物料 | 位置 |
 |---|---|
-| 安装包 | GitHub Release `v0.1.0-rc6`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc6 |
-| SHA256 | `f5213e3b5da77062a27aa55dbcac967347c5e9e9b4e9e9ee489e2f2e74dddb1d` |
+| 安装包 | GitHub Release `v0.1.0-rc7`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc7 |
+| SHA256 | `89793fd99c168c851f9b2fe194b81553c4e1948820b60b806ebf00a29b95772b` |
 | 详细说明 | 仓库 `docs/BETA.md`（安装/已知限制/回报渠道） |
 | 产品介绍 | https://slimit.pages.dev |
 
