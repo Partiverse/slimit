@@ -23,7 +23,9 @@ pub fn lint(rule: &Rule) -> Result<(), String> {
         }
         None => return Err(format!("unsupported os '{}'", rule.os)),
     }
-    if rule.paths.is_empty() {
+    if rule.project.is_some() {
+        lint_project(rule)?;
+    } else if rule.paths.is_empty() {
         return Err("paths must not be empty".into());
     }
     if rule.risk == Risk::Red {
@@ -60,6 +62,39 @@ pub fn lint(rule: &Rule) -> Result<(), String> {
 }
 
 use std::collections::HashSet;
+
+/// project-artifact 规则的额外约束（设计见 docs/PROJECT-ARTIFACT-DESIGN.md §5）。
+/// markers/rel_paths 只允许单段名——这是路径注入防线：命中锚在「目录名相等」
+/// 上，规则无法把目标引到项目根之外。
+fn lint_project(rule: &Rule) -> Result<(), String> {
+    let proj = rule.project.as_ref().unwrap();
+    if !rule.paths.is_empty() {
+        return Err("project rule must have empty paths (mutually exclusive)".into());
+    }
+    if proj.markers.is_empty() || proj.rel_paths.is_empty() {
+        return Err("project rule requires non-empty markers and rel_paths".into());
+    }
+    for name in proj.markers.iter().chain(proj.rel_paths.iter()) {
+        let bad = name.is_empty()
+            || name == "."
+            || name == ".."
+            || name
+                .chars()
+                .any(|c| c == '/' || c == '\\' || c == '*' || c == '?' || c == '[');
+        if bad {
+            return Err(format!(
+                "project entry '{name}' must be a single path segment (no separators/glob)"
+            ));
+        }
+    }
+    if proj.max_age_days == Some(0) {
+        return Err("project max_age_days must be >= 1".into());
+    }
+    if rule.action.kind == ActionKind::Command {
+        return Err("project rule must not use command action".into());
+    }
+    Ok(())
+}
 
 /// 规则 id 全局唯一（在 [`crate::loader::load_rules`] 层做库级检查时调用）。
 pub fn lint_unique(ids: &[String]) -> Result<(), String> {

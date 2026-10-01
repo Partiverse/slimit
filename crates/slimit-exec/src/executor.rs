@@ -189,6 +189,8 @@ mod tests {
             path: path.to_path_buf(),
             actual_bytes: bytes,
             apparent_bytes: bytes,
+            age_days: None,
+            below_min_age: false,
         };
         crate::plan::plan(&[r], &[m]).remove(0)
     }
@@ -296,7 +298,10 @@ mod tests {
         let victim_rel = tmp.path().join("slimit").join("victim");
         // 绝对路径 id：join 直接替换整个 base。
         let victim_abs = tmp.path().join("victim-abs");
-        for (id, dir) in [("../victim", &victim_rel), (victim_abs.to_str().unwrap(), &victim_abs)] {
+        for (id, dir) in [
+            ("../victim", &victim_rel),
+            (victim_abs.to_str().unwrap(), &victim_abs),
+        ] {
             std::fs::create_dir_all(dir).unwrap();
             std::fs::write(dir.join("payload"), b"payload").unwrap();
             std::fs::write(

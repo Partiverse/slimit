@@ -1,13 +1,13 @@
 # 种子用户内测包（分发材料）
 
-> 2026-09-29 更新至 rc2（含首批反馈修复：云端 AI / 进度条 / 多任务 / 规则 90）。分发动作由用户执行；本文件是随附文案与操作清单。
+> 2026-10-01 更新至 rc3（体验打磨 / 安全加固 / 规则库 175 条，详见 Release Notes）。分发动作由用户执行；本文件是随附文案与操作清单。
 
 ## 分发物
 
 | 物料 | 位置 |
 |---|---|
-| 安装包 | GitHub Release `v0.1.0-rc2`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc2 |
-| SHA256 | `c7c79cdc9ddd4b346f401be7eda25fd02d25eb543e82092062f8dabae3755a6e` |
+| 安装包 | GitHub Release `v0.1.0-rc3`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc3 |
+| SHA256 | `9360661cddf0fdf6a54eb73afbb06d4e38fbba0dfa2e47d38c4322d7c5219d5b` |
 | 详细说明 | 仓库 `docs/BETA.md`（安装/已知限制/回报渠道） |
 | 产品介绍 | https://slimit.pages.dev |
 
@@ -15,7 +15,7 @@
 
 ## 邀请文案（三句话，微信/邮件可直接发）
 
-> 我在做一款 macOS 磁盘清理工具 SlimIt，特点是删任何东西之前先解释清楚「这是什么、删了会怎样」——规则库 + AI 双重解释，清理只做可一键恢复的隔离，绝不直接删。上一轮内测反馈的问题（AI 感知弱、扫描没进度、不能多任务、规则少）刚全部修完，新包在：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc2 （首次打开记得右键 → 打开）。想请你再试试：设置里可以填自己的 API Key 开启云端 AI 解释，扫大目录时能看到实时进度，也可以同时扫多个目录。
+> 我在做一款 macOS 磁盘清理工具 SlimIt，特点是删任何东西之前先解释清楚「这是什么、删了会怎样」——规则库 + AI 双重解释，清理只做可一键恢复的隔离，绝不直接删。新包 rc3 刚出：界面大改版（分页签更好找了）、规则库扩到 175 条、又做了一轮安全加固，在：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc3 （首次打开记得右键 → 打开）。想请你再试试：设置里可以填自己的 API Key 开启云端 AI 解释；「规则库」页签能直接看到它认识哪些目录，欢迎吐槽漏了什么。
 
 **短版（群发/朋友圈）**：
 

@@ -12,6 +12,12 @@ pub struct PlanItem {
     pub risk: Risk,
     /// 可执行的动作：green/yellow 的 purge-dir 进隔离区；command/advise 不由本 crate 执行。
     pub executable: bool,
+    /// project 规则：目标目录 mtime 距今天数；路径规则为 None。
+    #[serde(default)]
+    pub age_days: Option<u64>,
+    /// project 规则年龄低于 max_age_days ⇒ true ⇒ 不可执行（只提示）。
+    #[serde(default)]
+    pub below_min_age: bool,
 }
 
 /// 从规则命中生成执行计划。
@@ -28,7 +34,8 @@ pub fn plan(rules: &[Rule], matches: &[Match]) -> Vec<PlanItem> {
         };
         let executable = match (rule.risk, rule.action.kind) {
             (Risk::Red, _) => false,
-            (Risk::Green | Risk::Yellow, ActionKind::PurgeDir) => true,
+            // project 规则年龄不足（或年龄不可得）⇒ 只提示不执行（安全方向单调）。
+            (Risk::Green | Risk::Yellow, ActionKind::PurgeDir) => !m.below_min_age,
             (Risk::Green | Risk::Yellow, ActionKind::Command | ActionKind::Advise) => false,
         };
         items.push(PlanItem {
@@ -37,6 +44,8 @@ pub fn plan(rules: &[Rule], matches: &[Match]) -> Vec<PlanItem> {
             estimated_bytes: m.actual_bytes,
             risk: rule.risk,
             executable,
+            age_days: m.age_days,
+            below_min_age: m.below_min_age,
         });
     }
     items.sort_by(|a, b| b.estimated_bytes.cmp(&a.estimated_bytes));
@@ -95,6 +104,74 @@ mod tests {
     }
 
     #[test]
+    fn project_rule_age_guard_controls_executable_and_authorize_replays() {
+        // project 规则：年龄守卫决定可执行性；authorize_items 重放（IPC 信任
+        // 边界）必须与首算一致——旧 target 保留可执行，伪造项照常降级。
+        let tmp = tempfile::tempdir().unwrap();
+
+        let old_root = tmp.path().join("oldproj");
+        std::fs::create_dir_all(old_root.join("target")).unwrap();
+        std::fs::write(old_root.join("Cargo.toml"), b"x").unwrap();
+        let old_target = old_root.join("target");
+        let status = std::process::Command::new("touch")
+            .args(["-t", "202001010000"])
+            .arg(&old_target)
+            .status()
+            .unwrap();
+        assert!(status.success());
+
+        let fresh_root = tmp.path().join("freshproj");
+        std::fs::create_dir_all(fresh_root.join("target")).unwrap();
+        std::fs::write(fresh_root.join("Cargo.toml"), b"x").unwrap();
+
+        let rule: Rule = serde_json::from_value(serde_json::json!({
+            "apiVersion": "slimit.rules/v1",
+            "id": "macos-project-cargo-target",
+            "os": "macos",
+            "paths": [],
+            "project": { "markers": ["Cargo.toml"], "rel_paths": ["target"], "max_age_days": 14 },
+            "risk": "yellow",
+            "action": { "kind": "purge-dir" },
+            "refs": ["https://example.com"]
+        }))
+        .unwrap();
+
+        let items = plan_from_snapshots(
+            &[rule.clone()],
+            &[
+                DirSnapshot::new(&old_target, 100, 80),
+                DirSnapshot::new(&fresh_root.join("target"), 100, 80),
+            ],
+        );
+        assert_eq!(items.len(), 2);
+        let old = items.iter().find(|i| i.path == old_target).unwrap();
+        let fresh = items
+            .iter()
+            .find(|i| i.path == fresh_root.join("target"))
+            .unwrap();
+        assert!(old.executable, "old target must be executable");
+        assert!(old.age_days.unwrap() > 100);
+        assert!(
+            !fresh.executable,
+            "fresh target must be guarded (below_min_age)"
+        );
+        assert!(fresh.below_min_age);
+
+        // IPC 信任边界：前端原样传回计划时，重放全部通过（幂等）；
+        // 同字节数时排序稳定，old 在前、fresh 在后。
+        let out = authorize_items(items, &[rule]);
+        assert!(
+            out[0].executable,
+            "old target stays executable after replay"
+        );
+        assert_eq!(
+            out.iter().filter(|i| i.executable).count(),
+            1,
+            "only the old target stays executable after replay"
+        );
+    }
+
+    #[test]
     fn authorize_items_keeps_rule_authorized_and_downgrades_forged() {
         // 红线（SPEC §5）：执行授权只来自规则库。apply_plan 收到的 PlanItem
         // 来自 IPC——`executable` 是客户端自证，路径不在规则库授权范围内时
@@ -115,6 +192,8 @@ mod tests {
             estimated_bytes: 10,
             risk: Risk::Green,
             executable: true,
+            age_days: None,
+            below_min_age: false,
         };
         // 伪造项：executable=true 但路径不在规则库 paths 内。
         let forged_path = tmp.path().join("documents");
@@ -125,6 +204,8 @@ mod tests {
             estimated_bytes: 100,
             risk: Risk::Green,
             executable: true,
+            age_days: None,
+            below_min_age: false,
         };
 
         let out = authorize_items(vec![legit_item, forged], &rules);
@@ -152,6 +233,8 @@ mod tests {
             estimated_bytes: 10,
             risk: Risk::Green,
             executable: true,
+            age_days: None,
+            below_min_age: false,
         };
         // red 规则永不执行（plan 的红线经 authorize_items 重新落地）。
         let red = PlanItem {
@@ -160,6 +243,8 @@ mod tests {
             estimated_bytes: 10,
             risk: Risk::Red,
             executable: true,
+            age_days: None,
+            below_min_age: false,
         };
 
         let out = authorize_items(vec![unknown, red], &rules);

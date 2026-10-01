@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-cargo-target
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - Cargo.toml
+  rel_paths:
+    - target
+  max_age_days: 14
+semantics:
+  title: "Rust 构建产物（项目内 target/）"
+  what: "Cargo 项目的编译产物、依赖编译缓存与测试二进制（debug/release 分目录，随工具链升级累积）。单个项目常见 5–15GB。你的源代码在 target 之外，不受影响"
+  producer: "cargo build / cargo test（构建时生成）"
+  safe_to_delete_because: "纯构建产物：cargo 可从源码完全重建；代码、Cargo.toml、锁文件与 git 历史均不在 target 内"
+  consequence: "下次 cargo build 需完整重新编译（大型项目首次约 1–10 分钟），之后恢复正常增量速度；不删则该项目的增量编译保持原速"
+  regenerate: "下次构建时按需重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数 GB 到数十 GB（多项目常见）"
+  recovery: partial
+refs:
+  - https://doc.rust-lang.org/cargo/guide/build-cache.html

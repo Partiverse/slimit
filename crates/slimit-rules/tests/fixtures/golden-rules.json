@@ -7,6 +7,7 @@
     "paths": [
       "/var/cache/apt/archives"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "APT 包下载缓存（/var/cache/apt/archives）",
@@ -44,6 +45,7 @@
     "paths": [
       "~/.cache/arc"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "ARC 浏览器缓存（~/.cache/arc）",
@@ -81,6 +83,7 @@
     "paths": [
       "~/.cache/bazel"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Bazel 构建缓存（~/.cache/bazel）",
@@ -118,6 +121,7 @@
     "paths": [
       "~/.cache/BraveSoftware/Brave-Browser"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Brave 浏览器缓存（~/.cache/BraveSoftware/Brave-Browser）",
@@ -155,6 +159,7 @@
     "paths": [
       "~/.bun/install/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Bun 安装缓存（~/.bun/install/cache）",
@@ -192,6 +197,7 @@
     "paths": [
       "~/.cargo/git"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cargo Git 依赖缓存（~/.cargo/git）",
@@ -229,6 +235,7 @@
     "paths": [
       "~/.cargo/registry/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cargo 注册表下载缓存（~/.cargo/registry/cache）",
@@ -267,6 +274,7 @@
     "paths": [
       "~/.cache/CocoaPods"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "CocoaPods 缓存（~/.cache/CocoaPods）",
@@ -304,6 +312,7 @@
     "paths": [
       "~/.cache/composer"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Composer 包缓存（~/.cache/composer）",
@@ -343,6 +352,7 @@
       "~/anaconda3/pkgs",
       "~/miniforge3/pkgs"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Conda 包缓存（pkgs 目录）",
@@ -380,6 +390,7 @@
     "paths": [
       "~/.cache/Coursier"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Coursier 缓存（~/.cache/Coursier）",
@@ -417,6 +428,7 @@
     "paths": [
       "~/.cache/Cypress"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cypress 浏览器缓存（~/.cache/Cypress）",
@@ -454,6 +466,7 @@
     "paths": [
       "~/.cache/deno"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Deno 缓存（~/.cache/deno）",
@@ -491,6 +504,7 @@
     "paths": [
       "~/.config/discord/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Discord 缓存（~/.config/discord/Cache）",
@@ -528,6 +542,7 @@
     "paths": [
       "~/Dropbox/.dropbox.cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Dropbox 缓存（~/Dropbox/.dropbox.cache）",
@@ -565,6 +580,7 @@
     "paths": [
       "~/.cache/microsoft-edge"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Edge 浏览器缓存（~/.cache/microsoft-edge）",
@@ -602,6 +618,7 @@
     "paths": [
       "~/.cache/electron"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Electron 缓存（~/.cache/electron）",
@@ -639,6 +656,7 @@
     "paths": [
       "~/.emscripten_cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Emscripten 编译缓存（~/.emscripten_cache）",
@@ -676,6 +694,7 @@
     "paths": [
       "~/.cache/go-build"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Go 构建缓存",
@@ -713,6 +732,7 @@
     "paths": [
       "~/go/pkg/mod/cache/download"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Go 模块缓存（GOMODCACHE）",
@@ -750,6 +770,7 @@
     "paths": [
       "~/.gradle/caches"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle 构建缓存（~/.gradle/caches）",
@@ -787,6 +808,7 @@
     "paths": [
       "~/.stack"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Haskell Stack 缓存（~/.stack）",
@@ -824,6 +846,7 @@
     "paths": [
       "~/.cache/Homebrew"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Homebrew 缓存（~/.cache/Homebrew）",
@@ -861,6 +884,7 @@
     "paths": [
       "~/.cache/huggingface"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Hugging Face 缓存（~/.cache/huggingface）",
@@ -898,6 +922,7 @@
     "paths": [
       "~/.cache/JetBrains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "JetBrains IDE 缓存（~/.cache/JetBrains）",
@@ -935,6 +960,7 @@
     "paths": [
       "~/.m2/repository"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Maven 本地仓库（~/.m2/repository）",
@@ -973,6 +999,7 @@
     "paths": [
       "~/.node-gyp"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "node-gyp 编译缓存（~/.node-gyp）",
@@ -1010,6 +1037,7 @@
     "paths": [
       "~/.npm/_cacache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "npm 包缓存（npm-cache）",
@@ -1047,6 +1075,7 @@
     "paths": [
       "~/.cache/operasoftware/Opera"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Opera 浏览器缓存（~/.cache/operasoftware/Opera）",
@@ -1084,6 +1113,7 @@
     "paths": [
       "~/.cache/pip"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pip 下载缓存",
@@ -1121,6 +1151,7 @@
     "paths": [
       "~/.cache/ms-playwright"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Playwright 浏览器缓存（~/.cache/ms-playwright）",
@@ -1158,6 +1189,7 @@
     "paths": [
       "~/.local/share/pnpm/store"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pnpm 内容寻址存储（store）",
@@ -1195,6 +1227,7 @@
     "paths": [
       "~/.cache/pypoetry"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Poetry 包缓存（~/.cache/pypoetry）",
@@ -1233,6 +1266,7 @@
     "paths": [
       "~/.pub-cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Dart/Flutter 包缓存（~/.pub-cache）",
@@ -1270,6 +1304,7 @@
     "paths": [
       "~/.cache/puppeteer"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Puppeteer 浏览器缓存（~/.cache/puppeteer）",
@@ -1307,6 +1342,7 @@
     "paths": [
       "~/.rustup/downloads"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "rustup 下载缓存（~/.rustup/downloads）",
@@ -1344,6 +1380,7 @@
     "paths": [
       "~/.rustup/toolchains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "rustup 工具链缓存（~/.rustup/toolchains）",
@@ -1381,6 +1418,7 @@
     "paths": [
       "~/.config/slack/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Slack 缓存（~/.config/slack/Cache）",
@@ -1418,6 +1456,7 @@
     "paths": [
       "~/.cache/org.swift.swiftpm"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Swift Package Manager 缓存（~/.cache/org.swift.swiftpm）",
@@ -1455,6 +1494,7 @@
     "paths": [
       "~/.cache/spotify/PersistentCache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Spotify 持久缓存（~/.cache/spotify/PersistentCache）",
@@ -1492,6 +1532,7 @@
     "paths": [
       "~/.local/share/Steam/appcache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Steam 应用缓存（appcache）",
@@ -1529,6 +1570,7 @@
     "paths": [
       "~/.cache/teams"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Teams 缓存（~/.cache/teams）",
@@ -1566,6 +1608,7 @@
     "paths": [
       "~/.local/share/TelegramDesktop/tdata/user_data"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Telegram 媒体缓存（TelegramDesktop/tdata/user_data）",
@@ -1604,6 +1647,7 @@
     "paths": [
       "~/.cache/torch/hub"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "PyTorch Hub 缓存（~/.cache/torch/hub）",
@@ -1641,6 +1685,7 @@
     "paths": [
       "~/.cache/unity3d"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Unity 缓存（~/.cache/unity3d）",
@@ -1678,6 +1723,7 @@
     "paths": [
       "~/.cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "用户级缓存目录（~/.cache，仅提示）",
@@ -1715,6 +1761,7 @@
     "paths": [
       "~/.cache/uv"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "uv 包缓存（~/.cache/uv）",
@@ -1752,6 +1799,7 @@
     "paths": [
       "~/.cache/vivaldi"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Vivaldi 浏览器缓存（~/.cache/vivaldi）",
@@ -1789,6 +1837,7 @@
     "paths": [
       "~/.config/Code/CachedData"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "VS Code 缓存数据（~/.config/Code/CachedData）",
@@ -1827,6 +1876,7 @@
     "paths": [
       "~/.cache/yarn"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Yarn 包缓存",
@@ -1865,6 +1915,7 @@
     "paths": [
       "~/.cache/zoom"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Zoom 缓存（~/.cache/zoom）",
@@ -1902,6 +1953,7 @@
     "paths": [
       "~/Library/Caches/Homebrew"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Homebrew 下载缓存",
@@ -1939,6 +1991,7 @@
     "paths": [
       "~/Library/Caches/Adobe"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Adobe 全家桶缓存（~/Library/Caches/Adobe）",
@@ -1976,6 +2029,7 @@
     "paths": [
       "~/.android/avd"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Android 模拟器虚拟设备（AVD）",
@@ -2015,6 +2069,7 @@
     "paths": [
       "~/Library/Android/sdk/system-images"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Android 模拟器系统镜像",
@@ -2053,6 +2108,7 @@
     "paths": [
       "~/Library/Logs"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "应用日志（~/Library/Logs）",
@@ -2090,6 +2146,7 @@
     "paths": [
       "~/Library/Caches/Arc"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Arc 浏览器缓存",
@@ -2128,6 +2185,7 @@
     "paths": [
       "~/.cache/bazel"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Bazel 磁盘缓存（~/.cache/bazel）",
@@ -2166,6 +2224,7 @@
     "paths": [
       "~/Library/Caches/BraveSoftware/Brave-Browser"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Brave 浏览器缓存",
@@ -2204,6 +2263,7 @@
     "paths": [
       "~/.bun/install/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Bun 包下载缓存（~/.bun/install/cache）",
@@ -2241,6 +2301,7 @@
     "paths": [
       "~/.cargo/git"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cargo Git 依赖缓存（~/.cargo/git）",
@@ -2278,6 +2339,7 @@
     "paths": [
       "~/.cargo/registry/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cargo crate 下载缓存",
@@ -2316,6 +2378,7 @@
     "paths": [
       "~/Library/Caches/Google/Chrome"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Google Chrome 浏览器缓存",
@@ -2354,6 +2417,7 @@
     "paths": [
       "~/Library/Caches/CocoaPods"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "CocoaPods 下载缓存",
@@ -2391,6 +2455,7 @@
     "paths": [
       "~/.colima"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Colima 容器运行时虚拟磁盘（~/.colima）",
@@ -2431,6 +2496,7 @@
     "paths": [
       "~/Library/Caches/composer"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Composer 包下载缓存（~/Library/Caches/composer）",
@@ -2470,6 +2536,7 @@
       "~/anaconda3/pkgs",
       "~/miniforge3/pkgs"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Conda 包缓存（官方 conda clean）",
@@ -2508,6 +2575,7 @@
     "paths": [
       "~/Library/Caches/Coursier"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Coursier Scala 构件缓存（~/Library/Caches/Coursier）",
@@ -2545,6 +2613,7 @@
     "paths": [
       "~/Library/Logs/DiagnosticReports"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "系统崩溃报告（DiagnosticReports）",
@@ -2583,6 +2652,7 @@
     "paths": [
       "~/Library/Caches/Cypress"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Cypress 二进制缓存（~/Library/Caches/Cypress）",
@@ -2621,6 +2691,7 @@
     "paths": [
       "~/Library/Caches/deno"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Deno 模块与编译缓存（~/Library/Caches/deno）",
@@ -2658,6 +2729,7 @@
     "paths": [
       "~/Library/Caches/com.hnc.Discord"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Discord 桌面客户端缓存",
@@ -2695,6 +2767,7 @@
     "paths": [
       "~/Library/Containers/com.docker.docker/Data/buildstore"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Docker 构建缓存（BuildKit，VM 内）",
@@ -2733,6 +2806,7 @@
     "paths": [
       "~/Library/Containers/com.docker.docker/Data/log"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Docker Desktop 日志（com.docker.docker 容器内 log）",
@@ -2770,6 +2844,7 @@
     "paths": [
       "~/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Docker Desktop 虚拟磁盘（Docker.raw）",
@@ -2812,6 +2887,7 @@
     "paths": [
       "~/Dropbox/.dropbox.cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Dropbox 桌面客户端缓存（~/Dropbox/.dropbox.cache）",
@@ -2849,6 +2925,7 @@
     "paths": [
       "~/Library/Caches/Microsoft Edge"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Edge 浏览器缓存（~/Library/Caches/Microsoft Edge）",
@@ -2887,6 +2964,7 @@
     "paths": [
       "~/Library/Caches/electron"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Electron 二进制下载缓存（~/Library/Caches/electron）",
@@ -2924,6 +3002,7 @@
     "paths": [
       "~/.emscripten_cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Emscripten 工具链缓存（~/.emscripten_cache）",
@@ -2961,6 +3040,7 @@
     "paths": [
       "~/Library/Caches/Firefox"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Firefox 浏览器缓存（~/Library/Caches/Firefox）",
@@ -2998,6 +3078,7 @@
     "paths": [
       "~/Library/Caches/go-build"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Go 构建缓存",
@@ -3035,6 +3116,7 @@
     "paths": [
       "~/go/pkg/mod/cache/download"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Go 模块下载缓存",
@@ -3072,6 +3154,7 @@
     "paths": [
       "~/.gradle/caches"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle 构建缓存与依赖缓存（~/.gradle/caches）",
@@ -3109,6 +3192,7 @@
     "paths": [
       "~/.gradle/jdks"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle 自动下载的 JDK（~/.gradle/jdks）",
@@ -3146,6 +3230,7 @@
     "paths": [
       "~/.gradle/wrapper/dists"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle Wrapper 发行版缓存（~/.gradle/wrapper/dists）",
@@ -3183,6 +3268,7 @@
     "paths": [
       "~/.stack"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Stack Haskell 工作区（~/.stack）",
@@ -3220,6 +3306,7 @@
     "paths": [
       "~/Library/Caches/Homebrew"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Homebrew 下载缓存与旧版本（官方 brew cleanup）",
@@ -3257,6 +3344,7 @@
     "paths": [
       "~/.cache/huggingface"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Hugging Face 模型缓存",
@@ -3294,6 +3382,7 @@
     "paths": [
       "~/Library/Messages/Attachments"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "iMessage 附件文件",
@@ -3336,6 +3425,7 @@
     "paths": [
       "~/Library/Application Support/MobileSync/Backup"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "iOS 设备本地备份",
@@ -3378,6 +3468,7 @@
     "paths": [
       "~/Library/Caches/JetBrains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "JetBrains IDE 系统缓存与索引（~/Library/Caches/JetBrains）",
@@ -3416,6 +3507,7 @@
     "paths": [
       "~/Library/Logs/JetBrains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "JetBrains IDE 日志（~/Library/Logs/JetBrains）",
@@ -3453,6 +3545,7 @@
     "paths": [
       "~/.lima"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Lima 虚拟机磁盘（~/.lima）",
@@ -3493,6 +3586,7 @@
     "paths": [
       "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Mail 附件打开缓存",
@@ -3531,6 +3625,7 @@
     "paths": [
       "~/.m2/repository"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Maven 本地仓库缓存（~/.m2/repository）",
@@ -3569,6 +3664,7 @@
     "paths": [
       "~/.minikube"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "minikube 本地集群（~/.minikube）",
@@ -3606,6 +3702,7 @@
     "paths": [
       "~/Library/Caches/com.microsoft.autoupdate2"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft AutoUpdate 更新包缓存",
@@ -3643,6 +3740,7 @@
     "paths": [
       "~/Library/Caches/com.microsoft.autoupdate.helper"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft AutoUpdate 特权辅助工具缓存",
@@ -3680,6 +3778,7 @@
     "paths": [
       "~/.node-gyp"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "node-gyp 头文件缓存（~/.node-gyp）",
@@ -3717,6 +3816,7 @@
     "paths": [
       "~/.npm/_cacache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "npm 包缓存（_cacache）",
@@ -3755,6 +3855,7 @@
     "paths": [
       "~/.nuget/packages"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "NuGet 全局包缓存（~/.nuget/packages）",
@@ -3792,6 +3893,7 @@
     "paths": [
       "~/.ollama/models"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Ollama 本地模型库（~/.ollama/models）",
@@ -3830,6 +3932,7 @@
     "paths": [
       "~/Library/Caches/com.operasoftware.Opera"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Opera 浏览器缓存",
@@ -3868,6 +3971,7 @@
     "paths": [
       "~/.orbstack"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "OrbStack 数据目录（~/.orbstack）",
@@ -3909,6 +4013,7 @@
     "paths": [
       "~/Parallels"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Parallels Desktop 虚拟机库",
@@ -3949,6 +4054,7 @@
     "paths": [
       "~/Library/Caches/pip"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pip 下载缓存",
@@ -3986,6 +4092,7 @@
     "paths": [
       "~/Library/Caches/ms-playwright"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Playwright 测试浏览器",
@@ -4023,6 +4130,7 @@
     "paths": [
       "~/Library/pnpm/store"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pnpm 全局包存储",
@@ -4060,6 +4168,7 @@
     "paths": [
       "~/Library/Caches/pypoetry"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Poetry 包下载缓存（~/Library/Caches/pypoetry）",
@@ -4092,12 +4201,150 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-cargo-target",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "Cargo.toml"
+      ],
+      "rel_paths": [
+        "target"
+      ],
+      "max_age_days": 14
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Rust 构建产物（项目内 target/）",
+      "what": "Cargo 项目的编译产物、依赖编译缓存与测试二进制（debug/release 分目录，随工具链升级累积）。单个项目常见 5–15GB。你的源代码在 target 之外，不受影响",
+      "producer": "cargo build / cargo test（构建时生成）",
+      "safe_to_delete_because": "纯构建产物：cargo 可从源码完全重建；代码、Cargo.toml、锁文件与 git 历史均不在 target 内",
+      "consequence": "下次 cargo build 需完整重新编译（大型项目首次约 1–10 分钟），之后恢复正常增量速度；不删则该项目的增量编译保持原速",
+      "regenerate": "下次构建时按需重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（多项目常见）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://doc.rust-lang.org/cargo/guide/build-cache.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-node-modules",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "rel_paths": [
+        "node_modules"
+      ],
+      "max_age_days": 30
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Node 依赖目录（项目内 node_modules/）",
+      "what": "npm/pnpm/yarn 安装的项目依赖包。社区经验：长期未动的项目里 node_modules 普遍数百 MB 到数 GB",
+      "producer": "npm install / pnpm install（装依赖时生成）",
+      "safe_to_delete_because": "依赖可由 package.json + lockfile 完全重装；项目源代码、配置与 git 历史均不在其中",
+      "consequence": "该项目下次开发前需重新 npm install（需网络，下载量取决于依赖规模）；项目本身完好",
+      "regenerate": "npm install 按需重装"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 30,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（每项目）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.npmjs.com/cli/v10/commands/npm-install"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-python-venv",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "pyproject.toml",
+        "requirements.txt",
+        "setup.py"
+      ],
+      "rel_paths": [
+        ".venv",
+        "venv"
+      ],
+      "max_age_days": 30
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Python 虚拟环境（项目内 .venv / venv）",
+      "what": "项目私有的 Python 解释器副本与已安装依赖。长期未动的项目虚拟环境普遍数百 MB 到数 GB",
+      "producer": "python -m venv / uv venv（创建环境时生成）",
+      "safe_to_delete_because": "虚拟环境可由 pyproject.toml/requirements.txt 完全重建；项目源代码与配置不在其中。旧虚拟环境里的 bin 脚本硬编码绝对路径，重建后反而更干净",
+      "consequence": "该项目下次开发前需重建环境（python -m venv .venv && pip install -r requirements.txt 或 uv sync，需网络）",
+      "regenerate": "按项目说明重建，通常一条命令"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 30,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（每项目）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.python.org/3/library/venv.html",
+      "https://pip.pypa.io/en/stable/topics/repeatable-installs/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-pub-cache",
     "os": "macos",
     "scope": "user",
     "paths": [
       "~/.pub-cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Dart/Flutter 全局包缓存（~/.pub-cache）",
@@ -4136,6 +4383,7 @@
     "paths": [
       "~/.cache/puppeteer"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Puppeteer 浏览器下载缓存（~/.cache/puppeteer）",
@@ -4174,6 +4422,7 @@
     "paths": [
       "~/Library/Containers/com.tencent.qq/Data/Library/Application Support/QQ"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "QQ NT 聊天数据目录（nt_qq 数据库）",
@@ -4216,6 +4465,7 @@
     "paths": [
       "~/Library/Caches/com.apple.QuickLook.thumbnailcache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "访达快速预览缩略图缓存（QuickLook.thumbnailcache）",
@@ -4253,6 +4503,7 @@
     "paths": [
       "~/.rustup/downloads"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "rustup 下载临时目录（~/.rustup/downloads）",
@@ -4290,6 +4541,7 @@
     "paths": [
       "~/.rustup/toolchains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "rustup 旧工具链（~/.rustup/toolchains）",
@@ -4328,6 +4580,7 @@
     "paths": [
       "~/Library/Caches/com.tinyspeck.slackmacgap"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Slack 桌面客户端缓存",
@@ -4365,6 +4618,7 @@
     "paths": [
       "~/Library/Caches/org.swift.swiftpm"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Swift Package Manager 缓存",
@@ -4402,6 +4656,7 @@
     "paths": [
       "~/Library/Application Support/Spotify/PersistentCache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Spotify 流媒体缓存（PersistentCache）",
@@ -4441,6 +4696,7 @@
     "paths": [
       "~/Library/Application Support/Steam/appcache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Steam 客户端缓存（appcache）",
@@ -4478,6 +4734,7 @@
     "paths": [
       "~/Library/Caches/com.microsoft.teams2"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Teams（新版）缓存",
@@ -4515,6 +4772,7 @@
     "paths": [
       "~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Telegram macOS 媒体缓存（Group Container）",
@@ -4552,6 +4810,7 @@
     "paths": [
       "/Volumes/com.apple.TimeMachine.localsnapshots"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Time Machine 本地快照",
@@ -4590,6 +4849,7 @@
     "paths": [
       "~/Library/Caches/torch"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "PyTorch Hub 模型缓存（~/Library/Caches/torch）",
@@ -4627,6 +4887,7 @@
     "paths": [
       "~/.Trash"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "废纸篓（清倒可释放空间）",
@@ -4668,6 +4929,7 @@
     "paths": [
       "~/Library/Unity/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Unity 全局缓存（~/Library/Unity/cache）",
@@ -4705,6 +4967,7 @@
     "paths": [
       "~/Library/Caches"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "用户应用缓存（~/Library/Caches）",
@@ -4742,6 +5005,7 @@
     "paths": [
       "~/Library/Containers/com.utmapp.UTM/Data/Documents"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "UTM 虚拟机库（.utm 虚拟机包）",
@@ -4782,6 +5046,7 @@
     "paths": [
       "~/Library/Caches/uv"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "uv 包缓存（~/Library/Caches/uv）",
@@ -4819,6 +5084,7 @@
     "paths": [
       "~/.vagrant.d/boxes"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Vagrant Box 下载缓存（~/.vagrant.d/boxes）",
@@ -4856,6 +5122,7 @@
     "paths": [
       "~/Library/Caches/Vivaldi"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Vivaldi 浏览器缓存",
@@ -4895,6 +5162,7 @@
       "~/Virtual Machines",
       "~/Virtual Machines.localized"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "VMware Fusion 虚拟机库",
@@ -4935,6 +5203,7 @@
     "paths": [
       "~/Library/Application Support/Code/CachedData"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "VS Code 启动缓存（V8 代码缓存）",
@@ -4974,6 +5243,7 @@
       "~/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files",
       "~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "微信聊天数据目录（xwechat_files / 旧版 Application Support）",
@@ -5016,6 +5286,7 @@
     "paths": [
       "~/Library/Caches/com.apple.dt.Xcode"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 索引与模块缓存（~/Library/Caches/com.apple.dt.Xcode）",
@@ -5053,6 +5324,7 @@
     "paths": [
       "~/Library/Developer/Xcode/iOS Device Logs"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 真机设备日志（iOS Device Logs）",
@@ -5090,6 +5362,7 @@
     "paths": [
       "~/Library/Developer/Xcode/iOS DeviceSupport"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 真机调试符号缓存（iOS DeviceSupport）",
@@ -5128,6 +5401,7 @@
     "paths": [
       "~/Library/Developer/CoreSimulator/Devices"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 模拟器设备",
@@ -5166,6 +5440,7 @@
     "paths": [
       "~/Library/Caches/Yarn"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Yarn 包缓存",
@@ -5204,6 +5479,7 @@
     "paths": [
       "~/Library/Caches/us.zoom.xos"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Zoom 会议客户端缓存",
@@ -5241,6 +5517,7 @@
     "paths": [
       "~/Library/Developer/Xcode/Archives"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 归档（Archives）",
@@ -5281,6 +5558,7 @@
     "paths": [
       "~/Library/Developer/Xcode/DerivedData"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Xcode 构建产物（DerivedData）",
@@ -5318,6 +5596,7 @@
     "paths": [
       "~/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Brave 浏览器缓存（~/.cache/BraveSoftware/Brave-Browser）",
@@ -5355,6 +5634,7 @@
     "paths": [
       "~/AppData/Local/Google/Chrome/User Data/Default/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Google Chrome 浏览器缓存（Default profile）",
@@ -5395,6 +5675,7 @@
       "~/anaconda3/pkgs",
       "~/miniforge3/pkgs"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Conda 包缓存（pkgs 目录）",
@@ -5434,6 +5715,7 @@
       "~/AppData/Local/Microsoft/Windows/WER/ReportArchive",
       "~/AppData/Local/Microsoft/Windows/WER/ReportQueue"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Windows 崩溃转储与错误报告（CrashDumps / WER）",
@@ -5471,6 +5753,7 @@
     "paths": [
       "~/AppData/Roaming/discord/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Discord 缓存（~/AppData/Roaming/discord/Cache）",
@@ -5508,6 +5791,7 @@
     "paths": [
       "~/AppData/Local/Docker/log"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Docker Desktop 日志（%LOCALAPPDATA%\\Docker\\log）",
@@ -5545,6 +5829,7 @@
     "paths": [
       "~/Dropbox/.dropbox.cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Dropbox 缓存（~/Dropbox/.dropbox.cache）",
@@ -5582,6 +5867,7 @@
     "paths": [
       "~/AppData/Local/Microsoft/Edge/User Data/Default/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Edge 浏览器缓存（Default profile）",
@@ -5620,6 +5906,7 @@
     "paths": [
       "~/AppData/Local/Mozilla/Firefox/Profiles/*/cache2"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Firefox 浏览器缓存（各 profile 的 cache2）",
@@ -5658,6 +5945,7 @@
     "paths": [
       "~/.gradle/caches"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle 构建缓存（~/.gradle/caches）",
@@ -5695,6 +5983,7 @@
     "paths": [
       "~/.gradle/jdks"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle JDK 工具链缓存（~/.gradle/jdks）",
@@ -5732,6 +6021,7 @@
     "paths": [
       "~/.gradle/wrapper/dists"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Gradle Wrapper 分发缓存（~/.gradle/wrapper/dists）",
@@ -5769,6 +6059,7 @@
     "paths": [
       "~/.stack"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Haskell Stack 缓存（~/.stack）",
@@ -5806,6 +6097,7 @@
     "paths": [
       "~/.cache/huggingface"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Hugging Face 缓存（~/.cache/huggingface）",
@@ -5843,6 +6135,7 @@
     "paths": [
       "~/AppData/Local/JetBrains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "JetBrains IDE 缓存与日志（%LOCALAPPDATA%\\JetBrains）",
@@ -5880,6 +6173,7 @@
     "paths": [
       "~/.m2/repository"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Maven 本地仓库（~/.m2/repository）",
@@ -5918,6 +6212,7 @@
     "paths": [
       "~/.minikube"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Minikube 集群缓存（~/.minikube）",
@@ -5955,6 +6250,7 @@
     "paths": [
       "~/AppData/Local/npm-cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "npm 包缓存（npm-cache）",
@@ -5992,6 +6288,7 @@
     "paths": [
       "~/.nuget/packages"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "NuGet 全局包缓存（global-packages）",
@@ -6029,6 +6326,7 @@
     "paths": [
       "~/.ollama/models"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Ollama 模型缓存（~/.ollama/models）",
@@ -6066,6 +6364,7 @@
     "paths": [
       "~/AppData/Local/Opera Software/Opera Stable/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Opera 浏览器缓存（~/.cache/operasoftware/Opera）",
@@ -6103,6 +6402,7 @@
     "paths": [
       "~/AppData/Local/pip/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pip 下载缓存",
@@ -6140,6 +6440,7 @@
     "paths": [
       "~/AppData/Local/pnpm/store"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "pnpm 内容寻址存储（store）",
@@ -6177,6 +6478,7 @@
     "paths": [
       "~/.rustup/toolchains"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "rustup 工具链缓存（~/.rustup/toolchains）",
@@ -6214,6 +6516,7 @@
     "paths": [
       "~/AppData/Roaming/slack/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Slack 缓存（~/AppData/Roaming/slack/Cache）",
@@ -6251,6 +6554,7 @@
     "paths": [
       "~/AppData/Roaming/Spotify/PersistentCache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Spotify 持久缓存（~/AppData/Roaming/Spotify）",
@@ -6288,6 +6592,7 @@
     "paths": [
       "~/AppData/Roaming/Microsoft/Teams/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Microsoft Teams 缓存（~/AppData/Roaming/Microsoft/Teams/Cache）",
@@ -6325,6 +6630,7 @@
     "paths": [
       "~/AppData/Roaming/Telegram Desktop/tdata/user_data"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Telegram 媒体缓存（tdata/user_data）",
@@ -6363,6 +6669,7 @@
     "paths": [
       "~/.cache/torch/hub"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "PyTorch Hub 缓存（~/.cache/torch/hub）",
@@ -6400,6 +6707,7 @@
     "paths": [
       "~/AppData/Local/Unity/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Unity 缓存（~/AppData/Local/Unity/cache）",
@@ -6437,6 +6745,7 @@
     "paths": [
       "~/.vagrant.d/boxes"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Vagrant 盒子缓存（~/.vagrant.d/boxes）",
@@ -6474,6 +6783,7 @@
     "paths": [
       "~/AppData/Local/Vivaldi/User Data/Default/Cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Vivaldi 浏览器缓存（~/.cache/Vivaldi）",
@@ -6511,6 +6821,7 @@
     "paths": [
       "~/AppData/Roaming/Code/CachedData"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "VS Code 缓存数据（~/AppData/Roaming/Code）",
@@ -6548,6 +6859,7 @@
     "paths": [
       "~/AppData/Roaming/Zoom/cache"
     ],
+    "project": null,
     "match_": null,
     "semantics": {
       "title": "Zoom 缓存（~/AppData/Roaming/Zoom）",

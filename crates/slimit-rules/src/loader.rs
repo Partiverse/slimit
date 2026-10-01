@@ -18,6 +18,9 @@ pub struct Rule {
     #[serde(default)]
     pub scope: Option<String>,
     pub paths: Vec<String>,
+    /// 项目感知匹配（project-artifact 扩展）。与 `paths` 互斥（lint 强制）。
+    #[serde(default)]
+    pub project: Option<ProjectCfg>,
     #[serde(default)]
     pub match_: Option<MatchCfg>,
     #[serde(default)]
@@ -38,6 +41,20 @@ pub struct MatchCfg {
     pub include: Vec<String>,
     #[serde(default)]
     pub exclude: Vec<String>,
+}
+
+/// 项目感知匹配配置（设计见 docs/PROJECT-ARTIFACT-DESIGN.md）：
+/// 命中「父目录存在 markers 之一、自身目录名 ∈ rel_paths」的目录。
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectCfg {
+    /// 项目根标记文件（单段文件名），如 `Cargo.toml`。
+    pub markers: Vec<String>,
+    /// 项目根下的产物目录名（单段），如 `target`。
+    pub rel_paths: Vec<String>,
+    /// 目录 mtime 距今天数低于该值 ⇒ below_min_age（不可执行，只提示）。
+    #[serde(default)]
+    pub max_age_days: Option<u32>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

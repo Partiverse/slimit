@@ -29,15 +29,59 @@ pub struct Match {
     pub path: PathBuf,
     pub actual_bytes: u64,
     pub apparent_bytes: u64,
+    /// project 规则：目标目录 mtime 距今天数；路径规则恒为 None。
+    pub age_days: Option<u64>,
+    /// project 规则：年龄低于 max_age_days（或 mtime 不可得）⇒ true，
+    /// 上层据此降为不可执行（只提示）。安全方向单调：拿不到年龄按需保护处理。
+    pub below_min_age: bool,
 }
 
 /// 把规则的 `paths` 模板展开（`~` 展开）后在目录快照中查命中。
 /// 模板含 glob 元字符（`*` `?` `[`）时按 globset 语义匹配每个快照路径
 /// （profile 随机后缀等无法精确枚举的目标）；否则查目录快照精确前缀命中。
+/// project 规则另走项目感知分支：目录名 ∈ rel_paths 且父目录存在 marker。
 pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
     let by_path: HashSet<&Path> = dirs.iter().map(|d| d.path.as_path()).collect();
     let mut out = Vec::new();
     for rule in rules {
+        // project 分支：对「目录名命中」的少数候选做 marker 存在性检查（lstat）。
+        // 快照不含文件明细，marker 检查必须回源文件系统；候选数少，成本可忽略。
+        if let Some(proj) = &rule.project {
+            for d in dirs {
+                let Some(name) = d.path.file_name().and_then(|n| n.to_str()) else {
+                    continue;
+                };
+                if !proj.rel_paths.iter().any(|r| r == name) {
+                    continue;
+                }
+                let Some(root) = d.path.parent() else {
+                    continue;
+                };
+                if !proj.markers.iter().any(|m| root.join(m).exists()) {
+                    continue;
+                }
+                let age_days = std::fs::metadata(&d.path)
+                    .ok()
+                    .and_then(|md| md.modified().ok())
+                    .and_then(days_since);
+                // mtime 不可得时按需保护处理（below_min_age=true）：年龄无法
+                // 担保就不担保；该选择在 authorize 重放下同样成立（单调安全）。
+                let below_min_age = match (proj.max_age_days, age_days) {
+                    (Some(max), Some(age)) => age < max as u64,
+                    (Some(_), None) => true,
+                    (None, _) => false,
+                };
+                out.push(Match {
+                    rule_id: rule.id.clone(),
+                    path: d.path.clone(),
+                    actual_bytes: d.actual,
+                    apparent_bytes: d.apparent,
+                    age_days,
+                    below_min_age,
+                });
+            }
+            continue;
+        }
         for template in &rule.paths {
             let Some(path) = expand_tilde(template) else {
                 continue;
@@ -54,6 +98,8 @@ pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
                             path: d.path.clone(),
                             actual_bytes: d.actual,
                             apparent_bytes: d.apparent,
+                            age_days: None,
+                            below_min_age: false,
                         });
                     }
                 }
@@ -64,12 +110,23 @@ pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
                         path,
                         actual_bytes: d.actual,
                         apparent_bytes: d.apparent,
+                        age_days: None,
+                        below_min_age: false,
                     });
                 }
             }
         }
     }
     dedup(out)
+}
+
+/// 目录 mtime 距今整天数（构建产物目录的 mtime = 最近一次构建活动；
+/// APFS atime 不可靠，不用）。
+fn days_since(mtime: std::time::SystemTime) -> Option<u64> {
+    std::time::SystemTime::now()
+        .duration_since(mtime)
+        .ok()
+        .map(|d| d.as_secs() / 86400)
 }
 
 /// glob 元字符检测：模板含任一即走 glob 语义（字面路径不受影响）。
@@ -141,6 +198,92 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn project_rules_match_only_with_marker() {
+        // project 规则：目录名 ∈ rel_paths 且父目录存在 marker 才命中；
+        // 无 marker 的同名目录（如手工建的 ~/target）天然不命中。
+        let dir = tempfile::tempdir().unwrap();
+        let rules_dir = dir.path().join("rules");
+        std::fs::create_dir_all(rules_dir.join("macos")).unwrap();
+        std::fs::write(
+            rules_dir.join("macos/test-project.yaml"),
+            "apiVersion: slimit.rules/v1\nid: macos-project-test-target\nos: macos\npaths: []\nproject:\n  markers:\n    - Cargo.toml\n  rel_paths:\n    - target\nsemantics:\n  title: t\n  what: w\n  producer: p\n  consequence: c\nrisk: yellow\naction:\n  kind: purge-dir\nrefs:\n  - https://example.com\n",
+        )
+        .unwrap();
+        let rules = load_rules(&rules_dir).unwrap();
+        assert_eq!(rules.len(), 1);
+
+        let proj = dir.path().join("proj");
+        std::fs::create_dir_all(proj.join("target")).unwrap();
+        std::fs::write(proj.join("Cargo.toml"), b"[package]\n").unwrap();
+        let decoy = dir.path().join("decoy");
+        std::fs::create_dir_all(decoy.join("target")).unwrap();
+
+        let matches = match_rules(
+            &rules,
+            &[
+                DirSnapshot::new(&proj.join("target"), 100, 80),
+                DirSnapshot::new(&decoy.join("target"), 100, 80),
+            ],
+        );
+        assert_eq!(matches.len(), 1, "decoy without marker must not match");
+        assert_eq!(matches[0].path, proj.join("target"));
+        assert_eq!(matches[0].actual_bytes, 80);
+        assert_eq!(matches[0].age_days, Some(0), "fresh dir is 0 days old");
+        assert!(!matches[0].below_min_age, "no max_age_days set ⇒ no guard");
+    }
+
+    #[test]
+    fn project_age_guard_blocks_fresh_and_allows_old() {
+        // max_age_days=14：新鲜 target 不得执行（below_min_age），mtime 拨回
+        // 2020 年的可执行候选。mtime 口径 = 目录最近一次构建活动。
+        let dir = tempfile::tempdir().unwrap();
+        let rules_dir = dir.path().join("rules");
+        std::fs::create_dir_all(rules_dir.join("macos")).unwrap();
+        std::fs::write(
+            rules_dir.join("macos/test-project.yaml"),
+            "apiVersion: slimit.rules/v1\nid: macos-project-test-target\nos: macos\npaths: []\nproject:\n  markers:\n    - Cargo.toml\n  rel_paths:\n    - target\n  max_age_days: 14\nsemantics:\n  title: t\n  what: w\n  producer: p\n  consequence: c\nrisk: yellow\naction:\n  kind: purge-dir\nrefs:\n  - https://example.com\n",
+        )
+        .unwrap();
+        let rules = load_rules(&rules_dir).unwrap();
+
+        let fresh_root = dir.path().join("fresh");
+        std::fs::create_dir_all(fresh_root.join("target")).unwrap();
+        std::fs::write(fresh_root.join("Cargo.toml"), b"x").unwrap();
+
+        let old_root = dir.path().join("old");
+        std::fs::create_dir_all(old_root.join("target")).unwrap();
+        std::fs::write(old_root.join("Cargo.toml"), b"x").unwrap();
+        let old_target = old_root.join("target");
+        // touch -t 在 macOS/Linux 均可用（CI rust 任务仅 macos-14）。
+        let status = std::process::Command::new("touch")
+            .args(["-t", "202001010000"])
+            .arg(&old_target)
+            .status()
+            .unwrap();
+        assert!(status.success(), "touch -t must work in test env");
+
+        let matches = match_rules(
+            &rules,
+            &[
+                DirSnapshot::new(&fresh_root.join("target"), 10, 8),
+                DirSnapshot::new(&old_target, 10, 8),
+            ],
+        );
+        assert_eq!(matches.len(), 2);
+        let fresh = matches
+            .iter()
+            .find(|m| m.path == fresh_root.join("target"))
+            .unwrap();
+        let old = matches.iter().find(|m| m.path == old_target).unwrap();
+        assert!(fresh.below_min_age, "fresh target must be guarded");
+        assert!(
+            !old.below_min_age,
+            "old target must be executable-candidate"
+        );
+        assert!(old.age_days.unwrap() > 100);
     }
 
     #[test]

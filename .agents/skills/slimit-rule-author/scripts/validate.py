@@ -63,6 +63,32 @@ def main() -> int:
         if rule["risk"] == "red" and action["kind"] == "purge-dir":
             failures.append(f"{rel}: red rule must not use purge-dir")
 
+        project = rule.get("project")
+        if project is not None:
+            # project-artifact 扩展约束（设计见 docs/PROJECT-ARTIFACT-DESIGN.md §5），
+            # 与 rules crate lint.rs 等价——双保险，CI 与本地同一套。
+            if rule["paths"]:
+                failures.append(f"{rel}: project rule must have empty paths")
+            for key in ("markers", "rel_paths"):
+                items = project.get(key) or []
+                if not items:
+                    failures.append(f"{rel}: project rule requires non-empty {key}")
+                for name in items:
+                    bad = (
+                        not name
+                        or name in (".", "..")
+                        or any(ch in name for ch in "/\\*?[]")
+                    )
+                    if bad:
+                        failures.append(
+                            f"{rel}: project {key} entry '{name}' must be a single path segment"
+                        )
+            max_age = project.get("max_age_days")
+            if max_age is not None and max_age < 1:
+                failures.append(f"{rel}: project max_age_days must be >= 1")
+            if action["kind"] == "command":
+                failures.append(f"{rel}: project rule must not use command action")
+
     if failures:
         print(f"{len(failures)} failure(s):")
         for f in failures:

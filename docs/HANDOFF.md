@@ -52,7 +52,7 @@ Rust workspace，五 crate（[Cargo.toml](../Cargo.toml)，license `Apache-2.0 W
 | `crates/slimit-ai` | AI 解释 | `AiSettings` + 云端解释（OpenAI 兼容端点，用户自备 Key，config.json 存储，默认关闭）；规则命中优先返回规则库 semantics（confidence 0.95），启发式仅兜底 |
 | `crates/slimit-tauri` | Tauri 2 壳 + UI | 命令 `scan_and_plan` / `explain` / `apply_plan` / `restore_item` / `list_quarantine`，进度事件 `scan-progress`（带 seq 防乱序）；UI 在 `crates/slimit-tauri/ui/`（手写 Vite React-TS），桥接契约 [BRIDGE.md](./BRIDGE.md)，前端类型化镜像 `ui/src/bridge.ts` |
 
-规则库：`rules/macos/` 共 **90 条**、`rules/linux/` 共 **51 条**、`rules/windows/` 共 **34 条**，合计 **175 条**（CodeArts 批量扩充至 188 后经平台核查收口：删除 13 条平台错配/无可靠来源规则，修复 11 条路径与风险错标——含 Telegram `tdata` 会话密钥误标为可清缓存这一严重项；收口明细见 [COMPLETION-REPORT.md](../COMPLETION-REPORT.md)），契约 `slimit.rules/v1`（[schema-v1.json](../rules/schema-v1.json)，CI 强制校验），一规则一文件，文件名 = 规则 id，`_` 前缀不参与校验。red/advise 双层保险（前端不可勾选 + apply 再拒）。
+规则库：`rules/macos/` 共 **93 条**（含 3 条 project-artifact 试点）、`rules/linux/` 共 **51 条**、`rules/windows/` 共 **34 条**，合计 **178 条**（CodeArts 批量扩充至 188 后经平台核查收口：删除 13 条平台错配/无可靠来源规则，修复 11 条路径与风险错标——含 Telegram `tdata` 会话密钥误标为可清缓存这一严重项；收口明细见 [COMPLETION-REPORT.md](../COMPLETION-REPORT.md)），契约 `slimit.rules/v1`（[schema-v1.json](../rules/schema-v1.json)，CI 强制校验；含向后兼容的 `project` 项目感知扩展，见 [PROJECT-ARTIFACT-DESIGN.md](./PROJECT-ARTIFACT-DESIGN.md)），一规则一文件，文件名 = 规则 id，`_` 前缀不参与校验。red/advise 双层保险（前端不可勾选 + apply 再拒）。
 
 ## 4. 构建与验证命令
 
@@ -109,7 +109,7 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 3. **体验打磨**：种子反馈「交互一般、语义模板化」的后续迭代（UI 与解释文案质量），配合云端 AI 使用率观察。
 4. **签名 + 公证（notarization）**：用户决定暂不注册 Apple Developer Program（$99/年），v0.1 走未签名软启动；**公开发布/收费前必须补公证**。
 5. **v0.2 差异化**：本地模型（~3B）AI 解释，保持「默认全离线」承诺。
-6. **开发者大额回收（v0.2 主打候选，优先级待用户定夺）**：项目感知规则（schema v2 `project-artifact`）+ 扫描器 marker 探测 + 净回收持久度评级 + 重建成本披露——直击「竞品只会清 2GB 浏览器缓存，80GB target/ 无人敢碰」的真空地带，方案见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md)。
+6. **开发者大额回收（v0.2 主打候选，优先级待用户定夺）**：项目感知规则（schema `project` 扩展 + 3 条试点：cargo target / node_modules / python venv，年龄守卫 below_min_age）**R1 已实装**；R3–R5（UI 净收益排序与年龄徽章、project 解释模板、新手/专家档）与 walker 短路优化待做——直击「竞品只会清 2GB 浏览器缓存，80GB target/ 无人敢碰」的真空地带，方案见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) 与 [PROJECT-ARTIFACT-DESIGN.md](./PROJECT-ARTIFACT-DESIGN.md)。
 
 ## 8. 文档索引
 
@@ -124,5 +124,6 @@ GitHub Release 发布用 `gh` CLI（现例：`gh release create v0.1.0-rcX` 上�
 | [W8-PLAN.md](./W8-PLAN.md) | 发布计划：notarization、落地页、发布 checklist、W7 核对结论 |
 | [SEED-INVITE.md](./SEED-INVITE.md) | 种子用户邀请文案与分发材料 |
 | [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) | 深度回收策略调研：竞品为什么清不动大头、A/B/C 分类学、项目感知方案（v0.2 主打候选） |
+| [PROJECT-ARTIFACT-DESIGN.md](./PROJECT-ARTIFACT-DESIGN.md) | 项目感知规则设计：schema `project` 扩展、匹配算法、年龄守卫、授权重放一致性 |
 | [rules/README.md](../rules/README.md) | 规则编写规范与执行语义 |
 | 本文档 | 现状/进度/工具链交接 |

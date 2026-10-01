@@ -1,0 +1,29 @@
+apiVersion: slimit.rules/v1
+id: macos-project-node-modules
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - package.json
+    - package-lock.json
+  rel_paths:
+    - node_modules
+  max_age_days: 30
+semantics:
+  title: "Node 依赖目录（项目内 node_modules/）"
+  what: "npm/pnpm/yarn 安装的项目依赖包。社区经验：长期未动的项目里 node_modules 普遍数百 MB 到数 GB"
+  producer: "npm install / pnpm install（装依赖时生成）"
+  safe_to_delete_because: "依赖可由 package.json + lockfile 完全重装；项目源代码、配置与 git 历史均不在其中"
+  consequence: "该项目下次开发前需重新 npm install（需网络，下载量取决于依赖规模）；项目本身完好"
+  regenerate: "npm install 按需重装"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB 到数 GB（每项目）"
+  recovery: partial
+refs:
+  - https://docs.npmjs.com/cli/v10/commands/npm-install

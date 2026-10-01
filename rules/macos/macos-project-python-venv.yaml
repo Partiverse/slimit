@@ -1,0 +1,32 @@
+apiVersion: slimit.rules/v1
+id: macos-project-python-venv
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - pyproject.toml
+    - requirements.txt
+    - setup.py
+  rel_paths:
+    - .venv
+    - venv
+  max_age_days: 30
+semantics:
+  title: "Python 虚拟环境（项目内 .venv / venv）"
+  what: "项目私有的 Python 解释器副本与已安装依赖。长期未动的项目虚拟环境普遍数百 MB 到数 GB"
+  producer: "python -m venv / uv venv（创建环境时生成）"
+  safe_to_delete_because: "虚拟环境可由 pyproject.toml/requirements.txt 完全重建；项目源代码与配置不在其中。旧虚拟环境里的 bin 脚本硬编码绝对路径，重建后反而更干净"
+  consequence: "该项目下次开发前需重建环境（python -m venv .venv && pip install -r requirements.txt 或 uv sync，需网络）"
+  regenerate: "按项目说明重建，通常一条命令"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB 到数 GB（每项目）"
+  recovery: partial
+refs:
+  - https://docs.python.org/3/library/venv.html
+  - https://pip.pypa.io/en/stable/topics/repeatable-installs/
