@@ -120,7 +120,13 @@ fn is_valid_entry_id(id: &str) -> bool {
 }
 
 /// 按 manifest 完整恢复。原路径已存在时生成带后缀的新路径，绝不覆盖。
-pub fn restore(quarantine: &Quarantine, id: &str) -> Result<std::path::PathBuf, ApplyError> {
+/// 成功恢复追加一行 `restore` 审计事件（红线④：隔离区的每次迁出必须可追溯，
+/// 与 apply/purge-expired 同一日志流）。
+pub fn restore(
+    quarantine: &Quarantine,
+    id: &str,
+    audit: &mut AuditLog,
+) -> Result<std::path::PathBuf, ApplyError> {
     if !is_valid_entry_id(id) {
         return Err(ApplyError::InvalidId(id.to_string()));
     }
@@ -158,6 +164,15 @@ pub fn restore(quarantine: &Quarantine, id: &str) -> Result<std::path::PathBuf, 
     std::fs::rename(&payload, &dest)?;
     // 清空隔离条目（manifest 一并移除）。
     std::fs::remove_dir_all(quarantine.entry_dir(id))?;
+    audit.record(&serde_json::json!({
+        "event": "restore",
+        "id": id,
+        "path": dest,
+        "original_path": manifest.original_path,
+        "rule": manifest.rule_id,
+        "bytes": manifest.actual_bytes,
+        "renamed": dest != *original,
+    }));
     Ok(dest)
 }
 
@@ -233,10 +248,21 @@ mod tests {
         let qid = reports[0].quarantine_id.clone().unwrap();
         assert!(!target.exists(), "target should be moved into quarantine");
 
-        let restored = restore(&q, &qid).unwrap();
+        let restored = restore(&q, &qid, &mut audit).unwrap();
         assert_eq!(restored, target);
         assert!(target.join("f.bin").exists(), "content fully restored");
         assert!(!q.entry_dir(&qid).exists(), "quarantine entry cleaned");
+
+        // 红线④：恢复同样入审计（GUI 手测 2026-10-01 抓到 restore 无审计）。
+        let text = std::fs::read_to_string(audit.path()).unwrap();
+        let restore_line = text
+            .lines()
+            .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+            .find(|v| v["event"] == "restore")
+            .expect("restore must be audited");
+        assert_eq!(restore_line["id"], qid.as_str());
+        assert_eq!(restore_line["path"], target.to_string_lossy().as_ref());
+        assert_eq!(restore_line["renamed"], false);
     }
 
     #[test]
@@ -263,7 +289,7 @@ mod tests {
         std::fs::create_dir_all(&target).unwrap();
         std::fs::write(target.join("new"), b"new").unwrap();
 
-        let restored = restore(&q, &qid).unwrap();
+        let restored = restore(&q, &qid, &mut audit).unwrap();
         assert_ne!(restored, target, "must not overwrite");
         assert!(restored.to_string_lossy().contains("slimit-restored"));
         assert_eq!(std::fs::read(target.join("new")).unwrap(), b"new");
@@ -294,6 +320,7 @@ mod tests {
         // 都作用在逃逸路径上。非 UUID 条目 id 必须被拒绝，隔离区外零写入。
         let tmp = tempfile::tempdir().unwrap();
         let q = Quarantine::new(&tmp.path().join("slimit"));
+        let mut audit = AuditLog::new(&tmp.path().join("slimit")).unwrap();
         // entry_root = tmp/slimit/quarantine；id "../victim" 逃逸到 tmp/slimit/victim。
         let victim_rel = tmp.path().join("slimit").join("victim");
         // 绝对路径 id：join 直接替换整个 base。
@@ -319,7 +346,7 @@ mod tests {
         }
 
         for evil in ["../victim", victim_abs.to_str().unwrap()] {
-            let err = restore(&q, evil).unwrap_err();
+            let err = restore(&q, evil, &mut audit).unwrap_err();
             assert!(
                 matches!(err, ApplyError::InvalidId(_)),
                 "id {evil:?} must be rejected as InvalidId"

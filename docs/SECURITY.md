@@ -48,15 +48,21 @@ Mimosa 扫描（2026-09-29）completeness: partial，入口识别未覆盖 Tauri
    - **修复**：新增 `authorize_items(items, rules)` 按规则库重新推导可执行性（复用 canonical `match_rules`+`plan` 逻辑），伪造、未知 rule_id 或 red 规则命中的项一律降级为不可执行。`apply_plan` 在调用 `apply` 前先 `authorize_items`。
    - **测试**：`authorize_items_keeps_rule_authorized_and_downgrades_forged` + `authorize_items_downgrades_unknown_rule_id_and_red` 双绿，验证正常流程幂等、伪造项降级、无副作用。
 
+3. **`restore` 未写审计日志**（`crates/slimit-exec/src/executor.rs`）——GUI 全链路手测抓到（2026-10-01，project-artifact 场景）
+   - **问题**：`audit.rs` 的契约是"每次 apply/restore 追加一行"，但 `restore()` 从未接收也从未写入 `AuditLog`；本节此前一度声称 `restore` 已记录，属文档与实现不符（已更正）。后果：隔离区迁出不可追溯，违反红线④「删除必须可追溯」的对称要求。
+   - **修复**：`restore(quarantine, id, audit)` 收 `&mut AuditLog`，成功 rename + 清理隔离条目后追加 `restore` 事件（含 id / 实际恢复路径 / original_path / rule / bytes / `renamed` 标记是否因原路径被占而改名）；tauri `restore_item` 同步构造 AuditLog。与 `apply` 同层保证，不依赖调用方自觉。
+   - **测试**：`apply_quarantine_then_restore_roundtrip` 内断言 `restore` 事件字段齐备（id/path/renamed）；另两条 restore 测试同步改签名。
+
 ### 已确认安全（审计通过）
 
 - **AI 输出只进 UI 提示层**：`explain` 命令的云端 AI 失败静默回落，永不阻塞、永不影响执行授权。
 - **red 永不执行**：`plan()` 对 `risk: red` 一律 `executable=false`；`apply_plan` 的 `authorize_items` 二次拒绝。
+- **project 规则年龄守卫**：`below_min_age`（年龄不足或 mtime 不可得）⇒ `executable=false`；`authorize_items` 重放同逻辑。拿不到年龄证据时按需保护处理，所有不确定方向单调朝安全。
 - **删除 = 迁入隔离区**：唯一删除动作是同卷原子 rename 进 `<app_data>/quarantine/` + manifest 落盘；`restore` 绝不覆盖已存在路径（自动加后缀）；审计 JSONL 追加写。
 - **command 必带 dry_run**：规则库内 command 规则无 dry_run 不入库（lint 强制）；MVP 中 command 类规则不自动执行。
-- **规则库可信输入**：编译期嵌入 + 加载时逐条 lint（kebab-case id、red 必填 red_flags、refs 非空）+ id 全局唯一；嵌入版与目录版一致性有测试锁定。
+- **规则库可信输入**：编译期嵌入 + 加载时逐条 lint（kebab-case id、red 必填 red_flags、refs 非空、project 规则单段名防路径注入）+ id 全局唯一；嵌入版与目录版一致性有测试锁定。
 - **密钥与隐私**：扫描只读文件元数据（dev/ino/size/blocks），不读取文件内容；无网络上传路径（云端解释是 W8+ 的显式开关项）。
-- **审计日志**：`AuditLog` 追加写 JSONL，不可改写历史；`apply`/`restore`/`purge-expired` 均记录。
+- **审计日志**：`AuditLog` 追加写 JSONL，不可改写历史；`apply`/`restore`/`purge-expired` 三类事件均在 executor/command 层实装（非仅约定）。
 - **隔离区根**：`<app_data_dir>/quarantine/`，id 校验后零逃逸。
 
 ## 设计级安全不变量（机制保证，不依赖扫描结论）

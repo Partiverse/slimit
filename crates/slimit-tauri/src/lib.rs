@@ -174,8 +174,13 @@ fn apply_plan(app: AppHandle, items: Vec<PlanItem>) -> Result<Vec<ApplyReport>, 
 
 #[tauri::command]
 fn restore_item(app: AppHandle, id: String) -> Result<PathBuf, String> {
+    let data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("resolve app data dir: {e}"))?;
     let q = quarantine(&app)?;
-    slimit_exec::restore(&q, &id).map_err(|e| e.to_string())
+    let mut audit = slimit_exec::AuditLog::new(&data).map_err(|e| e.to_string())?;
+    slimit_exec::restore(&q, &id, &mut audit).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
