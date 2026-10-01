@@ -421,4 +421,23 @@ mod tests {
         let err = resolve_scan_root("~/code").unwrap_err();
         assert!(err.contains("无法展开"), "got: {err}");
     }
+
+    /// 真实主目录下端到端展开 + 真实扫描。GUI 自动化被系统焦点限制挡住时，
+    /// 这里用后端契约证明 `~/…` 真的能扫（修复前正是这条路径报
+    /// root does not exist），而不是只在 mock HOME 下过单测。
+    #[test]
+    fn scan_root_works_with_real_home() {
+        let _lock = ENV_LOCK.lock().unwrap();
+        let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from) else {
+            return;
+        };
+        let caches = home.join("Library").join("Caches");
+        if !caches.exists() {
+            return; // 非 macOS CI 环境跳过
+        }
+        let resolved = resolve_scan_root("~/Library/Caches").unwrap();
+        assert_eq!(resolved, caches);
+        let result = slimit_core::scan_with_progress(&resolved, &|_| {}).unwrap();
+        assert_eq!(result.root, caches);
+    }
 }
