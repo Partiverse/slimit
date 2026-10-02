@@ -133,7 +133,7 @@ function CleanPanel() {
     setReports(null);
     setTips({});
     setConfirming(false);
-    scanAndPlan(path, 20)
+    scanAndPlan(path, 20, id)
       .then((result) => {
         setTasks((ts) =>
           ts.map((t) =>

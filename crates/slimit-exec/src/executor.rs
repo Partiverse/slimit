@@ -111,8 +111,8 @@ fn purge_into_quarantine(item: &PlanItem, q: &Quarantine) -> Result<String, Appl
                 .map(|m| m.len())
                 .unwrap_or(0);
             let _ = copied; // 目录场景 size 意义有限；完整性由隔离区可恢复兜底
-            if let Err(e) = std::fs::remove_dir_all(&item.path)
-                .or_else(|_| std::fs::remove_file(&item.path))
+            if let Err(e) =
+                std::fs::remove_dir_all(&item.path).or_else(|_| std::fs::remove_file(&item.path))
             {
                 // 删原件失败：隔离区副本保留，报错让用户决定
                 let _ = std::fs::remove_dir_all(&dest);

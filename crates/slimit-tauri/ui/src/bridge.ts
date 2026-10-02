@@ -108,8 +108,8 @@ export interface VolumeSummary {
   system_snapshot_name: string | null;
 }
 
-export function scanAndPlan(root: string, top = 20): Promise<ScanPlanResponse> {
-  return invoke("scan_and_plan", { root, top });
+export function scanAndPlan(root: string, top = 20, taskId?: number): Promise<ScanPlanResponse> {
+  return invoke("scan_and_plan", { root, top, taskId });
 }
 
 export function getSettings(): Promise<AiSettings> {

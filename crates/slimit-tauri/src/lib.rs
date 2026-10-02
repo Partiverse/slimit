@@ -62,12 +62,31 @@ fn scan_and_plan(
     app: AppHandle,
     root: String,
     top: Option<usize>,
+    task_id: Option<u64>,
 ) -> Result<ScanPlanResponse, String> {
-    let seq = SCAN_SEQ.fetch_add(1, Ordering::Relaxed);
+    // 进度事件序号必须与前端任务 id 一致（2026-10-02 修复「进度条不走」：
+    // 此前后端自增序号从 0 起、前端任务 id 从 1 起，`t.id === p.seq` 永不
+    // 匹配，进度数字永远停在 0）。由前端显式传 task_id，后端原样回传。
+    let seq = task_id.unwrap_or_else(|| SCAN_SEQ.fetch_add(1, Ordering::Relaxed));
     let root = resolve_scan_root(&root)?;
+    // 测试钩子：`--scan-delay-ms N` 启动参数让每次进度回调停顿 N 毫秒，
+    // 模拟慢盘（真机验证进度条中间态用；`open --args` 可传入 GUI 进程，
+    // 环境变量对 launchd 启动的 app 不可靠）。生产不带参数即零开销。
+    let delay_ms: u64 = std::env::args()
+        .position(|a| a == "--scan-delay-ms")
+        .and_then(|i| std::env::args().nth(i + 1))
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(0);
+    eprintln!(
+        "[debug] scan delay_ms={delay_ms} args={:?}",
+        std::env::args().collect::<Vec<_>>()
+    );
     let result = {
         let app = app.clone();
         slimit_core::scan_with_progress(&root, &move |p| {
+            if delay_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            }
             // 进度事件：累计条目数 + 当前目录（总量未知，是进度而非百分比）。
             let _ = app.emit(
                 "scan-progress",

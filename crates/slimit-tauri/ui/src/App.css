@@ -1,351 +1,422 @@
+/* ============================================================
+   SlimIt UI — 基于 shadcn/ui 设计规范的令牌体系
+   ------------------------------------------------------------
+   设计计划（frontend-design pass）：
+   - 色：shadcn zinc 中性基座（HSL 令牌，明暗双主题）；
+     主色仅用于每屏唯一主行动（开始扫描 / 执行 / 确认）；
+     风险色只出现在风险语义上（绿/黄/红徽章），不作装饰。
+   - 型：系统字体栈（原生应用质感），路径/ID 用等宽 12px，
+     正文 13px 高密度，标题 15px/600。
+   - 布局：左对齐单栏，内容区最大 980px，执行行吸底，
+     表格密度优先（行高 36px）。
+   - 原则：状态 = 颜色 + 文字双通道；空态给行动指引；
+     破坏性操作永远红色 + 两段式确认。
+   ============================================================ */
+
 :root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --accent: 240 4.8% 95.9%;
+  --destructive: 0 84.2% 60.2%;
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5% 64.9%;
+  --radius: 0.5rem;
   color-scheme: light dark;
-  font-family: -apple-system, "PingFang SC", sans-serif;
-  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5.9%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 240 3.7% 15.9%;
+    --destructive: 0 62.8% 50.6%;
+    --success: 142 69% 48%;
+    --warning: 38 92% 55%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+#root,
+main,
+section {
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 main {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 16px 20px 40px;
-}
-
-h1 {
-  font-size: 22px;
-  margin-bottom: 4px;
+  padding: 20px 24px 56px;
 }
 
 h2 {
   font-size: 15px;
-  margin-top: 28px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
-  padding-bottom: 4px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 4px 0 12px;
+}
+
+p {
+  margin: 8px 0;
 }
 
 .hint {
-  color: rgba(128, 128, 128, 0.9);
-  margin-top: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.ok {
+  color: hsl(var(--success));
+}
+
+.error,
+.reports .error {
+  color: hsl(var(--destructive));
+}
+
+.path {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+/* ---------- 控件基原语（button / input / select） ---------- */
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  transition: background 0.12s ease, opacity 0.12s ease;
+}
+
+button:hover:not(:disabled) {
+  background: hsl(var(--primary) / 0.88);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.ghost {
+  background: transparent;
+  color: hsl(var(--foreground));
+}
+
+button.ghost:hover:not(:disabled) {
+  background: hsl(var(--accent));
+}
+
+button.danger {
+  background: transparent;
+  color: hsl(var(--destructive));
+}
+
+button.danger:hover:not(:disabled) {
+  background: hsl(var(--destructive) / 0.1);
+}
+
+input,
+select {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: transparent;
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-family: inherit;
+}
+
+input::placeholder {
+  color: hsl(var(--muted-foreground) / 0.8);
 }
 
 .row {
   display: flex;
+  align-items: center;
   gap: 8px;
-  margin: 8px 0;
+  flex-wrap: wrap;
+  margin: 10px 0;
 }
 
-input {
-  flex: 1;
-  padding: 5px 8px;
-  border: 1px solid rgba(128, 128, 128, 0.4);
-  border-radius: 6px;
+.row input:not([type="checkbox"]) {
+  flex: 1 1 260px;
 }
 
-button {
-  padding: 5px 14px;
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.mode-toggle select {
+  height: 28px;
+  padding: 0 6px;
+}
+
+input[type="checkbox"] {
+  height: 14px;
+  width: 14px;
+  accent-color: hsl(var(--primary));
+}
+
+/* ---------- 选项卡 ---------- */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid hsl(var(--border));
+  margin: 14px 0 4px;
+}
+
+.tabs button {
+  background: transparent;
+  color: hsl(var(--muted-foreground));
   border: none;
-  border-radius: 6px;
-  background: #2f9e8f;
-  color: #fff;
-  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  height: 36px;
+  padding: 0 14px;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
+.tabs button:hover {
+  color: hsl(var(--foreground));
+  background: transparent;
 }
 
-.error {
-  color: #c0392b;
+.tabs button.active {
+  color: hsl(var(--foreground));
+  border-bottom-color: hsl(var(--foreground));
+  font-weight: 600;
 }
+
+/* ---------- 卡片与提示 ---------- */
+
+.fda-card {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+
+.fda-card > b {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.fda-banner {
+  border: 1px solid hsl(var(--warning) / 0.45);
+  background: hsl(var(--warning) / 0.07);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.empty {
+  border: 1px dashed hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  margin: 12px 0;
+}
+
+.empty b {
+  display: block;
+  margin-bottom: 4px;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* ---------- 表格 ---------- */
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 8px;
+  font-size: 13px;
 }
 
 th,
 td {
   text-align: left;
-  padding: 4px 8px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+  padding: 6px 10px;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: middle;
 }
 
 th {
-  color: rgba(128, 128, 128, 0.9);
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: hsl(var(--accent) / 0.6);
+}
+
+tr.task-selected,
+tr.task-selected:hover {
+  background: hsl(var(--accent));
+}
+
+table.tasks td,
+table.tasks th {
+  height: 36px;
 }
 
 td.path {
-  font-family: ui-monospace, Menlo, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
-  /* 排布修复（种子反馈：规则列窄到竖排、行高过宽）：路径与规则列单行
-     省略号，行高收紧；完整内容看 title 悬浮。 */
-  max-width: 380px;
+  max-width: 340px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 规则名列：单行不竖排，给足最小宽度 */
 td.rule-cell,
 th.rule-col {
   white-space: nowrap;
-  max-width: 300px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
+  color: hsl(var(--muted-foreground));
 }
 
 td.age-cell {
   white-space: nowrap;
 }
 
-tr {
-  height: 32px;
+td.tip {
+  background: hsl(var(--muted) / 0.6);
+  font-size: 12px;
+  line-height: 1.7;
+  border-radius: calc(var(--radius) - 2px);
 }
 
 .totals {
-  margin: 10px 0 0;
-}
-
-ul {
-  margin: 8px 0;
-  padding-left: 20px;
-  line-height: 1.7;
-}
-
-button.ghost {
-  background: transparent;
-  color: #2f9e8f;
-  border: 1px solid rgba(47, 158, 143, 0.5);
-  padding: 2px 10px;
-}
-
-td.tip {
-  background: rgba(128, 128, 128, 0.08);
+  color: hsl(var(--muted-foreground));
   font-size: 12px;
-  line-height: 1.6;
 }
 
-.ok {
-  color: #2f9e8f;
-}
+/* ---------- 徽章 ---------- */
 
-.reports {
-  margin-top: 10px;
-}
-
-.rules-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.rule-card {
-  border: 1px solid rgba(128, 128, 128, 0.2);
-  border-radius: 6px;
-  padding: 8px 12px;
-  background: rgba(128, 128, 128, 0.04);
-}
-
-.rule-card > summary {
-  cursor: pointer;
-  display: flex;
+.risk-badge,
+.age-badge,
+.manual-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.rule-card > summary::-webkit-details-marker {
-  display: none;
-}
-
-.rule-card > summary::before {
-  content: "▶";
-  font-size: 10px;
-  color: rgba(128, 128, 128, 0.6);
-  transition: transform 0.15s;
-}
-
-.rule-card[open] > summary::before {
-  transform: rotate(90deg);
-}
-
-.risk-tag {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 9999px;
   font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(128, 128, 128, 0.1);
-}
-
-.rule-id {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.rule-os {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(47, 158, 143, 0.15);
-  color: #2f9e8f;
-}
-
-.rule-title {
-  margin: 6px 0 2px;
   font-weight: 500;
-}
-
-.rule-what {
-  margin: 2px 0 6px;
-  color: rgba(128, 128, 128, 0.9);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.rule-paths {
-  margin: 4px 0 2px;
-}
-
-.rule-refs {
-  margin: 2px 0 0;
-  font-size: 11px;
-}
-
-.rule-refs a {
-  color: #2f9e8f;
-  word-break: break-all;
-}
-
-/* Tab 导航：6 面板分 4 组，消除面板墙 */
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-top: 16px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
-}
-
-.tabs button {
-  background: transparent;
-  color: rgba(128, 128, 128, 0.9);
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 6px 6px 0 0;
-  padding: 6px 14px;
-  font-size: 13px;
-}
-
-.tabs button:hover {
-  color: #2f9e8f;
-}
-
-.tabs button.active {
-  color: #2f9e8f;
-  font-weight: 600;
-  border-bottom-color: #2f9e8f;
-}
-
-/* 风险徽章：色彩 + 文字双通道（不单靠颜色传达状态） */
-.risk-badge {
-  display: inline-block;
-  font-size: 11px;
-  padding: 1px 8px;
-  border-radius: 10px;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 .risk-badge.risk-green {
-  background: rgba(47, 158, 143, 0.15);
-  color: #1d7a6d;
+  background: hsl(var(--success) / 0.12);
+  color: hsl(var(--success));
+  border-color: hsl(var(--success) / 0.25);
 }
 
 .risk-badge.risk-yellow {
-  background: rgba(230, 167, 32, 0.18);
-  color: #9a6b00;
+  background: hsl(var(--warning) / 0.12);
+  color: hsl(38 80% 38%);
+  border-color: hsl(var(--warning) / 0.3);
 }
 
 .risk-badge.risk-red {
-  background: rgba(192, 57, 43, 0.15);
-  color: #c0392b;
+  background: hsl(var(--destructive) / 0.1);
+  color: hsl(var(--destructive));
+  border-color: hsl(var(--destructive) / 0.25);
 }
 
-/* 年龄徽章（project 规则）：「N 天未动」是清理勇气的证据；守卫态降透明度 */.age-badge {
-  display: inline-block;
-  font-size: 11px;
+.age-badge {
   margin-left: 6px;
-  padding: 1px 8px;
-  border-radius: 10px;
-  white-space: nowrap;
-  background: rgba(93, 156, 236, 0.15);
-  color: #2b6cb0;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-color: hsl(var(--border));
 }
 
 .age-badge.age-guarded {
   opacity: 0.55;
 }
 
-@media (prefers-color-scheme: dark) {
-  .risk-badge.risk-green {
-    color: #5fd0c0;
-  }
-  .risk-badge.risk-yellow {
-    color: #e6a720;
-  }
-  .risk-badge.risk-red {
-    color: #ff7a6b;
-  }
+.manual-badge {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-style: dashed;
 }
 
-/* 空状态：不显示空白区域 */
-.empty {
-  margin-top: 12px;
-  padding: 20px;
-  text-align: center;
-  border: 1px dashed rgba(128, 128, 128, 0.3);
-  border-radius: 6px;
-  color: rgba(128, 128, 128, 0.9);
-}
+/* ---------- 进度（shadcn 风格轨道 + 移动指示，支持 prefers-reduced-motion） ---------- */
 
-.empty b {
-  display: block;
-  margin-bottom: 4px;
-  color: inherit;
-}
-
-
-/* 新手档 / 大小筛选开关行 */
-.mode-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-/* 高级页权限引导卡 */
-.fda-card {
-  border: 1px solid rgba(93, 156, 236, 0.35);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  background: rgba(93, 156, 236, 0.06);
-}
-
-.fda-card b {
-  display: block;
-  margin-bottom: 6px;
-}
-
-.fda-card button {
-  margin: 6px 0;
-}
-
-/* 扫描中不确定进度条（总量未知，条纹动画表达"活着且在扫"） */
 .progress {
   display: inline-flex;
   align-items: center;
@@ -354,67 +425,167 @@ td.tip {
 
 .progress-bar {
   display: inline-block;
-  width: 120px;
-  height: 8px;
-  border-radius: 4px;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(93, 156, 236, 0.15) 0%,
-      rgba(93, 156, 236, 0.6) 40%,
-      rgba(93, 156, 236, 0.15) 80%
-    );
-  background-size: 200% 100%;
-  animation: slimit-progress 1.2s linear infinite;
+  width: 110px;
+  height: 6px;
+  border-radius: 9999px;
+  background: hsl(var(--secondary));
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes slimit-progress {
-  from { background-position: 200% 0; }
-  to { background-position: -60% 0; }
-}
-
-/* 手动清理条目徽章 */
-.manual-badge {
-  outline: 1px dashed currentColor;
-}
-
-
-/* FDA 引导条与全局扫描进度 */
-.fda-banner {
-  border: 1px solid rgba(230, 167, 32, 0.45);
-  background: rgba(230, 167, 32, 0.08);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 40%;
+  border-radius: 9999px;
+  background: hsl(var(--foreground) / 0.75);
+  animation: slimit-indeterminate 1.1s ease-in-out infinite;
 }
 
 .scan-live {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 8px 0;
-  font-size: 13px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  font-size: 12px;
 }
+
+.scan-live .progress-bar {
+  flex: 0 0 140px;
+}
+
+@keyframes slimit-indeterminate {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar::after {
+    animation: none;
+    left: 30%;
+  }
+}
+
+/* ---------- 吸底执行行 ---------- */
 
 .sticky-actions {
   position: sticky;
   bottom: 0;
-  background: var(--bg, #fff);
-  padding: 8px 0;
-  border-top: 1px solid rgba(128, 128, 128, 0.25);
   z-index: 5;
+  background: hsl(var(--background) / 0.92);
+  backdrop-filter: blur(6px);
+  padding: 10px 0;
+  border-top: 1px solid hsl(var(--border));
 }
 
-@media (prefers-color-scheme: dark) {
-  .sticky-actions {
-    background: var(--bg, #1a1a1e);
-  }
+/* ---------- 规则库卡片 ---------- */
+
+.rules-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-button.danger {
-  color: #c0392b;
+.rule-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  overflow: hidden;
+}
+
+.rule-card > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+}
+
+.rule-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rule-card > summary:hover {
+  background: hsl(var(--accent) / 0.6);
+}
+
+.rule-card > summary::before {
+  content: "›";
+  color: hsl(var(--muted-foreground));
+  transform: rotate(90deg);
+  font-size: 13px;
+}
+
+.rule-card[open] > summary::before {
+  transform: rotate(-90deg);
+}
+
+.rule-card > summary .rule-id {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 600;
+}
+
+.rule-card > summary .rule-os {
+  margin-left: auto;
+  color: hsl(var(--muted-foreground));
+}
+
+.rule-card p {
+  padding: 0 14px;
+  margin: 6px 0;
+  user-select: text;
+}
+
+.rule-card .rule-title {
+  font-weight: 600;
+  padding-top: 2px;
+}
+
+.rule-card .rule-what {
+  color: hsl(var(--muted-foreground));
+}
+
+.rule-paths,
+.rule-refs {
+  margin: 4px 0 10px;
+  padding-left: 30px;
+  font-size: 12px;
+}
+
+.rule-paths li {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ---------- 其余结构 ---------- */
+
+.reports {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 12px;
+  background: hsl(var(--card));
+}
+
+details > summary {
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+details[open] > summary {
+  color: hsl(var(--foreground));
 }
