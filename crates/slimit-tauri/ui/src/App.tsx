@@ -212,7 +212,7 @@ function CleanPanel() {
   const runApply = async (confirmed: boolean) => {
     if ((!selectedTask?.result && manualItems.length === 0) || applying) return;
     const ruleItems = (selectedTask?.result?.plan ?? []).filter(
-      (p) => p.executable && selected.has(p.path),
+      (p) => p.executable && selected.has(p.path) && viewSet.has(p.path),
     );
     const manual = manualItems.filter((m) => selected.has(m.path));
     const items = [...ruleItems, ...manual];
@@ -259,9 +259,13 @@ function CleanPanel() {
   // 新手档隐藏 B 类（会再生的缓存类）；expert 为完整清单。
   // 大小阈值筛选（种子反馈：<1MB 的条目列表太噪）：仅影响展示与选择范围。
   const [minSize, setMinSize] = useState(0);
-  const sizeVisible = selectedTask?.result?.plan.filter(
-    (p) => p.estimated_bytes >= minSize,
-  ) ?? [];
+  // 年龄筛选（种子反馈）：只看闲置 ≥ N 天；无年龄证据的条目在筛选时不显示
+  const [minAge, setMinAge] = useState(0);
+  const sizeVisible = (selectedTask?.result?.plan ?? []).filter(
+    (p) =>
+      p.estimated_bytes >= minSize &&
+      (minAge === 0 || (p.age_days != null && p.age_days >= minAge)),
+  );
   const visiblePlan = noviceMode
     ? sizeVisible.filter(
         (p) => p.durability === undefined || p.durability !== "regenerating",
@@ -282,10 +286,13 @@ function CleanPanel() {
     if (page >= pageCount) setPage(0);
   }, [page, pageCount]);
 
+  // 执行/统计只作用于当前筛选视图内的选中项（2026-10-02 逻辑错误专项）：
+  // 被筛选掉的条目即使残留选中状态也不参与执行。
+  const viewSet = new Set(visiblePlan.map((p) => p.path));
   const planBytes =
     (selectedTask?.result
       ? selectedTask.result.plan
-          .filter((p) => p.executable && selected.has(p.path))
+          .filter((p) => p.executable && selected.has(p.path) && viewSet.has(p.path))
           .reduce((a, p) => a + p.estimated_bytes, 0)
       : 0) +
     manualItems
@@ -364,6 +371,18 @@ function CleanPanel() {
             <option value={10485760}>10 MB</option>
             <option value={104857600}>100 MB</option>
             <option value={1073741824}>1 GB</option>
+          </select>
+        </label>
+        <label className="hint mode-toggle">
+          闲置 ≥{" "}
+          <select
+            value={minAge}
+            onChange={(e) => setMinAge(Number(e.target.value))}
+          >
+            <option value={0}>不限</option>
+            <option value={7}>7 天</option>
+            <option value={30}>30 天</option>
+            <option value={90}>90 天</option>
           </select>
         </label>
       </div>
@@ -559,8 +578,8 @@ function CleanPanel() {
                 <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.filter((p) => p.executable).map((p) => p.path)))}>
                   全选可执行
                 </button>
-                <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.map((p) => p.path).filter((x) => !selected.has(x))))}>
-                  反选
+                <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.filter((p) => !selected.has(p.path)).map((p) => p.path)))}>
+                  反选（仅当前视图）
                 </button>
                 <button className="ghost" onClick={() => setSelected(new Set())}>
                   全不选
@@ -854,7 +873,7 @@ function AiSettingsPanel() {
   );
 }
 
-function QuarantinePanel() {
+function QuarantinePanel({ active }: { active: boolean }) {
   const [items, setItems] = useState<Manifest[] | null>(null);
   const [err, setErr] = useState("");
   const [restored, setRestored] = useState<string | null>(null);
@@ -871,10 +890,11 @@ function QuarantinePanel() {
     }
   };
 
-  // 面板随 tab 激活挂载，进入即自动加载（保留刷新按钮手动重取）。
+  // tab 激活即自动刷新（种子反馈「隔离后要手动刷新才出现」）；
+  // 执行清理后切过来也必然最新。
   useEffect(() => {
-    run();
-  }, []);
+    if (active) run();
+  }, [active]);
 
   const restore = async (id: string) => {
     setErr("");
@@ -889,6 +909,27 @@ function QuarantinePanel() {
   // 单条立即删除（种子反馈「隔离区不能清理删除文件夹？」）：两段式确认，
   // 不可逆，后端审计 purge-entry。
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  // 一键批量（种子反馈「删除/恢复太繁琐」）：restore-all 逐条恢复；
+  // purge-all 逐条彻底删除（均两段式确认）。
+  const [batchConfirm, setBatchConfirm] = useState<null | "restore-all" | "purge-all">(null);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const runBatch = async () => {
+    if (!batchConfirm || batchBusy || !items) return;
+    setBatchBusy(true);
+    setErr("");
+    try {
+      for (const m of items) {
+        if (batchConfirm === "restore-all") await restoreItem(m.id);
+        else await purgeQuarantineItem(m.id);
+      }
+      setBatchConfirm(null);
+      await run();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setBatchBusy(false);
+    }
+  };
   const purgeOne = async (id: string) => {
     setErr("");
     try {
@@ -936,6 +977,34 @@ function QuarantinePanel() {
           <button className="ghost" onClick={() => setPurgeConfirming(false)}>
             取消
           </button>
+        )}
+        {items && items.length > 0 && (
+          <>
+            <button
+              onClick={() =>
+                batchConfirm === "restore-all"
+                  ? runBatch()
+                  : setBatchConfirm("restore-all")
+              }
+              disabled={batchBusy}
+            >
+              {batchConfirm === "restore-all" ? "✅ 确认全部恢复" : `一键恢复全部（${items.length}）`}
+            </button>
+            <button
+              className="danger"
+              onClick={() =>
+                batchConfirm === "purge-all" ? runBatch() : setBatchConfirm("purge-all")
+              }
+              disabled={batchBusy}
+            >
+              {batchConfirm === "purge-all" ? "✅ 确认清空（不可恢复）" : `清空隔离区（${items.length}）`}
+            </button>
+            {batchConfirm && (
+              <button className="ghost" onClick={() => setBatchConfirm(null)}>
+                取消
+              </button>
+            )}
+          </>
         )}
       </div>
       {err && <p className="error">{err}</p>}
@@ -1282,7 +1351,7 @@ export default function App() {
         <CleanPanel />
       </div>
       <div style={{ display: tab === "quarantine" ? "" : "none" }}>
-        <QuarantinePanel />
+        <QuarantinePanel active={tab === "quarantine"} />
       </div>
       <div style={{ display: tab === "rules" ? "" : "none" }}>
         <RulesPanel />

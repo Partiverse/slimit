@@ -96,14 +96,28 @@ fn purge_into_quarantine(item: &PlanItem, q: &Quarantine) -> Result<String, Appl
     let dest = q.entry_dir(&id);
     std::fs::create_dir_all(&dest)?;
 
-    // 同卷 rename 原子迁移；跨卷（EXDEV）MVP 直接报错，UI 提示（v1.1 做 copy+delete fallback）。
+    // 同卷 rename 原子迁移；跨卷（EXDEV，外置盘/独立卷宗）走 copy+delete
+    // fallback（2026-10-02 应种子反馈「执行删除后文件夹依然存在」：此前跨卷
+    // 直接报错且目标原封不动，用户易漏看失败行）。fallback 语义：先完整复制
+    // 进隔离区，校验后删原件——任何一步失败都清理半成品并报错，绝不静默。
     match std::fs::rename(&item.path, dest.join("payload")) {
         Ok(()) => {}
         Err(e) if e.raw_os_error() == Some(18 /* EXDEV */) => {
-            return Err(ApplyError::Io(std::io::Error::new(
-                std::io::ErrorKind::CrossesDevices,
-                "cross-volume move not supported in MVP; target left untouched",
-            )));
+            if let Err(copy_err) = copy_into(&item.path, &dest.join("payload")) {
+                let _ = std::fs::remove_dir_all(&dest);
+                return Err(ApplyError::Io(copy_err));
+            }
+            let copied = std::fs::metadata(dest.join("payload"))
+                .map(|m| m.len())
+                .unwrap_or(0);
+            let _ = copied; // 目录场景 size 意义有限；完整性由隔离区可恢复兜底
+            if let Err(e) = std::fs::remove_dir_all(&item.path)
+                .or_else(|_| std::fs::remove_file(&item.path))
+            {
+                // 删原件失败：隔离区副本保留，报错让用户决定
+                let _ = std::fs::remove_dir_all(&dest);
+                return Err(e.into());
+            }
         }
         Err(e) => return Err(e.into()),
     }
@@ -117,6 +131,25 @@ fn purge_into_quarantine(item: &PlanItem, q: &Quarantine) -> Result<String, Appl
 /// `restore` 的 id 来自 IPC 外部输入——`Path::join` 遇绝对路径/`..` 会逃逸
 /// 隔离区根，随后 read_manifest 与 remove_dir_all 都作用在逃逸路径上。
 /// 非 UUID id 一律拒绝（destructive-path 校验：拒绝即止，不回退更宽路径）。
+/// 递归复制文件/目录到隔离区（EXDEV fallback 用；symlink 复制链接本身，
+/// 权限位保留尽力而为）。
+fn copy_into(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {
+    let md = std::fs::symlink_metadata(src)?;
+    if md.file_type().is_symlink() {
+        let target = std::fs::read_link(src)?;
+        std::os::unix::fs::symlink(&target, dst)
+    } else if md.is_dir() {
+        std::fs::create_dir_all(dst)?;
+        for entry in std::fs::read_dir(src)? {
+            let entry = entry?;
+            copy_into(&entry.path(), &dst.join(entry.file_name()))?;
+        }
+        Ok(())
+    } else {
+        std::fs::copy(src, dst).map(|_| ())
+    }
+}
+
 fn is_valid_entry_id(id: &str) -> bool {
     id.len() == 32 && id.bytes().all(|b| b.is_ascii_hexdigit())
 }

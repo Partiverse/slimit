@@ -6,20 +6,19 @@ paths:
   - "~/.Trash"
 semantics:
   title: "废纸篓（清倒可释放空间）"
-  what: "macOS 废纸篓目录。在 Finder 中「移到废纸篓」的项目、部分应用删除文件时生成的「Recovered Files」文件夹都暂存在这里，清倒前文件仍占用磁盘。该目录受 TCC 保护，扫描与清理需要完全磁盘访问权限。"
-  producer: "macOS Finder 的「移到废纸篓」操作，以及各应用执行删除时的中转（含应用自动生成的 Recovered Files）"
-  safe_to_delete_because: "清倒废纸篓是 macOS 官方的清理方式；进入废纸篓通常已代表用户的删除意图，清倒只完成这个意图。但清倒不可逆，且无法区分「有意删除」与「刚误删」，故工具不代清，仅提示用户在访达中自行确认后清倒"
-  consequence: "内容被永久删除，「放回原处」信息一并丢失，无法再从废纸篓恢复；近期误删且还想找回的文件会因此丢失。~/.Trash 目录本身保留，其他卷宗的 .Trash 不受影响"
-  regenerate: "无法重建，属不可逆删除。~/.Trash 目录本身保留，之后新删除的文件会照常进入"
-risk: red
-red_flags:
-  - "清倒即不可逆：文件永久删除、无法「放回原处」，不能由工具代为执行"
-  - "废纸篓内容是用户自行移入的任意个人文件（可能含文档/照片），刚移入的可能只是误删，清倒即永久丢失"
+  what: "macOS 废纸篓目录。Finder「移到废纸篓」的项目、应用删除的中转文件都暂存在这里，清倒前仍占磁盘。该目录受 TCC 保护，需要完全磁盘访问权限"
+  producer: "macOS Finder 的「移到废纸篓」操作，以及各应用删除时的中转"
+  safe_to_delete_because: "进入废纸篓通常已代表用户的删除意图，清倒（Empty Trash）是 macOS 官方操作，只完成这个意图。定级 yellow（原 red）是应种子反馈调整：废纸篓本就是弃置区，但清倒不可逆且可能含刚误删项，故走官方命令 + 用户自行确认，不由工具静默代清"
+  consequence: "内容被永久删除，「放回原处」信息丢失，无法再从废纸篓恢复；近期误删且想找回的文件会因此丢失"
+  regenerate: "无法重建，不可逆。~/.Trash 目录本身保留"
+risk: yellow
 action:
-  kind: advise
+  kind: command
+  command: "osascript -e 'tell application \"Finder\" to empty trash'"
+  dry_run: "osascript -e 'tell application \"Finder\" to count items in trash'"
+  irreversible: true
 estimate:
-  typical_size: "0 至数十 GB，随近期删除内容波动（本机内容受 TCC 保护，未能实测）"
+  typical_size: "0 至数十 GB，随近期删除内容波动"
   recovery: none
 refs:
   - https://support.apple.com/zh-cn/guide/mac-help/mchlp1093/mac
-  - https://support.apple.com/guide/mac-help/if-the-trash-contains-recovered-files-on-mac-mchlp2919/27/mac/27
