@@ -32,6 +32,7 @@ cargo tauri dev                           # GUI（tauri.conf.json cwd 已指向 
 - 新增/修改规则：先读 `rules/README.md` 与 `.agents/skills/slimit-rule-author/SKILL.md`。事实核查先行（refs 必填官方来源）、风险分级从紧、`command` 必带 `dry_run`、删除默认只清内容留目录、官方清理命令优先于裸删。
 - 性能结论必须同日同树对照（见 docs/BENCH.md 方法学）。
 - 凭据只走环境变量（范本 scripts/release/sign-notarize.sh）。
+- **UI/功能改动必须真机验证后再提交**（2026-10-02 用户明令）：用 computer-use/手测驱动真实应用确认功能生效（含视觉排布），验证不过不 commit、不发包；自动化受阻时至少人工路径验证并如实记录验证方式。
 - 提交信息：中文 conventional（feat/fix/docs/chore: …）。
 
 ## 下一步工作（建议起点，详情见 docs/HANDOFF.md §7）

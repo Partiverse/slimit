@@ -95,24 +95,35 @@ pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
                 };
                 for d in dirs {
                     if glob.is_match(&d.path) {
+                        let age_days = std::fs::metadata(&d.path)
+                            .ok()
+                            .and_then(|md| md.modified().ok())
+                            .and_then(days_since);
                         out.push(Match {
                             rule_id: rule.id.clone(),
                             path: d.path.clone(),
                             actual_bytes: d.actual,
                             apparent_bytes: d.apparent,
-                            age_days: None,
+                            age_days,
                             below_min_age: false,
                         });
                     }
                 }
             } else if by_path.contains(path.as_path()) {
                 if let Some(d) = dirs.iter().find(|d| d.path == path) {
+                    // 年龄对所有规则都尽量给出（种子反馈「存在时间为什么不总是
+                    // 显示」）：mtime 是通用元数据；仅 project 规则用它做
+                    // below_min_age 守卫，路径规则只作展示证据。
+                    let age_days = std::fs::metadata(&d.path)
+                        .ok()
+                        .and_then(|md| md.modified().ok())
+                        .and_then(days_since);
                     out.push(Match {
                         rule_id: rule.id.clone(),
                         path,
                         actual_bytes: d.actual,
                         apparent_bytes: d.apparent,
-                        age_days: None,
+                        age_days,
                         below_min_age: false,
                     });
                 }

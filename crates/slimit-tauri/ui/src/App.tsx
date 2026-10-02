@@ -7,8 +7,10 @@ import {
   listQuarantine,
   listRules,
   listSnapshots,
+  checkFda,
   openFdaSettings,
   probeManual,
+  purgeQuarantineItem,
   purgeExpiredQuarantine,
   restoreItem,
   testAi,
@@ -271,6 +273,15 @@ function CleanPanel() {
     ).length +
     ((selectedTask?.result?.plan.length ?? 0) - sizeVisible.length);
 
+  // 计划分页（种子反馈：条目多时执行键划太久）
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 15;
+  const paged = visiblePlan.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pageCount = Math.max(1, Math.ceil(visiblePlan.length / PAGE_SIZE));
+  useEffect(() => {
+    if (page >= pageCount) setPage(0);
+  }, [page, pageCount]);
+
   const planBytes =
     (selectedTask?.result
       ? selectedTask.result.plan
@@ -281,9 +292,50 @@ function CleanPanel() {
       .filter((m) => selected.has(m.path))
       .reduce((a, m) => a + m.estimated_bytes, 0);
 
+  // FDA 授权状态（种子反馈：一个文件夹一个弹窗太累 + 授权后状态不更新）：
+  // 挂载即检测，未授权显示常驻引导条；用户可关闭本会话提示。
+  const [fdaGranted, setFdaGranted] = useState<boolean | null>(null);
+  const [fdaDismissed, setFdaDismissed] = useState(false);
+  useEffect(() => {
+    checkFda()
+      .then(setFdaGranted)
+      .catch(() => setFdaGranted(null));
+  }, []);
+  const refreshFda = () => {
+    setFdaGranted(null);
+    checkFda()
+      .then(setFdaGranted)
+      .catch(() => setFdaGranted(null));
+  };
+  const runningTask = tasks.find((t) => t.status === "running");
+  const runningDirName =
+    runningTask?.currentDir.split("/").filter(Boolean).pop() ?? "";
+
   return (
     <section>
       <h2>清理</h2>
+      {fdaGranted === false && !fdaDismissed && (
+        <div className="fda-banner">
+          ⚠️ 尚未开启「完全磁盘访问」：逐个文件夹授权很繁琐且扫不全。建议
+          一次授权解决所有弹窗——
+          <button className="ghost" onClick={refreshFda}>
+            我已开启，重新检测
+          </button>
+          <button className="ghost" onClick={() => setFdaDismissed(true)}>
+            本次忽略
+          </button>
+        </div>
+      )}
+      {fdaGranted === true && (
+        <p className="hint">✅ 完全磁盘访问已授权（检测于本页加载时）</p>
+      )}
+      {runningTask && (
+        <div className="scan-live" role="status">
+          <span className="progress-bar" aria-hidden="true" />
+          正在扫描 {runningTask.path} — 已发现{" "}
+          {runningTask.filesDone.toLocaleString()} 项 · 正在扫 {runningDirName}
+        </div>
+      )}
       <div className="row">
         <input
           value={root}
@@ -527,7 +579,7 @@ function CleanPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...visiblePlan]
+                  {[...paged]
                     .sort(
                       (a, b) =>
                         Number(a.below_min_age) - Number(b.below_min_age) ||
@@ -546,7 +598,14 @@ function CleanPanel() {
                     ))}
                 </tbody>
               </table>
-              <div className="row">
+              <div className="row sticky-actions">
+                {pageCount > 1 && (
+                  <span className="hint">
+                    <button className="ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>‹</button>
+                    第 {page + 1} / {pageCount} 页（共 {visiblePlan.length} 条）
+                    <button className="ghost" disabled={page >= pageCount - 1} onClick={() => setPage(page + 1)}>›</button>
+                  </span>
+                )}
                 <button
                   onClick={() => runApply(confirming)}
                   disabled={applying || planBytes === 0}
@@ -615,7 +674,7 @@ function PlanRow(props: {
           )}
         </td>
         <td>{fmtSize(p.estimated_bytes)}</td>
-        <td className="path" title={p.rule_id}>
+        <td className="rule-cell" title={p.rule_id}>
           {ruleTitle ?? p.rule_id}
         </td>
         <td className="path">{p.path}</td>
@@ -827,6 +886,20 @@ function QuarantinePanel() {
     }
   };
 
+  // 单条立即删除（种子反馈「隔离区不能清理删除文件夹？」）：两段式确认，
+  // 不可逆，后端审计 purge-entry。
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const purgeOne = async (id: string) => {
+    setErr("");
+    try {
+      await purgeQuarantineItem(id);
+      setDeleteConfirmId(null);
+      await run();
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
   // 两段式确认对齐 CleanPanel：第一次点击进入确认态，第二次才真正执行。
   // 不可逆删除（红线④）：执行后经后端审计日志记录，UI 提示被清理项。
   const purge = async () => {
@@ -899,9 +972,23 @@ function QuarantinePanel() {
                   <td className="path">{m.rule_id}</td>
                   <td>{m.quarantined_at}</td>
                   <td>
-                    <button className="ghost" onClick={() => restore(m.id)}>
-                      恢复
-                    </button>
+                    {deleteConfirmId === m.id ? (
+                      <>
+                        <button onClick={() => purgeOne(m.id)}>✅ 确认彻底删除</button>
+                        <button className="ghost" onClick={() => setDeleteConfirmId(null)}>
+                          取消
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="ghost" onClick={() => restore(m.id)}>
+                          恢复
+                        </button>
+                        <button className="ghost danger" onClick={() => setDeleteConfirmId(m.id)}>
+                          删除
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1189,16 +1276,22 @@ export default function App() {
           </button>
         ))}
       </nav>
-      {tab === "clean" && <CleanPanel />}
-      {tab === "quarantine" && <QuarantinePanel />}
-      {tab === "rules" && <RulesPanel />}
-      {tab === "advanced" && (
-        <>
-          <AdvancedPanel />
-          <VolumePanel />
-          <SnapshotsPanel />
-        </>
-      )}
+      {/* 面板常驻挂载、用 display 切换（种子反馈：切 tab 后扫描数据丢失）。
+          状态保活 = 不丢扫描任务/手动条目/筛选条件；各面板挂载时自动加载。 */}
+      <div style={{ display: tab === "clean" ? "" : "none" }}>
+        <CleanPanel />
+      </div>
+      <div style={{ display: tab === "quarantine" ? "" : "none" }}>
+        <QuarantinePanel />
+      </div>
+      <div style={{ display: tab === "rules" ? "" : "none" }}>
+        <RulesPanel />
+      </div>
+      <div style={{ display: tab === "advanced" ? "" : "none" }}>
+        <AdvancedPanel />
+        <VolumePanel />
+        <SnapshotsPanel />
+      </div>
     </main>
   );
 }

@@ -325,6 +325,46 @@ fn probe_manual(path: String) -> Result<ManualProbe, String> {
     })
 }
 
+/// 检测「完全磁盘访问」授权状态（种子反馈：一个文件夹一个弹窗点得累 +
+/// 授权后软件状态不更新）。探测方式：尝试列读 FDA 保护目录 ~/Library/Safari
+/// （未授权时 read_dir 返回权限错误；授权后可读）。两目录互为备份。
+#[tauri::command]
+fn check_fda() -> Result<bool, String> {
+    let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from) else {
+        return Err("HOME 未设置".into());
+    };
+    for probe in [
+        home.join("Library").join("Safari"),
+        home.join("Library").join("Mail"),
+    ] {
+        if !probe.exists() {
+            continue;
+        }
+        return Ok(std::fs::read_dir(&probe).is_ok());
+    }
+    // 两个探测目录都不存在（罕见）：按未授权处理并提示人工确认。
+    Ok(false)
+}
+
+/// 立即彻底删除单个隔离条目（不可逆；UI 二次确认后调用，审计必记）。
+#[tauri::command]
+fn purge_quarantine_item(app: AppHandle, id: String) -> Result<Manifest, String> {
+    let data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("resolve app data dir: {e}"))?;
+    let q = quarantine(&app)?;
+    let m = q.purge_entry(&id).map_err(|e| e.to_string())?;
+    let mut audit = slimit_exec::AuditLog::new(&data).map_err(|e| e.to_string())?;
+    audit.record(&serde_json::json!({
+        "event": "purge-entry",
+        "id": m.id,
+        "path": m.original_path,
+        "rule": m.rule_id,
+    }));
+    Ok(m)
+}
+
 /// 打开「完全磁盘访问」系统设置面板（权限引导用；种子反馈：扫描时才
 /// 发现缺权限，希望一开始就引导到位）。
 #[tauri::command]
@@ -352,7 +392,9 @@ pub fn run() {
             list_rules,
             test_ai,
             open_fda_settings,
-            probe_manual
+            probe_manual,
+            check_fda,
+            purge_quarantine_item
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

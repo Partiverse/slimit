@@ -130,6 +130,22 @@ impl Quarantine {
         }
         Ok(purged)
     }
+
+    /// 立即彻底删除单个隔离条目（payload + manifest，不可逆）。
+    ///
+    /// UI 必须二次确认后调用；审计由调用方记录（与 purge-expired 同模式）。
+    /// id 先过 UUID 校验（防路径穿越，与 restore 同防线）。
+    pub fn purge_entry(&self, id: &str) -> std::io::Result<Manifest> {
+        if id.len() != 32 || !id.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("invalid quarantine id: {id}"),
+            ));
+        }
+        let manifest = self.read_manifest(id)?;
+        std::fs::remove_dir_all(self.entry_dir(id))?;
+        Ok(manifest)
+    }
 }
 
 fn now_rfc3339() -> String {

@@ -200,3 +200,13 @@ export interface ManualProbe {
 export function probeManual(path: string): Promise<ManualProbe> {
   return invoke("probe_manual", { path });
 }
+
+/** 检测「完全磁盘访问」授权状态（探测 FDA 保护目录可读性）。 */
+export function checkFda(): Promise<boolean> {
+  return invoke("check_fda");
+}
+
+/** 立即彻底删除单个隔离条目（不可逆；UI 必须二次确认后调用）。 */
+export function purgeQuarantineItem(id: string): Promise<Manifest> {
+  return invoke("purge_quarantine_item", { id });
+}

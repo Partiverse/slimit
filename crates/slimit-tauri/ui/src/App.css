@@ -83,7 +83,30 @@ th {
 td.path {
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
-  word-break: break-all;
+  /* 排布修复（种子反馈：规则列窄到竖排、行高过宽）：路径与规则列单行
+     省略号，行高收紧；完整内容看 title 悬浮。 */
+  max-width: 380px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 规则名列：单行不竖排，给足最小宽度 */
+td.rule-cell,
+th.rule-col {
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+td.age-cell {
+  white-space: nowrap;
+}
+
+tr {
+  height: 32px;
 }
 
 .totals {
@@ -353,4 +376,45 @@ td.tip {
 /* 手动清理条目徽章 */
 .manual-badge {
   outline: 1px dashed currentColor;
+}
+
+
+/* FDA 引导条与全局扫描进度 */
+.fda-banner {
+  border: 1px solid rgba(230, 167, 32, 0.45);
+  background: rgba(230, 167, 32, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scan-live {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg, #fff);
+  padding: 8px 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.25);
+  z-index: 5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sticky-actions {
+    background: var(--bg, #1a1a1e);
+  }
+}
+
+button.danger {
+  color: #c0392b;
 }
