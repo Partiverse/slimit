@@ -1,13 +1,13 @@
 # 种子用户内测包（分发材料）
 
-> 2026-10-02 更新至 rc7（手动清理模式：没命中规则也能删了——你自选的文件/文件夹直接进隔离区，附大文件/大目录榜单一键加入）。分发动作由用户执行；本文件是随附文案与操作清单。
+> 2026-10-02 更新至 rc9（反馈第三批：筛选作用域逻辑修复 / 跨卷删除支持 / 闲置筛选 / 隔离区批量操作 / 垃圾桶规则调整；含 rc8 的 tab 保活、吸底执行+分页、FDA 状态条等）。分发动作由用户执行；本文件是随附文案与操作清单。
 
 ## 分发物
 
 | 物料 | 位置 |
 |---|---|
-| 安装包 | GitHub Release `v0.1.0-rc7`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc7 |
-| SHA256 | `89793fd99c168c851f9b2fe194b81553c4e1948820b60b806ebf00a29b95772b` |
+| 安装包 | GitHub Release `v0.1.0-rc9`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc9 |
+| SHA256 | `d8e2ed484067850b7830083945a6fe82fff62e37135bf1009a840e69aa95dc62` |
 | 详细说明 | 仓库 `docs/BETA.md`（安装/已知限制/回报渠道） |
 | 产品介绍 | https://slimit.pages.dev |
 
