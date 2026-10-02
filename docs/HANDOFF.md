@@ -31,6 +31,20 @@ SlimIt（取自 "slim it"）是跨 macOS / Windows / Linux 的存储瘦身工具
 
 W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项目名 `slimit`）；rc1 → … → **rc7** 常驻 pre-release（rc7 = 手动清理模式 + 大文件榜单，DMG SHA256 往返校验一致）（rc4 = 项目构建产物识别主线；rc5 = `~` 展开体验修复，DMG SHA256 往返校验一致）；种子用户分发材料 [SEED-INVITE.md](./SEED-INVITE.md) 已更新至 rc5；**首批种子反馈 4 条全部落地并随 rc2 发布**——① 云端 AI 解释（OpenAI 兼容端点、用户自备 Key、默认关闭全离线，解释优先级 云端→规则库→启发式，UI 标来源）② 扫描实时进度（条目数/当前目录/速率/用时）③ 多任务并发扫描列表 ④ 规则 81→90 条。**体验打磨**（随 rc3 发布）：Tab 导航（4 组 6 面板）、自动加载、Plan 表格中文化、空状态、规则面板（list_rules）。**安全收口**：cargo-audit 0 漏洞、人工审计 Tauri command 层与 executor 路径，修复 2 个问题（`restore` id 路径穿越、`apply` 信任前端 `executable`）＋手测追加 1 个（`restore` 未写审计，已修），详见 [SECURITY.md](./SECURITY.md)。
 
+**种子反馈第三批收口（2026-10-02，@ 42fc3b8 + 真机验证批次，随 rc9 发布）**：①**逻辑错误专项**（用户明令写入 AGENTS.md 铁律）：筛选即作用域——执行/统计/全选/反选只作用于当前筛选视图（新增闲置 ≥7/30/90 天筛选）；数据变更后视图自动刷新（隔离区收 active prop 激活即刷新）。②隔离区一键恢复全部/清空（两段式逐条调用）。③EXDEV 跨卷 copy→删原件 fallback（回应「删除后依然存在」：此前跨卷报错目标原封不动、失败行易被忽略）。④垃圾桶规则 red→yellow（官方 Empty Trash osascript + dry_run 计数）。⑤docs/FEATURE-TREE.md 功能逻辑树（数据流/状态树/联动铁律/变更检查单，开发前必读）。
+
+**真机验证记录（穷举式，computer-use + 截图，新规矩第二批）**：
+- ✅ V2 tab 保活（切隔离区再切回，任务表完好）
+- ✅ V3 筛选作用域（≥1GB 后 24MB target 消失、执行/全选按钮随之消失）
+- ✅ V4 隔离区自动刷新（apply 后切 tab 立见条目，无需手动刷新）
+- ✅ V5 批量按钮可见（一键恢复全部/清空隔离区）
+- ✅ V6 单条删除全链（两段式 → 条目消失 → quarantine/ 清空 → audit purge-entry）
+- ✅ V7 手动加入 .dmg → 执行 → 隔离（audit origin=user-manual，原路径消失）
+- ✅ V8 垃圾桶规则以 yellow 在库（macos-trash）
+- ❌ **未解：规则库页搜索触发白屏**——任何方式修改搜索词（键入/AX set_value）后渲染树崩掉（元素 367→15、窗口空白），无 JS 异常（window.onerror 钩子无捕获）、无 stderr；已试渲染截断（60/页）无效；**键入后不做 AX 观察则应用仍活**（疑与自动化观察交互有关，但用户键入路径同样报过此症状——待复现排查，规则库搜索在 rc9 中不可用）
+- ⚠️ 进度条中间态：120 万文件本机 2 秒扫完，物理无法截到；组件在位（全局条+任务行条），需慢盘/大库环境人工确认。
+- ⚠️ 真机验证还抓到并修复一个真 bug：**规则 0 命中时手动条目无执行按钮**（执行块被 `visiblePlan.length>0` 门控）——已改 `(visiblePlan||manual) &&`，验证手动条目可完整走两段式执行。
+
 **种子反馈第二批收口（2026-10-02，@ 06c3a25，随 rc8 发布）**：①tab 保活（四面板常驻挂载 display 切换——切 tab 不再丢扫描数据）；②check_fda 授权探测（~/Library/Safari read_dir 可读性）+ 清理页未授权常驻引导条/已授权状态（回应「一个一个点累」「授权后状态不变」）；③计划分页（15 条/页）+ 执行按钮行 sticky 吸底；④表格排布（路径/规则列单行省略号、行高压紧、rule-cell 加宽）；⑤**matcher 对路径/glob 命中也统计 mtime 天数**——所有规则都显示「N 天未动」（此前仅 project 规则）；⑥隔离区单条「立即彻底删除」purge_entry（UUID 校验防穿越 + purge-entry 审计 + UI 两段式）；⑦清理页顶部全局实时进度条。**真机验证（新规矩首次执行，computer-use）**：✅FDA banner、✅tab 保活（切回任务表保留）、✅年龄徽章、✅扫描→计划→错误提示链路、✅加入计划后输入框清空；❌未能捕获：进度条中间态（AX 观察等待期扫描即完成，需大库+FDA 人工确认）、分页（需 >15 条命中）、隔离区删除按钮（验证链被手动加入误报阻断）、表格视觉排布（AX 不呈现换行）。**验证中发现的疑点**：CUA typeText 向手动框输入的串疑似带不可见尾部字符致 probe 误报「路径不存在」（文件确认存在），未复现根因，rc8 notes 已向用户如实说明。dev 实例（bundle_id=null）键盘注入不可用，release 包可用——真机验证一律用 release 包。
 
 **手动清理模式实装（2026-10-02，rc7）**：红线语义正式扩展——执行授权 = 规则库命中 **或** 用户对具体路径的显式手动选择（`PlanItem.origin: rule|user-manual`）。安全设计：①AI 解释永不产生 manual 项（数据流不可达）；②`authorize_items` 对 manual 项服务端**重写全部自证字段**（risk=Yellow、executable=true、rule_id 归一 `user-manual`、durability=OneShot），伪造 IPC 字段无效；③`is_protected_path` 系统路径保护名单：前缀保护（/System /private /usr /bin /sbin /etc /var /dev 整棵子树——/private 覆盖 /etc /var /tmp 的 symlink 目标）+ 自身保护（/ /Volumes /Applications /Library /opt、HOME 与 Desktop/Documents/Downloads/Music/Movies/Pictures/Public/Library/Applications 挡自身、子路径放行，如 `~/Downloads/setup.dmg` ✓、`~/Downloads` ✗）；canonicalize 归一 symlink 与 `..`，失败按保护处理。④全部走隔离区可恢复，审计事件加 origin 标注。配套：core `ScanSummary.top_files` 大文件榜（.dmg/.pkg 安装包场景）、tauri `probe_manual` 探测命令、UI 手动输入 + 大文件/大目录 Top 榜一键加入 + 扫描中不确定进度条。**测试注记**：macOS 测试环境可写路径全在 /private 下，保护名单「放行」断言只能落在纯函数 `is_protected_resolved` 上（is_protected_path 包装层只测保护方向）。56 测试 0 失败。红线措辞已同步 README/AGENTS/HANDOFF/SECURITY。

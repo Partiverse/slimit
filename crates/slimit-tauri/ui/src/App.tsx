@@ -560,10 +560,10 @@ function CleanPanel() {
               </table>
             </details>
           )}
-          {selectedTask.result.plan.length === 0 && (
+          {selectedTask.result.plan.length === 0 && manualItems.length === 0 && (
             <div className="empty">
               <b>未命中任何规则</b>
-              扫描完成；当前规则库没有覆盖该路径下的目标
+              扫描完成；当前规则库没有覆盖该路径下的目标。也可以在上方手动粘贴路径加入计划
             </div>
           )}
           {noviceMode && hiddenB > 0 && (
@@ -572,7 +572,7 @@ function CleanPanel() {
               切换到专家档可查看全部。
             </p>
           )}
-          {visiblePlan.length > 0 && (
+          {(visiblePlan.length > 0 || manualItems.length > 0) && (
             <>
               <div className="row">
                 <button className="ghost" onClick={() => setSelected(new Set(visiblePlan.filter((p) => p.executable).map((p) => p.path)))}>
@@ -1131,6 +1131,7 @@ function RulesPanel() {
     run();
   }, []);
 
+  const [rulesPage, setRulesPage] = useState(1);
   const filtered = (rules ?? []).filter((r) => {
     if (os !== "all" && r.os !== os) return false;
     if (risk !== "all" && r.risk !== risk) return false;
@@ -1193,6 +1194,11 @@ function RulesPanel() {
             共 {filtered.length} 条规则（{rules.length} 条总库）。规则库是可信输入，
             任何失败即整体报错；UI 仅展示，不触发执行。
           </p>
+          {filtered.length > rulesPage * 60 && (
+            <button className="ghost" onClick={() => setRulesPage(rulesPage + 1)}>
+              显示更多（已显示 {Math.min(rulesPage * 60, filtered.length)} / {filtered.length}）
+            </button>
+          )}
           {filtered.length === 0 && (
             <div className="empty">
               <b>无匹配规则</b>
@@ -1200,7 +1206,9 @@ function RulesPanel() {
             </div>
           )}
           <div className="rules-list">
-            {filtered.map((r) => (
+            {/* 真机验证发现：每次键入全量重渲染 180 张 details 卡片会压垮
+                WKWebContent（白屏、无 JS 错误）。截断渲染 + 展开更多。 */}
+            {filtered.slice(0, rulesPage * 60).map((r) => (
               <details key={r.id} className="rule-card">
                 <summary>
                   <span className={`risk-badge risk-${r.risk}`}>
