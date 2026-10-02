@@ -25,6 +25,9 @@ use tauri::{AppHandle, Emitter, Manager};
 /// 事件序号：区分先后两次扫描，前端丢弃过期序号的进度事件。
 static SCAN_SEQ: AtomicU64 = AtomicU64::new(0);
 
+/// 进度事件最小发射间隔（毫秒）：防事件风暴冻屏（见 scan_and_plan 注释）。
+const PROGRESS_EMIT_INTERVAL_MS: u64 = 100;
+
 /// 扫描根解析：先做 `~` 展开（与规则路径同一套展开语义），再校验存在。
 ///
 /// 手测发现（2026-10-01）：直接输入 `~/Library/Caches` 报 "root does not exist"
@@ -58,7 +61,22 @@ pub struct ScanPlanResponse {
 }
 
 #[tauri::command]
-fn scan_and_plan(
+async fn scan_and_plan(
+    app: AppHandle,
+    root: String,
+    top: Option<usize>,
+    task_id: Option<u64>,
+) -> Result<ScanPlanResponse, String> {
+    // 必须异步 + spawn_blocking（2026-10-02 终极根因）：Tauri 同步命令在
+    // **主线程**执行——扫描百万文件期间整个应用事件循环停摆：彩球、窗口
+    // 无响应、进度事件无法送达 WebView（用户所见全部「无进度」症状的
+    // 总根源）。async 命令 + spawn_blocking 把扫描挪到工作线程。
+    tauri::async_runtime::spawn_blocking(move || scan_and_plan_blocking(app, root, top, task_id))
+        .await
+        .map_err(|e| format!("scan task join failed: {e}"))?
+}
+
+fn scan_and_plan_blocking(
     app: AppHandle,
     root: String,
     top: Option<usize>,
@@ -81,13 +99,25 @@ fn scan_and_plan(
         "[debug] scan delay_ms={delay_ms} args={:?}",
         std::env::args().collect::<Vec<_>>()
     );
+    // 进度事件节流（2026-10-02 根因修复）：大目录扫描每目录批次 emit 一次，
+    // 百万级文件 = 每秒数百事件，前端每事件 setState 全面板重渲染 → WKWebView
+    // 主线程打满、UI 冻结（用户所见「光标一直转、不知道在不在扫」）。改为
+    // 每 100ms 最多发一次 + 结束必发一次。
     let result = {
         let app = app.clone();
+        let last_emit = std::sync::Mutex::new(
+            std::time::Instant::now() - std::time::Duration::from_millis(PROGRESS_EMIT_INTERVAL_MS),
+        );
         slimit_core::scan_with_progress(&root, &move |p| {
             if delay_ms > 0 {
                 std::thread::sleep(std::time::Duration::from_millis(delay_ms));
             }
-            // 进度事件：累计条目数 + 当前目录（总量未知，是进度而非百分比）。
+            let mut last = last_emit.lock().unwrap();
+            if last.elapsed().as_millis() < PROGRESS_EMIT_INTERVAL_MS as u128 {
+                return;
+            }
+            *last = std::time::Instant::now();
+            drop(last);
             let _ = app.emit(
                 "scan-progress",
                 serde_json::json!({

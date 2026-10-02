@@ -104,19 +104,29 @@ function CleanPanel() {
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId && t.status === "done") ?? null;
 
+  // 进度事件前端缓冲（与后端节流双保险，2026-10-02）：事件只更新 ref，
+  // 定时器每 200ms 批量刷进 state——百万文件扫描不再逐事件重渲染冻屏。
+  const progressRef = useRef(new Map<number, ScanProgress>());
   useEffect(() => {
     const un = listen<ScanProgress>("scan-progress", (e) => {
-      const p = e.payload;
-      setTasks((ts) =>
-        ts.map((t) =>
-          t.id === p.seq
-            ? { ...t, filesDone: p.files_done, currentDir: p.current_dir }
-            : t,
-        ),
-      );
+      progressRef.current.set(e.payload.seq, e.payload);
     });
+    const timer = setInterval(() => {
+      if (progressRef.current.size === 0) return;
+      const pending = progressRef.current;
+      progressRef.current = new Map();
+      setTasks((ts) =>
+        ts.map((t) => {
+          const p = pending.get(t.id);
+          return p
+            ? { ...t, filesDone: p.files_done, currentDir: p.current_dir }
+            : t;
+        }),
+      );
+    }, 200);
     return () => {
       un.then((f) => f());
+      clearInterval(timer);
     };
   }, []);
 
