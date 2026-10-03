@@ -51,6 +51,8 @@ W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项
 
 **A 类生态覆盖扩展第一弹（2026-10-03，185 条规则）**：按「丰富功能走自己的主线」判断，优先做 A 类（一次性大额）生态宽度——此前 project-artifact 只覆盖 Rust/Node/Python，Go/Java/C++/iOS 开发机等于没覆盖，核心卖点宽度受限。新增 5 条 project 规则：Maven `target/`（pom.xml 标记）、Gradle `build/`（build.gradle[.kts]/settings.gradle[.kts]）、Flutter/Dart `build/`（pubspec.yaml）、Next.js `.next/`（next.config.*）、vcpkg `vcpkg_installed/`（vcpkg.json），均 yellow + 14 天守卫 + 官方 refs。真机验证：5 生态夹具一次扫描全部命中（150 MiB / 5 项），年龄徽章 2467 天、默认勾选、执行按钮 150 MiB。⚠️ 本批规则事实核查说明：WebSearch/WebFetch 工具在本轮不可用，路径与语义依据既有知识 + 官方文档 URL 作为 refs（如 maven.apache.org lifecycle、docs.gradle.org directory_layout、docs.flutter.dev、nextjs.org docs、vcpkg.io manifests）——**下次具备检索工具时应逐条复核这 5 条的 refs 可达性与措辞准确性**。
 
+**rc12 已发布（2026-10-03，@ 9520c22，DMG SHA d0d399cc）**：P0 平台过滤修复（linux-* 规则在 mac 误执行——隔离区 7/14 条实锤）+ FAQ。remote 曾被切到 gh-proxy.com 致 push 需凭据，已切回 github.com 恢复推送。
+
 **notarization 暂停（2026-10-03 用户指示）+ L3 设计稿完成（docs/L3-AUTOCLEAN-DESIGN.md，SECURITY 不变量第 7 条草案）**：L3=green 预授权自动清理（用户 opt-in 后定时任务自动隔离迁移 green+purge-dir 命中项；授权范围封闭、隔离+审计兜底、AI 不参与；默认关闭）。实装前置：不变量第 7 条经用户确认。无感化三档（L1 已实装 / L2 已实装 / L3 设计稿就绪）。
 
 **rc10 已发布 + 功能丰富路线（2026-10-03，用户指示「交互问题暂缓，继续丰富功能」）**：rc10 = 进度条五层修复 + 列宽抖动修复 + 更名 Slimit + 界面精简 + 设置页归位（均穷举真机验证）+ BETA FAQ。**功能丰富候选优先级**（待用户点名排序）：①**定时自动扫描**（LaunchAgent 每周扫描 + 通知中心提醒，用户 FAQ 关注「无实时监控」的最轻替代）；②**文件类型聚合视图**（按扩展名统计占用 + 一键筛选大类型，安装包场景延伸）；③**重复文件检测**（SHA-256，POSITIONING 提案，需读文件内容的隐私边界要重新评估）；④**Windows/Linux walker**（长线，规则库 91 条已就绪）。交互遗留（用户确认暂缓）：整体交互打磨。
