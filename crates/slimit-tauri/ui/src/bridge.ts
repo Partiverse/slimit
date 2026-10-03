@@ -224,3 +224,13 @@ export function getScanSchedule(): Promise<ScanSchedule> {
 export function setScanSchedule(schedule: ScanSchedule): Promise<string> {
   return invoke("set_scan_schedule", { schedule });
 }
+
+/** 定时扫描落盘的结果（GUI 启动时消费一次）。 */
+export interface PendingResults {
+  summary: import("./bridge").ScanSummary;
+  plan: PlanItem[];
+}
+
+export function takePendingResults(): Promise<PendingResults | null> {
+  return invoke("take_pending_results");
+}

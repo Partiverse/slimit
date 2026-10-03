@@ -16,6 +16,7 @@ import {
   setScanSchedule,
   purgeExpiredQuarantine,
   restoreItem,
+  takePendingResults,
   testAi,
   scanAndPlan,
   setSettings,
@@ -103,6 +104,31 @@ function CleanPanel({ noviceMode }: { noviceMode: boolean }) {
   useTick(anyRunning);
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId && t.status === "done") ?? null;
+
+  // 定时扫描发现可清理项后自动拉起应用：启动时消费落盘结果作为任务
+  // （无感化 L2，2026-10-02）。仅消费一次。
+  useEffect(() => {
+    takePendingResults()
+      .then((pending) => {
+        if (!pending) return;
+        const id = Date.now();
+        setTasks((ts) => [
+          {
+            id,
+            path: pending.summary.root,
+            status: "done" as const,
+            startedAt: Date.now(),
+            filesDone: pending.summary.file_count,
+            currentDir: "",
+            result: { summary: pending.summary, plan: pending.plan },
+          },
+          ...ts,
+        ]);
+        setSelectedTaskId(id);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 进度事件前端缓冲（与后端节流双保险，2026-10-02）：事件只更新 ref，
   // 定时器每 200ms 批量刷进 state——百万文件扫描不再逐事件重渲染冻屏。

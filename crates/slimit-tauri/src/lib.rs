@@ -57,7 +57,7 @@ fn resolve_scan_root(input: &str) -> Result<std::path::PathBuf, String> {
 }
 
 /// 扫描 + 计划的合并响应：一次遍历产出聚合视图与规则命中计划。
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ScanPlanResponse {
     pub summary: ScanSummary,
     /// 按 estimated_bytes 降序。仅 executable 项可被 apply_plan 执行。
@@ -479,6 +479,80 @@ fn scheduled_scan_headless(root_str: &str) {
         fmt_bytes(bytes)
     );
     notify("Slimit 周度扫描完成", &summary);
+    // L2（无感化第二档）：发现可清理项时自动拉起应用并加载结果——
+    // 用户点开就是现成的清理计划，不用重新扫描。
+    if count > 0 {
+        let response = ScanPlanResponse {
+            summary: result.summarize(20),
+            plan: items,
+        };
+        {
+            let pending = dirs_home()
+                .join("Library/Application Support/dev.partiverse.slimit")
+                .join("pending-scan-results.json");
+            if std::fs::write(
+                &pending,
+                serde_json::to_string(&response).unwrap_or_default(),
+            )
+            .is_ok()
+            {
+                launch_gui();
+            }
+        }
+    }
+}
+
+/// pending 定时扫描结果的落盘位置（GUI 启动时消费）。
+pub fn pending_results_path() -> Option<std::path::PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    // <…>/Slimit.app/Contents/MacOS/slimit-tauri → 向上找 .app，再取
+    // 同级 app data 目录（~/Library/Application Support/dev.partiverse.slimit）。
+    let mut anc = exe.parent();
+    while let Some(dir) = anc {
+        if dir.extension().map(|e| e == "app").unwrap_or(false) {
+            let home = dirs_home();
+            return Some(
+                home.join("Library/Application Support/dev.partiverse.slimit")
+                    .join("pending-scan-results.json"),
+            );
+        }
+        anc = dir.parent();
+    }
+    None
+}
+
+fn launch_gui() {
+    let exe = match std::env::current_exe() {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    // 从无头二进制路径向上找 .app bundle，用 LaunchServices 拉起 GUI。
+    let mut anc = exe.parent();
+    while let Some(dir) = anc {
+        if dir.extension().map(|e| e == "app").unwrap_or(false) {
+            let _ = std::process::Command::new("open").arg(dir).spawn();
+            return;
+        }
+        anc = dir.parent();
+    }
+}
+
+/// GUI 启动时消费定时扫描结果：读取并删除 pending 文件。
+#[tauri::command]
+fn take_pending_results() -> Result<Option<ScanPlanResponse>, String> {
+    let Some(path) = pending_results_path() else {
+        return Ok(None);
+    };
+    match std::fs::read_to_string(&path) {
+        Ok(text) => {
+            let _ = std::fs::remove_file(&path);
+            match serde_json::from_str::<ScanPlanResponse>(&text) {
+                Ok(r) => Ok(Some(r)),
+                Err(_) => Ok(None),
+            }
+        }
+        Err(_) => Ok(None),
+    }
 }
 
 fn fmt_bytes(b: u64) -> String {
@@ -623,7 +697,8 @@ pub fn run() {
             check_fda,
             purge_quarantine_item,
             get_scan_schedule,
-            set_scan_schedule
+            set_scan_schedule,
+            take_pending_results
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
