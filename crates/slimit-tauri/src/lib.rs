@@ -481,9 +481,9 @@ fn scheduled_scan_headless(root_str: &str) {
     // L3 预授权自动清理（docs/L3-AUTOCLEAN-DESIGN.md）：仅在用户 opt-in
     // （schedule.auto_clean）时执行，范围封闭于「green + purge-dir 的可执行
     // 项」——yellow/red/project/user-manual 永不自动执行。仍走隔离区+审计。
-    let schedule: ScanSchedule = std::fs::read_to_string(dirs_home().join(
-        "Library/Application Support/dev.partiverse.slimit/schedule.json",
-    ))
+    let schedule: ScanSchedule = std::fs::read_to_string(
+        dirs_home().join("Library/Application Support/dev.partiverse.slimit/schedule.json"),
+    )
     .ok()
     .and_then(|t| serde_json::from_str(&t).ok())
     .unwrap_or_default();
@@ -496,9 +496,13 @@ fn scheduled_scan_headless(root_str: &str) {
         let Ok(mut audit) = slimit_exec::AuditLog::new(&app_data) else {
             return;
         };
+        // 按 path 去重：多条规则可命中同一目录（首条成功后其余必报
+        // target missing，审计噪音）。保留净收益最大的一条。
+        let mut seen = std::collections::HashSet::new();
         let green: Vec<slimit_exec::PlanItem> = items
             .iter()
             .filter(|i| i.executable && i.risk == slimit_rules::Risk::Green)
+            .filter(|i| seen.insert(i.path.clone()))
             .cloned()
             .collect();
         for i in items.iter() {
@@ -511,7 +515,10 @@ fn scheduled_scan_headless(root_str: &str) {
         let reports = slimit_exec::apply(&authorized, &quarantine, &mut audit);
         for r in &reports {
             if r.error.is_some() {
-                notify("Slimit 自动清理部分失败", &r.error.clone().unwrap_or_default());
+                notify(
+                    "Slimit 自动清理部分失败",
+                    &r.error.clone().unwrap_or_default(),
+                );
             }
         }
         let done = reports.iter().filter(|r| r.error.is_none()).count();
@@ -521,7 +528,13 @@ fn scheduled_scan_headless(root_str: &str) {
                 &format!(
                     "已隔离 {} 项（{}），14 天内可在隔离区恢复。另有 {} 项（{}）需要您确认。",
                     done,
-                    fmt_bytes(reports.iter().filter(|r| r.error.is_none()).map(|r| r.item.estimated_bytes).sum()),
+                    fmt_bytes(
+                        reports
+                            .iter()
+                            .filter(|r| r.error.is_none())
+                            .map(|r| r.item.estimated_bytes)
+                            .sum()
+                    ),
                     confirm_count,
                     fmt_bytes(confirm_bytes)
                 ),
