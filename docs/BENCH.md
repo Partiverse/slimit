@@ -1,4 +1,4 @@
-# SlimIt 扫描器基准日志
+# Slimit 扫描器基准日志
 
 方法：`SLIMIT_DEBUG=1 ./target/release/slimit <dir> --top N`，release 构建（cargo 1.93.1，M-series Mac，内置 SSD）。冷/热各一次，热 = 紧随冷之后重跑同目录。格式：`文件数 | 耗时 | 吞吐`。
 

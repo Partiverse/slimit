@@ -1,4 +1,4 @@
-# SlimIt 内测分发（W7）
+# Slimit 内测分发（W7）
 
 状态：**未签名构建**（notarization 在 W8）。本页说明内测包的产出与安装方式。
 
@@ -6,12 +6,12 @@
 
 `cargo tauri build` 产出：
 
-- `target/release/bundle/macos/SlimIt.app` — 主程序（arm64，macOS 26 实测）
-- `target/release/bundle/dmg/SlimIt_0.1.0_aarch64.dmg` — 分发镜像（hdiutil 生成，无装饰布局）
+- `target/release/bundle/macos/Slimit.app` — 主程序（arm64，macOS 26 实测）
+- `target/release/bundle/dmg/Slimit_0.1.0_aarch64.dmg` — 分发镜像（hdiutil 生成，无装饰布局）
 
 > 备注：tauri 自带 bundle_dmg.sh 依赖 Finder AppleScript 定位图标，偶发 -10006
-> （自动化授权缺失）导致 DMG 步骤失败；失败时可 `hdiutil create -volname SlimIt
-> -srcfolder target/release/bundle/macos/SlimIt.app -ov -format UDZO <输出>.dmg`
+> （自动化授权缺失）导致 DMG 步骤失败；失败时可 `hdiutil create -volname Slimit
+> -srcfolder target/release/bundle/macos/Slimit.app -ov -format UDZO <输出>.dmg`
 > 直接生成。W8 notarization 阶段一并处理签名与 DMG 美化。
 
 ## 安装指引（未签名应用的 Gatekeeper 通行方式）
@@ -21,15 +21,15 @@
 **方式三（最可靠）：终端移除隔离属性**
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/SlimIt.app
+xattr -dr com.apple.quarantine /Applications/Slimit.app
 ```
 
-执行后即可正常双击打开（需先把 SlimIt 拖入 Applications；路径不同请对应修改）。
+执行后即可正常双击打开（需先把 Slimit 拖入 Applications；路径不同请对应修改）。
 
 **方式一：右键打开**
 
-1. 挂载 DMG，把 SlimIt 拖入 Applications（或直接使用 .app）。
-2. 在 Finder 中**右键点击 SlimIt → 打开**，再点弹窗中的「打开」。
+1. 挂载 DMG，把 Slimit 拖入 Applications（或直接使用 .app）。
+2. 在 Finder 中**右键点击 Slimit → 打开**，再点弹窗中的「打开」。
 3. 此后系统记住许可，以后双击正常启动。
    （注：部分系统版本此方式可能无效，请改用方式三。）
 

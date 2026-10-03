@@ -483,7 +483,7 @@ function CleanPanel() {
             >
               {manualBusy ? "探测中…" : "加入计划"}
             </button>
-            <span className="hint">手动条目同样进隔离区可恢复；系统路径受保护</span>
+            <span className="hint">可恢复</span>
           </div>
           {manualItems.length > 0 && (
             <table>
@@ -658,9 +658,7 @@ function CleanPanel() {
                     取消
                   </button>
                 )}
-                <span className="hint">
-                  仅 green/yellow 可执行项；全部迁入隔离区，可随时恢复
-                </span>
+                
               </div>
             </>
           )}
@@ -793,8 +791,8 @@ function AdvancedPanel() {
           打开系统设置 → 完全磁盘访问
         </button>
         <p className="hint">
-          在列表里勾选 SlimIt（或「+」手动添加 /Applications/SlimIt.app），然后
-          重启 SlimIt。扫描时若弹出权限请求，也请点允许。
+          在列表里勾选 Slimit（或「+」手动添加 /Applications/Slimit.app），然后
+          重启 Slimit。扫描时若弹出权限请求，也请点允许。
         </p>
         {openErr && <p className="error">{openErr}</p>}
       </div>
@@ -1176,11 +1174,7 @@ function RulesPanel() {
   return (
     <section>
       <h2>规则库（{rules ? rules.length : "?"} 条）</h2>
-      <p className="hint">
-        这里不是装饰页：每一行都写明「这是什么、删了会怎样」，这是执行授权的唯一
-        来源——你看到的每一条可清理项，都对应这里的一条规则。发现漏了什么目录？
-        提 issue，下个版本就进来。
-      </p>
+      <p className="hint">每条可清理项都对应这里的一条规则；发现漏了什么目录请提 issue。</p>
       <div className="row">
         <button onClick={run}>刷新</button>
         {rules && (
@@ -1209,8 +1203,7 @@ function RulesPanel() {
       {rules && (
         <>
           <p className="hint">
-            共 {filtered.length} 条规则（{rules.length} 条总库）。规则库是可信输入，
-            任何失败即整体报错；UI 仅展示，不触发执行。
+            共 {filtered.length} 条规则
           </p>
           {filtered.length > rulesPage * 60 && (
             <button className="ghost" onClick={() => setRulesPage(rulesPage + 1)}>
@@ -1355,10 +1348,7 @@ export default function App() {
   const [tab, setTab] = useState<TabId>("clean");
   return (
     <main>
-      <h1>SlimIt</h1>
-      <p className="hint">
-        扫描 → 规则计划 → 隔离执行 → 可恢复；AI 解释仅作提示，永不影响执行
-      </p>
+      <h1>Slimit</h1>
       <nav className="tabs" aria-label="功能面板">
         {TABS.map((t) => (
           <button

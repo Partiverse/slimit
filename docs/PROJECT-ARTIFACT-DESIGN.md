@@ -1,6 +1,6 @@
 # 项目感知规则设计：schema v1 的 project-artifact 扩展（R1+R2）
 
-> 目标：让 SlimIt 能命中**任意项目目录内的构建产物**（`target/`、`node_modules`、`.venv`…）——现状 175 条规则全部锚定 `~` 固定路径，用户 80GB 的 Rust `target/` 恰好落在盲区（背景与动机见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) §6）。
+> 目标：让 Slimit 能命中**任意项目目录内的构建产物**（`target/`、`node_modules`、`.venv`…）——现状 175 条规则全部锚定 `~` 固定路径，用户 80GB 的 Rust `target/` 恰好落在盲区（背景与动机见 [RECLAIM-STRATEGY.md](./RECLAIM-STRATEGY.md) §6）。
 > 日期：2026-10-01 · 状态：设计定稿，本文同批提交试点实现（R1 全量 + R2 降级为后续优化，理由见 §3）。
 
 ## 1. 现状与能力边界

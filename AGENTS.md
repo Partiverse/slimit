@@ -1,4 +1,4 @@
-# AGENTS.md — SlimIt 开发者/AI 代理须知
+# AGENTS.md — Slimit 开发者/AI 代理须知
 
 跨平台存储瘦身工具（Rust workspace + Tauri 2）。**完整现状、进度与工具链交接见 [docs/HANDOFF.md](./docs/HANDOFF.md)，接手前必读。**
 

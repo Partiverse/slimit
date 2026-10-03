@@ -14,8 +14,8 @@
 | 步骤 | 内容 | 产出/验证 |
 |---|---|---|
 | 8.1 | 注册 Apple Developer Program，Xcode/钥匙串里创建 **Developer ID Application** 证书 | `security find-identity -v -p codesigning` 可见 |
-| 8.2 | `tauri.conf.json` 增加签名配置（`signingIdentity`）；`cargo tauri build` 前设 `APPLE_SIGNING_IDENTITY` | `codesign -dv --verbose=2 SlimIt.app` 显示 Authority=Developer ID |
-| 8.3 | 公证：`APPLE_ID`/`APPLE_PASSWORD`（App 专用密码）/`APPLE_TEAM_ID` 环境变量 + `tauri notarize`（或 `xcrun notarytool submit` + `xcrun stapler staple`） | `spctl -a -vv SlimIt.app` → accepted；`xcrun stapler validate` 通过 |
+| 8.2 | `tauri.conf.json` 增加签名配置（`signingIdentity`）；`cargo tauri build` 前设 `APPLE_SIGNING_IDENTITY` | `codesign -dv --verbose=2 Slimit.app` 显示 Authority=Developer ID |
+| 8.3 | 公证：`APPLE_ID`/`APPLE_PASSWORD`（App 专用密码）/`APPLE_TEAM_ID` 环境变量 + `tauri notarize`（或 `xcrun notarytool submit` + `xcrun stapler staple`） | `spctl -a -vv Slimit.app` → accepted；`xcrun stapler validate` 通过 |
 | 8.4 | DMG 同样签名+公证 | 双击安装不再触发 Gatekeeper 警告 |
 | 8.5 | 干净机器（或新用户账号）全量验收：下载 → 挂载 → 安装 → 扫描 → 隔离 → 恢复 | 记录到 BETA.md，移除「未签名」相关指引 |
 
@@ -47,7 +47,7 @@
 
 | W7 交付项 | 状态 | 证据 |
 |---|---|---|
-| 内测包（官网直发） | ✅ 包就绪，渠道动作待用户 | SlimIt.app 9.0 MB / DMG 3.1 MB（release 冒烟存活），`docs/BETA.md` 分发说明 |
+| 内测包（官网直发） | ✅ 包就绪，渠道动作待用户 | Slimit.app 9.0 MB / DMG 3.1 MB（release 冒烟存活），`docs/BETA.md` 分发说明 |
 | 性能回归 | ✅ 达标（热） | 合成树 50k 基线 0.5–0.9s，折算 1M ≈ 10–18s（SPEC 热 <15s 线内）；冷未测（需 sudo purge，不阻塞）；W6 进度回调零开销经同日双版本对照证实 |
 | 规则库 80+ | ✅ 81 条 | validate 全绿 + golden 同步 + 与目录加载一致性测试 |
 

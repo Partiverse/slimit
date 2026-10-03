@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SlimIt macOS 签名 + 公证（docs/W8-PLAN.md §1 的可执行版）。
+# Slimit macOS 签名 + 公证（docs/W8-PLAN.md §1 的可执行版）。
 # 前置：Apple Developer Program 证书（Developer ID Application）。
 # 全部凭据只走环境变量，绝不写入本文件或仓库；示例值见 W8-PLAN.md。
 #
@@ -8,8 +8,8 @@
 #   bash scripts/release/sign-notarize.sh    # 先 cargo tauri build
 set -euo pipefail
 
-APP="target/release/bundle/macos/SlimIt.app"
-DMG="target/release/bundle/dmg/SlimIt_0.1.0_aarch64.dmg"
+APP="target/release/bundle/macos/Slimit.app"
+DMG="target/release/bundle/dmg/Slimit_0.1.0_aarch64.dmg"
 
 echo "== 0/4 环境变量自检 =="
 : "${APPLE_SIGNING_IDENTITY:?缺少 APPLE_SIGNING_IDENTITY（security find-identity -v -p codesigning 查看）}"

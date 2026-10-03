@@ -1,4 +1,4 @@
-# SlimIt MVP 技术规格（macOS）
+# Slimit MVP 技术规格（macOS）
 
 > 版本：v0.1 · 日期：2026-09-28 · 上游文档：[PRODUCT_PLAN.md](./PRODUCT_PLAN.md)
 > MVP 范围：macOS 单平台，8 周，旗舰场景 = "解剖 System Data" 完整闭环（扫描 → 语义解释 → 计划预演 → 隔离区清理 → 可恢复）。
@@ -66,7 +66,7 @@ slimit/
 2. **Apply**：逐项执行，产生 `AuditEntry`（JSONL 追加写，含时间戳、规则 id、路径、字节、结果、隔离区 id）。
 
 ### 4.2 隔离区
-- 位置：`~/Library/Application Support/SlimIt/quarantine/<ulid>/`。
+- 位置：`~/Library/Application Support/Slimit/quarantine/<ulid>/`。
 - `purge-dir` 实现 = `rename()` 到隔离区（同卷原子、零拷贝）+ `manifest.json`（原始路径、时间、规则、文件清单摘要）。跨卷 fallback：copy + delete，UI 提示耗时。
 - 恢复 = 按 manifest `rename()` 回原路径；原路径已存在则生成带后缀路径，绝不覆盖。
 - 保留期默认 14 天，到期的后台任务仅删除隔离区内副本。注意：隔离区本身占空间，UI 在体检中显示其体积。

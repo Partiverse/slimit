@@ -1,8 +1,8 @@
-# SlimIt
+# Slimit
 
 跨 macOS / Windows / Linux 的存储瘦身工具。核心差异化：**AI 语义化解释 + 机制级安全**——解释每个目录是什么、谁产生的、删了会怎样，并以隔离区可回滚方式清理。
 
-**状态**：MVP W7 完成（2026-09-29）——W2 扫描器 `getattrlistbulk` 批量枚举（[docs/BENCH.md](./docs/BENCH.md)：~/Library 实测 296 万文件热 57s，同机 `du` 913s，快 ~16×）；W3–W7 规则库 81 条 macOS 规则（validate + golden 全绿）；W4 APFS 探测；W5 Tauri 2 + React 前端；W6 GUI 清理链串联（扫描进度事件流 / plan → 隔离 → 恢复 / AI 语义解释，[docs/BRIDGE.md](./docs/BRIDGE.md)）并经 GUI 全链路手测修复 2 个正确性 bug；W7 性能回归基线（合成树 50k 文件，折算 1M 热 ≈ 10–18s）+ 内测包就绪（[docs/BETA.md](./docs/BETA.md)：SlimIt.app 9 MB / DMG 3.1 MB）。安全状态见 [docs/SECURITY.md](./docs/SECURITY.md)。下一步 W8：notarization、落地页、发布 v0.1（[docs/W8-PLAN.md](./docs/W8-PLAN.md)）。仓库：https://github.com/Partiverse/slimit（私有）。
+**状态**：MVP W7 完成（2026-09-29）——W2 扫描器 `getattrlistbulk` 批量枚举（[docs/BENCH.md](./docs/BENCH.md)：~/Library 实测 296 万文件热 57s，同机 `du` 913s，快 ~16×）；W3–W7 规则库 81 条 macOS 规则（validate + golden 全绿）；W4 APFS 探测；W5 Tauri 2 + React 前端；W6 GUI 清理链串联（扫描进度事件流 / plan → 隔离 → 恢复 / AI 语义解释，[docs/BRIDGE.md](./docs/BRIDGE.md)）并经 GUI 全链路手测修复 2 个正确性 bug；W7 性能回归基线（合成树 50k 文件，折算 1M 热 ≈ 10–18s）+ 内测包就绪（[docs/BETA.md](./docs/BETA.md)：Slimit.app 9 MB / DMG 3.1 MB）。安全状态见 [docs/SECURITY.md](./docs/SECURITY.md)。下一步 W8：notarization、落地页、发布 v0.1（[docs/W8-PLAN.md](./docs/W8-PLAN.md)）。仓库：https://github.com/Partiverse/slimit（私有）。
 
 ## 文档索引
 

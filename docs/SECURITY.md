@@ -1,4 +1,4 @@
-# SlimIt 安全状态
+# Slimit 安全状态
 
 > 本文档汇总自动化扫描结果与设计级安全不变量。**自动化扫描的"无发现"不等于项目安全**——见下文覆盖缺口。
 
@@ -67,7 +67,7 @@ Mimosa 扫描（2026-09-29）completeness: partial，入口识别未覆盖 Tauri
 
 ## 设计级安全不变量（机制保证，不依赖扫描结论）
 
-SlimIt 是一个有删除能力的工具，安全模型是产品的核心承诺，以下不变量由代码结构强制（SPEC_MVP §5）：
+Slimit 是一个有删除能力的工具，安全模型是产品的核心承诺，以下不变量由代码结构强制（SPEC_MVP §5）：
 
 1. **AI 永无删除权**：`slimit-ai` 的 `Explanation` 只进 UI 提示层；AI 输出在数据流上不可达执行器。执行授权来源有二（2026-10-02 扩展）：① `slimit-rules` 规则库命中（`PlanItem.executable` 判定）；② **用户对具体路径的显式手动选择**（`PlanOrigin::UserManual`，应种子反馈「没命中规则就不能删吗」新增）。手动模式的授权主体是用户本人而非 AI——AI 解释永不产生 manual 项，数据流上不可达。
 2. **red 永不执行**：`plan()` 对 `risk: red` 一律 `executable=false`（executor.rs）；`lint` 拒绝 red+purge-dir 组合进库；UI 勾选与 `apply_plan` 二次拒绝（双层保险）。
