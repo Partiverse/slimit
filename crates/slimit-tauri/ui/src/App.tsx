@@ -76,7 +76,7 @@ function useTick(active: boolean) {
  * 勾选 → 两段式确认隔离执行 → 可恢复。
  * 红线：AI 解释仅为提示层；red/非 executable 项永不进入执行列表。
  */
-function CleanPanel() {
+function CleanPanel({ noviceMode }: { noviceMode: boolean }) {
   const [root, setRoot] = useState("");
   const [applying, setApplying] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -87,9 +87,6 @@ function CleanPanel() {
   const [reports, setReports] = useState<ApplyReport[] | null>(null);
   const [tips, setTips] = useState<Record<string, Explanation>>({});
   const [ruleTitles, setRuleTitles] = useState<Map<string, string>>(new Map());
-  // 新手档：只展示 A 类（一次性大额）与 C 类（用户数据提示），隐藏会再生的
-  // B 类缓存——「清完又长回来」是清理工具失去信任的主因。默认新手档。
-  const [noviceMode, setNoviceMode] = useState(true);
   const seqRef = useRef(0);
 
   // 规则 id → 人类可读标题（进程内嵌数据，廉价；失败不影响主流程）。
@@ -371,14 +368,6 @@ function CleanPanel() {
         <button onClick={startScan} disabled={!root.trim()}>
           开始扫描
         </button>
-        <label className="hint mode-toggle">
-          <input
-            type="checkbox"
-            checked={noviceMode}
-            onChange={(e) => setNoviceMode(e.target.checked)}
-          />
-          新手档（只显示大额可回收与危险提示）
-        </label>
         <label className="hint mode-toggle">
           只看 ≥{" "}
           <select
@@ -771,36 +760,62 @@ function ApplyReports({ reports }: { reports: ApplyReport[] }) {
   );
 }
 
-function AdvancedPanel() {
+function SettingsPanel({
+  noviceMode,
+  setNoviceMode,
+}: {
+  noviceMode: boolean;
+  setNoviceMode: (v: boolean) => void;
+}) {
   const [openErr, setOpenErr] = useState("");
   return (
     <section>
-      <h2>高级</h2>
-      <div className="fda-card">
-        <b>权限引导：完全磁盘访问（推荐先做）</b>
-        <p className="hint">
-          扫描 ~/Library、代码目录等位置需要「完全磁盘访问」权限；没有授权时扫描
-          也能运行，但很多目录会被系统挡住（结果偏小、部分条目看不到）。建议第一
-          次使用时就授权，避免扫到一半再补权限。
-        </p>
-        <button
-          onClick={async () => {
-            try {
-              await openFdaSettings();
-            } catch (e) {
-              setOpenErr(String(e));
-            }
-          }}
-        >
-          打开系统设置 → 完全磁盘访问
-        </button>
-        <p className="hint">
-          在列表里勾选 Slimit（或「+」手动添加 /Applications/Slimit.app），然后
-          重启 Slimit。扫描时若弹出权限请求，也请点允许。
-        </p>
-        {openErr && <p className="error">{openErr}</p>}
+      <h2>设置</h2>
+      <div className="settings-section">
+        <h3>权限</h3>
+        <div className="fda-card">
+          <b>完全磁盘访问</b>
+          <p className="hint">
+            未授权时扫描也能运行，但很多目录会被系统挡住（结果偏小）。授权
+            后扫得全，也不用逐个文件夹点允许。
+          </p>
+          <button
+            onClick={async () => {
+              try {
+                await openFdaSettings();
+              } catch (e) {
+                setOpenErr(String(e));
+              }
+            }}
+          >
+            打开系统设置 → 完全磁盘访问
+          </button>
+          <p className="hint">
+            勾选 Slimit 后重启应用生效。
+          </p>
+          {openErr && <p className="error">{openErr}</p>}
+        </div>
       </div>
-      <AiSettingsPanel />
+      <div className="settings-section">
+        <h3>清理</h3>
+        <label className="hint mode-toggle">
+          <input
+            type="checkbox"
+            checked={noviceMode}
+            onChange={(e) => setNoviceMode(e.target.checked)}
+          />{" "}
+          新手档（清理页只显示大额可回收与危险提示）
+        </label>
+      </div>
+      <div className="settings-section">
+        <h3>AI 解释</h3>
+        <AiSettingsPanel />
+      </div>
+      <div className="settings-section">
+        <h3>高级诊断</h3>
+        <VolumePanel />
+        <SnapshotsPanel />
+      </div>
     </section>
   );
 }
@@ -1343,13 +1358,16 @@ const TABS = [
   { id: "clean", label: "清理" },
   { id: "quarantine", label: "隔离区" },
   { id: "rules", label: "规则库" },
-  { id: "advanced", label: "高级" },
+  { id: "advanced", label: "设置" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
 
 export default function App() {
   const [tab, setTab] = useState<TabId>("clean");
+  // 新手档是用户偏好（SETTINGS-DESIGN §2）：状态在 App 层，设置页开关、
+  // 清理页过滤共用。
+  const [noviceMode, setNoviceMode] = useState(true);
   return (
     <main>
       <h1>Slimit</h1>
@@ -1368,7 +1386,7 @@ export default function App() {
       {/* 面板常驻挂载、用 display 切换（种子反馈：切 tab 后扫描数据丢失）。
           状态保活 = 不丢扫描任务/手动条目/筛选条件；各面板挂载时自动加载。 */}
       <div style={{ display: tab === "clean" ? "" : "none" }}>
-        <CleanPanel />
+        <CleanPanel noviceMode={noviceMode} />
       </div>
       <div style={{ display: tab === "quarantine" ? "" : "none" }}>
         <QuarantinePanel active={tab === "quarantine"} />
@@ -1377,7 +1395,7 @@ export default function App() {
         <RulesPanel />
       </div>
       <div style={{ display: tab === "advanced" ? "" : "none" }}>
-        <AdvancedPanel />
+        <SettingsPanel noviceMode={noviceMode} setNoviceMode={setNoviceMode} />
         <VolumePanel />
         <SnapshotsPanel />
       </div>

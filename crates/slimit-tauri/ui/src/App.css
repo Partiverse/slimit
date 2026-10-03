@@ -621,3 +621,19 @@ details > summary {
 details[open] > summary {
   color: hsl(var(--foreground));
 }
+
+
+/* ---------- 设置页分区（shadcn settings 分区表单） ---------- */
+
+.settings-section {
+  margin: 18px 0;
+}
+
+.settings-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 6px;
+  margin: 0 0 10px;
+}
