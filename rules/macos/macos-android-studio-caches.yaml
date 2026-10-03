@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-android-studio-caches
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Google/AndroidStudio*"
+  - "~/Library/Logs/Google/AndroidStudio*"
+semantics:
+  title: "Android Studio 缓存与日志（旧版本）"
+  what: "Android Studio 按版本分目录的 IDE 缓存（索引、Gradle 同步缓存）与运行日志。升级后旧版本目录不会再被使用，是常见的大空间遗留（每版本数 GB）"
+  producer: "Android Studio（索引构建与同步时生成）"
+  safe_to_delete_because: "缓存与日志可再生：删除后 IDE 启动时重建；建议仅清理已升级弃用的旧版本目录（glob 覆盖所有版本，IDE 关闭时清理当前版本也会自动重建）"
+  consequence: "当前版本下次启动需重建索引（首次打开项目变慢）；旧版本无影响"
+  regenerate: "IDE 启动时自动重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB（每版本）"
+  recovery: full
+refs:
+  - https://developer.android.com/studio/intro/studio-config

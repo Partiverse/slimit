@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-lark-data-advice
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.ss.lark.*"
+semantics:
+  title: "飞书数据容器（聊天文件与缓存）"
+  what: "飞书 macOS 沙盒容器（com.ss.lark.* 多目录）：聊天文件缓存、本地数据库与登录态混在一起。重度使用常达数 GB"
+  producer: "飞书（接收消息与文件时写入）"
+  safe_to_delete_because: "不建议工具代删：容器内混有聊天记录数据库与登录态。请退出飞书后在容器内只删 Cache 子目录，或使用飞书设置内的官方清理功能"
+  consequence: "工具不代删；只清 Cache 子目录可保留登录态与聊天文件，误删容器其他内容需重新登录并可能丢本地文件"
+  regenerate: "缓存随使用重新产生"
+risk: yellow
+red_flags:
+  - "com.ss.lark.* 多目录混有聊天记录数据库与登录态，代删会丢数据并要求重新登录"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB（重度办公用户）"
+  recovery: none
+refs:
+  - https://www.feishu.cn/

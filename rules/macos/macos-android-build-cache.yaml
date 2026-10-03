@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-android-build-cache
+os: macos
+scope: user
+paths:
+  - "~/.android/build-cache"
+semantics:
+  title: "Android 构建缓存（~/.android/build-cache）"
+  what: "Android SDK 构建工具的共享依赖缓存（build-cache 目录），所有 Android 项目共用"
+  producer: "Android Gradle 插件构建时生成"
+  safe_to_delete_because: "纯构建缓存：删除后下次构建自动重建；项目源码、SDK、AVD 均不受影响"
+  consequence: "首次 Android 构建变慢（重新生成缓存）；功能完全不受影响"
+  regenerate: "下次构建自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://developer.android.com/build

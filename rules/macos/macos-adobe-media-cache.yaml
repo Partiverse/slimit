@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-adobe-media-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Adobe/Common/Media Cache Files"
+semantics:
+  title: "Adobe 媒体缓存（Media Cache Files）"
+  what: "Premiere Pro / After Effects / Media Encoder 共享的音频 conform 缓存（.cfa）与峰值文件（.pek），剪辑过视频的机器常达数十 GB"
+  producer: "Adobe 视频套件导入/播放媒体时生成"
+  safe_to_delete_because: "缓存文件删除安全，Adobe 官方确认会自动重建；建议优先在 Premiere/AE 的 偏好设置 → 媒体缓存 内执行官方清理以保持缓存数据库一致"
+  consequence: "重新打开相关工程时需重新 conform 音频与生成峰值文件（首次播放/渲染变慢，时长取决于素材量）"
+  regenerate: "打开工程时自动重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数 GB 到数十 GB（剪辑重度用户）"
+  recovery: full
+refs:
+  - https://helpx.adobe.com/premiere-pro/using/setting-preferences.html
+  - https://helpx.adobe.com/after-effects/using/disk-cache.html

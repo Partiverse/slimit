@@ -1,0 +1,23 @@
+apiVersion: slimit.rules/v1
+id: macos-dingtalk-data-advice
+os: macos
+scope: user
+paths:
+  - "~/Library/Containers/com.alibaba.DingTalk.mac"
+semantics:
+  title: "钉钉数据容器（聊天文件与缓存）"
+  what: "钉钉 macOS 沙盒容器：聊天图片/视频/文件缓存、本地数据库与登录态混在一起。使用钉钉办公的机器常达数 GB 到数十 GB"
+  producer: "钉钉（接收消息与文件时写入）"
+  safe_to_delete_because: "不建议工具代删：容器内混有聊天记录数据库与登录态，直接删除会丢聊天文件与登录状态。官方提供应用内清理入口（钉钉 → 偏好设置 → 其他 → 清理缓存），只清缓存保留数据"
+  consequence: "工具不代删；请在钉钉内使用官方「清理缓存」功能，或确认后手动处理"
+  regenerate: "应用内清理后随使用重新产生缓存"
+risk: yellow
+red_flags:
+  - "容器内混有聊天记录数据库与登录态，代删会丢失聊天文件并要求重新登录"
+action:
+  kind: advise
+estimate:
+  typical_size: "数 GB 到数十 GB（重度办公用户）"
+  recovery: none
+refs:
+  - https://www.dingtalk.com/

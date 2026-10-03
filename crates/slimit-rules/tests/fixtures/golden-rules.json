@@ -2023,6 +2023,45 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-adobe-media-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Adobe/Common/Media Cache Files"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "Adobe 媒体缓存（Media Cache Files）",
+      "what": "Premiere Pro / After Effects / Media Encoder 共享的音频 conform 缓存（.cfa）与峰值文件（.pek），剪辑过视频的机器常达数十 GB",
+      "producer": "Adobe 视频套件导入/播放媒体时生成",
+      "safe_to_delete_because": "缓存文件删除安全，Adobe 官方确认会自动重建；建议优先在 Premiere/AE 的 偏好设置 → 媒体缓存 内执行官方清理以保持缓存数据库一致",
+      "consequence": "重新打开相关工程时需重新 conform 音频与生成峰值文件（首次播放/渲染变慢，时长取决于素材量）",
+      "regenerate": "打开工程时自动重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（剪辑重度用户）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://helpx.adobe.com/premiere-pro/using/setting-preferences.html",
+      "https://helpx.adobe.com/after-effects/using/disk-cache.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-android-avd",
     "os": "macos",
     "scope": "user",
@@ -2063,6 +2102,44 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-android-build-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/.android/build-cache"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "Android 构建缓存（~/.android/build-cache）",
+      "what": "Android SDK 构建工具的共享依赖缓存（build-cache 目录），所有 Android 项目共用",
+      "producer": "Android Gradle 插件构建时生成",
+      "safe_to_delete_because": "纯构建缓存：删除后下次构建自动重建；项目源码、SDK、AVD 均不受影响",
+      "consequence": "首次 Android 构建变慢（重新生成缓存）；功能完全不受影响",
+      "regenerate": "下次构建自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.android.com/build"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-android-sdk-system-images",
     "os": "macos",
     "scope": "user",
@@ -2098,6 +2175,45 @@
     "refs": [
       "https://developer.android.com/studio/run/managing-avds",
       "https://developer.android.com/studio/run/emulator"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-android-studio-caches",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Google/AndroidStudio*",
+      "~/Library/Logs/Google/AndroidStudio*"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "Android Studio 缓存与日志（旧版本）",
+      "what": "Android Studio 按版本分目录的 IDE 缓存（索引、Gradle 同步缓存）与运行日志。升级后旧版本目录不会再被使用，是常见的大空间遗留（每版本数 GB）",
+      "producer": "Android Studio（索引构建与同步时生成）",
+      "safe_to_delete_because": "缓存与日志可再生：删除后 IDE 启动时重建；建议仅清理已升级弃用的旧版本目录（glob 覆盖所有版本，IDE 关闭时清理当前版本也会自动重建）",
+      "consequence": "当前版本下次启动需重建索引（首次打开项目变慢）；旧版本无影响",
+      "regenerate": "IDE 启动时自动重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB（每版本）",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://developer.android.com/studio/intro/studio-config"
     ]
   },
   {
@@ -2719,6 +2835,46 @@
     },
     "refs": [
       "https://docs.deno.com/runtime/manual/basics/environment_variables/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-dingtalk-data-advice",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.alibaba.DingTalk.mac"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "钉钉数据容器（聊天文件与缓存）",
+      "what": "钉钉 macOS 沙盒容器：聊天图片/视频/文件缓存、本地数据库与登录态混在一起。使用钉钉办公的机器常达数 GB 到数十 GB",
+      "producer": "钉钉（接收消息与文件时写入）",
+      "safe_to_delete_because": "不建议工具代删：容器内混有聊天记录数据库与登录态，直接删除会丢聊天文件与登录状态。官方提供应用内清理入口（钉钉 → 偏好设置 → 其他 → 清理缓存），只清缓存保留数据",
+      "consequence": "工具不代删；请在钉钉内使用官方「清理缓存」功能，或确认后手动处理",
+      "regenerate": "应用内清理后随使用重新产生缓存"
+    },
+    "risk": "yellow",
+    "red_flags": [
+      "容器内混有聊天记录数据库与登录态，代删会丢失聊天文件并要求重新登录"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（重度办公用户）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://www.dingtalk.com/"
     ]
   },
   {
@@ -3535,6 +3691,46 @@
     },
     "refs": [
       "https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-lark-data-advice",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.ss.lark.*"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "飞书数据容器（聊天文件与缓存）",
+      "what": "飞书 macOS 沙盒容器（com.ss.lark.* 多目录）：聊天文件缓存、本地数据库与登录态混在一起。重度使用常达数 GB",
+      "producer": "飞书（接收消息与文件时写入）",
+      "safe_to_delete_because": "不建议工具代删：容器内混有聊天记录数据库与登录态。请退出飞书后在容器内只删 Cache 子目录，或使用飞书设置内的官方清理功能",
+      "consequence": "工具不代删；只清 Cache 子目录可保留登录态与聊天文件，误删容器其他内容需重新登录并可能丢本地文件",
+      "regenerate": "缓存随使用重新产生"
+    },
+    "risk": "yellow",
+    "red_flags": [
+      "com.ss.lark.* 多目录混有聊天记录数据库与登录态，代删会丢数据并要求重新登录"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB（重度办公用户）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://www.feishu.cn/"
     ]
   },
   {
