@@ -1,0 +1,31 @@
+apiVersion: slimit.rules/v1
+id: macos-project-gradle-build
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - build.gradle
+    - build.gradle.kts
+    - settings.gradle
+    - settings.gradle.kts
+  rel_paths:
+    - build
+  max_age_days: 14
+semantics:
+  title: "Gradle 构建产物（项目内 build/）"
+  what: "Gradle 项目的编译输出、测试报告与打包结果（libs/、classes/），随每次构建累积"
+  producer: "gradle build / ./gradlew assemble（构建时生成）"
+  safe_to_delete_because: "纯构建产物：Gradle 可从源码完全重建；源码与 .gradle 脚本不在 build 内（依赖缓存另在 ~/.gradle，见对应规则）"
+  consequence: "下次 Gradle 构建需重新编译（大型项目首次约 1–10 分钟）"
+  regenerate: "下次构建时按需重建（gradle clean 可主动清理）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: partial
+refs:
+  - https://docs.gradle.org/current/userguide/directory_layout.html

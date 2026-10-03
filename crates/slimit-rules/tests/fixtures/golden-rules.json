@@ -4294,6 +4294,191 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-flutter-build",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "pubspec.yaml"
+      ],
+      "rel_paths": [
+        "build"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Flutter/Dart 构建产物（项目内 build/）",
+      "what": "Flutter 应用的编译输出与资源打包（含 flutter_assets/），随版本发布累积。pub-cache（~/.pub-cache 里的包缓存）是另一处，已有独立规则",
+      "producer": "flutter build / dart compile（构建时生成）",
+      "safe_to_delete_because": "纯构建产物：flutter 可从源码完全重建；源码与 pubspec.yaml 不在 build 内",
+      "consequence": "下次 flutter build 需重新编译与资源打包（首次约 1–5 分钟）",
+      "regenerate": "下次构建时按需重建（flutter clean 可主动清理）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.flutter.dev/reference/flutter-tools-reference/flutter-build"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-gradle-build",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "build.gradle",
+        "build.gradle.kts",
+        "settings.gradle",
+        "settings.gradle.kts"
+      ],
+      "rel_paths": [
+        "build"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Gradle 构建产物（项目内 build/）",
+      "what": "Gradle 项目的编译输出、测试报告与打包结果（libs/、classes/），随每次构建累积",
+      "producer": "gradle build / ./gradlew assemble（构建时生成）",
+      "safe_to_delete_because": "纯构建产物：Gradle 可从源码完全重建；源码与 .gradle 脚本不在 build 内（依赖缓存另在 ~/.gradle，见对应规则）",
+      "consequence": "下次 Gradle 构建需重新编译（大型项目首次约 1–10 分钟）",
+      "regenerate": "下次构建时按需重建（gradle clean 可主动清理）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.gradle.org/current/userguide/directory_layout.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-maven-target",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "pom.xml"
+      ],
+      "rel_paths": [
+        "target"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Maven 构建产物（项目内 target/）",
+      "what": "Maven 项目的编译输出（classes/、jar/war 包）与依赖下载暂存，单个大型项目常见 1–10GB。源码（src/）与 pom.xml 均不在 target 内",
+      "producer": "mvn package / mvn compile（构建时生成）",
+      "safe_to_delete_because": "纯构建产物：mvn 可从源码完全重建；源码、pom.xml、settings 与 git 历史均不在 target 内",
+      "consequence": "下次 mvn 构建需重新编译并重新下载依赖（首次约 1–10 分钟，取决于依赖量）",
+      "regenerate": "下次构建时按需重建（mvn clean 可主动清理）"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–10GB（大型多模块项目可达数十 GB）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-nextjs-next",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "next.config.js",
+        "next.config.mjs",
+        "next.config.ts"
+      ],
+      "rel_paths": [
+        ".next"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Next.js 构建产物（项目内 .next/）",
+      "what": "Next.js 的构建输出与增量缓存（含 build 产物与 cache），随每次 dev/build 累积。node_modules 依赖是另一处，已有独立规则",
+      "producer": "next dev / next build（构建时生成）",
+      "safe_to_delete_because": "纯构建与缓存产物：next 可从源码完全重建；源码与 next.config 均不在 .next 内。注意：构建以 standalone 模式发布的 Docker 镜像依赖 .next 内容，重新构建即可",
+      "consequence": "下次 next build / next dev 需重新编译（大型站点首次约 1–5 分钟）",
+      "regenerate": "下次构建时按需重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://nextjs.org/docs/app/building-your-application/configuring/next-config-js"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-project-node-modules",
     "os": "macos",
     "scope": "user",
@@ -4385,6 +4570,51 @@
     "refs": [
       "https://docs.python.org/3/library/venv.html",
       "https://pip.pypa.io/en/stable/topics/repeatable-installs/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-vcpkg-installed",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "vcpkg.json"
+      ],
+      "rel_paths": [
+        "vcpkg_installed"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "vcpkg 依赖安装目录（项目内 vcpkg_installed/）",
+      "what": "C/C++ 项目用 vcpkg manifest 模式安装的头文件与库（含 buildtrees 编译树），单项目常见数百 MB 到数 GB",
+      "producer": "vcpkg install（构建时按 manifest 安装）",
+      "safe_to_delete_because": "可由 vcpkg.json manifest 完整重装（vcpkg install）；源码与 manifest 不在此目录内。前提：重装需要网络与 C++ 工具链",
+      "consequence": "下次构建需重新下载并编译全部 C++ 依赖（大型依赖树首次可达 10–60 分钟，CMake 项目尤甚）",
+      "regenerate": "vcpkg install 按 manifest 重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB（C++ 依赖树大时更多）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://vcpkg.io/en/about/manifests.html"
     ]
   },
   {

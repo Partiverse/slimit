@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-vcpkg-installed
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - vcpkg.json
+  rel_paths:
+    - vcpkg_installed
+  max_age_days: 14
+semantics:
+  title: "vcpkg 依赖安装目录（项目内 vcpkg_installed/）"
+  what: "C/C++ 项目用 vcpkg manifest 模式安装的头文件与库（含 buildtrees 编译树），单项目常见数百 MB 到数 GB"
+  producer: "vcpkg install（构建时按 manifest 安装）"
+  safe_to_delete_because: "可由 vcpkg.json manifest 完整重装（vcpkg install）；源码与 manifest 不在此目录内。前提：重装需要网络与 C++ 工具链"
+  consequence: "下次构建需重新下载并编译全部 C++ 依赖（大型依赖树首次可达 10–60 分钟，CMake 项目尤甚）"
+  regenerate: "vcpkg install 按 manifest 重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB（C++ 依赖树大时更多）"
+  recovery: partial
+refs:
+  - https://vcpkg.io/en/about/manifests.html

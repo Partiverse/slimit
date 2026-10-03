@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-maven-target
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - pom.xml
+  rel_paths:
+    - target
+  max_age_days: 14
+semantics:
+  title: "Maven 构建产物（项目内 target/）"
+  what: "Maven 项目的编译输出（classes/、jar/war 包）与依赖下载暂存，单个大型项目常见 1–10GB。源码（src/）与 pom.xml 均不在 target 内"
+  producer: "mvn package / mvn compile（构建时生成）"
+  safe_to_delete_because: "纯构建产物：mvn 可从源码完全重建；源码、pom.xml、settings 与 git 历史均不在 target 内"
+  consequence: "下次 mvn 构建需重新编译并重新下载依赖（首次约 1–10 分钟，取决于依赖量）"
+  regenerate: "下次构建时按需重建（mvn clean 可主动清理）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "1–10GB（大型多模块项目可达数十 GB）"
+  recovery: partial
+refs:
+  - https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html

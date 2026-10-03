@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-flutter-build
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - pubspec.yaml
+  rel_paths:
+    - build
+  max_age_days: 14
+semantics:
+  title: "Flutter/Dart 构建产物（项目内 build/）"
+  what: "Flutter 应用的编译输出与资源打包（含 flutter_assets/），随版本发布累积。pub-cache（~/.pub-cache 里的包缓存）是另一处，已有独立规则"
+  producer: "flutter build / dart compile（构建时生成）"
+  safe_to_delete_because: "纯构建产物：flutter 可从源码完全重建；源码与 pubspec.yaml 不在 build 内"
+  consequence: "下次 flutter build 需重新编译与资源打包（首次约 1–5 分钟）"
+  regenerate: "下次构建时按需重建（flutter clean 可主动清理）"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: partial
+refs:
+  - https://docs.flutter.dev/reference/flutter-tools-reference/flutter-build

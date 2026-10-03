@@ -1,0 +1,30 @@
+apiVersion: slimit.rules/v1
+id: macos-project-nextjs-next
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - next.config.js
+    - next.config.mjs
+    - next.config.ts
+  rel_paths:
+    - .next
+  max_age_days: 14
+semantics:
+  title: "Next.js 构建产物（项目内 .next/）"
+  what: "Next.js 的构建输出与增量缓存（含 build 产物与 cache），随每次 dev/build 累积。node_modules 依赖是另一处，已有独立规则"
+  producer: "next dev / next build（构建时生成）"
+  safe_to_delete_because: "纯构建与缓存产物：next 可从源码完全重建；源码与 next.config 均不在 .next 内。注意：构建以 standalone 模式发布的 Docker 镜像依赖 .next 内容，重新构建即可"
+  consequence: "下次 next build / next dev 需重新编译（大型站点首次约 1–5 分钟）"
+  regenerate: "下次构建时按需重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: partial
+refs:
+  - https://nextjs.org/docs/app/building-your-application/configuring/next-config-js
