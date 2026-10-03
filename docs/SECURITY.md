@@ -80,6 +80,6 @@ SlimIt 是一个有删除能力的工具，安全模型是产品的核心承诺�
 ## 待办
 
 - [x] W8 发布前重跑 Mimosa 并确认 completeness: complete（若仍 partial，人工审计 Tauri command 层与 executor 路径作为替代证据）——**本次人工审计已覆盖全部 11 个 command 入口与 executor 路径，发现 2 个问题已修复**。
-- [ ] Tauri capability 最小化复查（当前默认 capability，仅 core:default；确认无需额外 IPC 权限）。
+- [x] Tauri capability 最小化复查——**复查发现项目此前从未创建 capability 文件**（Tauri v2 无 capability 即拒绝全部前端 API，`listen` 静默失败，这正是进度事件到不了前端的根因之一）；已新建 `capabilities/default.json` 最小集：`core:default` + `core:event:default`（事件订阅必需）+ `core:window:allow-{set-focus,show,unminimize}`（Dock Reopen 唤窗所需）。文件即权限清单，新增 IPC 能力必须同步此文件。
 - [ ] 干净机验收（第二台 Mac，需用户执行）。
 - [ ] notarization（需 Apple Developer Program 注册，$99/年；公开发布/收费前必须补）。
