@@ -487,7 +487,6 @@ fn scheduled_scan_headless(root_str: &str) {
     .ok()
     .and_then(|t| serde_json::from_str(&t).ok())
     .unwrap_or_default();
-    let mut auto_items: Vec<slimit_exec::PlanItem> = Vec::new();
     let mut confirm_count = 0u64;
     let mut confirm_bytes = 0u64;
     if schedule.enabled && schedule.auto_clean {
@@ -540,10 +539,8 @@ fn scheduled_scan_headless(root_str: &str) {
                 ),
             );
         }
-        let _ = auto_items.len();
         return;
     }
-    let _ = &auto_items;
     let summary = format!(
         "发现 {} 项可清理（{}）。打开 Slimit 查看详情。",
         count,
