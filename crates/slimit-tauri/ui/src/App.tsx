@@ -886,13 +886,25 @@ function SchedulePanel() {
         </label>
       </div>
       {cfg.enabled && (
-        <div className="row">
-          <input
-            value={cfg.root}
-            onChange={(e) => setCfg({ ...cfg, root: e.target.value })}
-            placeholder="自动扫描的文件夹，支持 ~（如 ~/code）"
-          />
-        </div>
+        <>
+          <div className="row">
+            <input
+              value={cfg.root}
+              onChange={(e) => setCfg({ ...cfg, root: e.target.value })}
+              placeholder="自动扫描的文件夹，支持 ~（如 ~/code）"
+            />
+          </div>
+          <div className="row">
+            <label className="hint mode-toggle">
+              <input
+                type="checkbox"
+                checked={cfg.auto_clean ?? false}
+                onChange={(e) => setCfg({ ...cfg, auto_clean: e.target.checked })}
+              />{" "}
+              同时自动清理可再生缓存（绿色条目，仍进隔离区可 14 天内恢复；默认关闭）
+            </label>
+          </div>
+        </>
       )}
       <div className="row">
         <button onClick={save}>保存定时扫描</button>

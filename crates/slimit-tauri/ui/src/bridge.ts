@@ -215,6 +215,8 @@ export function purgeQuarantineItem(id: string): Promise<Manifest> {
 export interface ScanSchedule {
   enabled: boolean;
   root: string;
+  /** L3 预授权：定时扫描时自动隔离 green 命中项（默认关闭）。 */
+  auto_clean?: boolean;
 }
 
 export function getScanSchedule(): Promise<ScanSchedule> {

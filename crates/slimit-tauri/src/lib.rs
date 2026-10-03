@@ -340,6 +340,10 @@ fn test_ai(app: AppHandle) -> Result<String, String> {
 pub struct ScanSchedule {
     pub enabled: bool,
     pub root: String,
+    /// L3 预授权（docs/L3-AUTOCLEAN-DESIGN.md，默认关闭）：定时扫描时自动
+    /// 隔离迁移 green+purge-dir 命中项。授权主体是用户 opt-in，AI 不参与。
+    #[serde(default)]
+    pub auto_clean: bool,
 }
 
 const LAUNCH_AGENT_LABEL: &str = "dev.partiverse.slimit.scan";
@@ -473,6 +477,60 @@ fn scheduled_scan_headless(root_str: &str) {
             b + if i.executable { i.estimated_bytes } else { 0 },
         )
     });
+
+    // L3 预授权自动清理（docs/L3-AUTOCLEAN-DESIGN.md）：仅在用户 opt-in
+    // （schedule.auto_clean）时执行，范围封闭于「green + purge-dir 的可执行
+    // 项」——yellow/red/project/user-manual 永不自动执行。仍走隔离区+审计。
+    let schedule: ScanSchedule = std::fs::read_to_string(dirs_home().join(
+        "Library/Application Support/dev.partiverse.slimit/schedule.json",
+    ))
+    .ok()
+    .and_then(|t| serde_json::from_str(&t).ok())
+    .unwrap_or_default();
+    let mut auto_items: Vec<slimit_exec::PlanItem> = Vec::new();
+    let mut confirm_count = 0u64;
+    let mut confirm_bytes = 0u64;
+    if schedule.enabled && schedule.auto_clean {
+        let app_data = dirs_home().join("Library/Application Support/dev.partiverse.slimit");
+        let quarantine = slimit_exec::Quarantine::new(&app_data);
+        let Ok(mut audit) = slimit_exec::AuditLog::new(&app_data) else {
+            return;
+        };
+        let green: Vec<slimit_exec::PlanItem> = items
+            .iter()
+            .filter(|i| i.executable && i.risk == slimit_rules::Risk::Green)
+            .cloned()
+            .collect();
+        for i in items.iter() {
+            if i.executable && i.risk != slimit_rules::Risk::Green {
+                confirm_count += 1;
+                confirm_bytes += i.estimated_bytes;
+            }
+        }
+        let authorized = slimit_exec::authorize_items(green.clone(), &rules);
+        let reports = slimit_exec::apply(&authorized, &quarantine, &mut audit);
+        for r in &reports {
+            if r.error.is_some() {
+                notify("Slimit 自动清理部分失败", &r.error.clone().unwrap_or_default());
+            }
+        }
+        let done = reports.iter().filter(|r| r.error.is_none()).count();
+        if done > 0 {
+            notify(
+                "Slimit 已自动清理可再生缓存",
+                &format!(
+                    "已隔离 {} 项（{}），14 天内可在隔离区恢复。另有 {} 项（{}）需要您确认。",
+                    done,
+                    fmt_bytes(reports.iter().filter(|r| r.error.is_none()).map(|r| r.item.estimated_bytes).sum()),
+                    confirm_count,
+                    fmt_bytes(confirm_bytes)
+                ),
+            );
+        }
+        let _ = auto_items.len();
+        return;
+    }
+    let _ = &auto_items;
     let summary = format!(
         "发现 {} 项可清理（{}）。打开 Slimit 查看详情。",
         count,
