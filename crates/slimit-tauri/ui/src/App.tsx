@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import {
   applyPlan,
+  type ScanSchedule,
   explain,
+  getScanSchedule,
   getSettings,
   listQuarantine,
   listRules,
@@ -11,6 +13,7 @@ import {
   openFdaSettings,
   probeManual,
   purgeQuarantineItem,
+  setScanSchedule,
   purgeExpiredQuarantine,
   restoreItem,
   testAi,
@@ -808,6 +811,10 @@ function SettingsPanel({
         </label>
       </div>
       <div className="settings-section">
+        <h3>定时扫描</h3>
+        <SchedulePanel />
+      </div>
+      <div className="settings-section">
         <h3>AI 解释</h3>
         <AiSettingsPanel />
       </div>
@@ -817,6 +824,55 @@ function SettingsPanel({
         <SnapshotsPanel />
       </div>
     </section>
+  );
+}
+
+function SchedulePanel() {
+  const [cfg, setCfg] = useState<ScanSchedule | null>(null);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    getScanSchedule()
+      .then(setCfg)
+      .catch((e) => setMsg(String(e)));
+  }, []);
+
+  if (!cfg) return null;
+  const save = async () => {
+    setMsg("应用中…");
+    try {
+      setMsg(await setScanSchedule(cfg));
+    } catch (e) {
+      setMsg(`❌ ${e}`);
+    }
+  };
+
+  return (
+    <>
+      <div className="row">
+        <label className="hint mode-toggle">
+          <input
+            type="checkbox"
+            checked={cfg.enabled}
+            onChange={(e) => setCfg({ ...cfg, enabled: e.target.checked })}
+          />{" "}
+          每周六 10:00 自动扫描（完成后系统通知，仅提醒不自动清理）
+        </label>
+      </div>
+      {cfg.enabled && (
+        <div className="row">
+          <input
+            value={cfg.root}
+            onChange={(e) => setCfg({ ...cfg, root: e.target.value })}
+            placeholder="自动扫描的文件夹，支持 ~（如 ~/code）"
+          />
+        </div>
+      )}
+      <div className="row">
+        <button onClick={save}>保存定时扫描</button>
+        {msg && <span className="hint">{msg}</span>}
+      </div>
+    </>
   );
 }
 

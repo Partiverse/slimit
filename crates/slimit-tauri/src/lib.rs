@@ -333,6 +333,174 @@ fn test_ai(app: AppHandle) -> Result<String, String> {
     slimit_ai::test_connection(&s)
 }
 
+// ---------- 定时扫描（无感化 L1，设计见 HANDOFF） ----------
+
+/// 定时扫描配置（持久化 `<app_data>/schedule.json`）。
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct ScanSchedule {
+    pub enabled: bool,
+    pub root: String,
+}
+
+const LAUNCH_AGENT_LABEL: &str = "dev.partiverse.slimit.scan";
+const LAUNCH_AGENT_WEEKDAY: i32 = 6; // 周六 10:00
+const LAUNCH_AGENT_HOUR: i32 = 10;
+
+fn schedule_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir.join("schedule.json"))
+}
+
+#[tauri::command]
+fn get_scan_schedule(app: AppHandle) -> Result<ScanSchedule, String> {
+    let p = schedule_path(&app)?;
+    match std::fs::read_to_string(p) {
+        Ok(text) => serde_json::from_str(&text).map_err(|e| format!("schedule.json 损坏: {e}")),
+        Err(_) => Ok(ScanSchedule::default()),
+    }
+}
+
+/// 保存定时扫描配置并安装/卸载 LaunchAgent。返回给人话结果。
+#[tauri::command]
+async fn set_scan_schedule(app: AppHandle, schedule: ScanSchedule) -> Result<String, String> {
+    let p = schedule_path(&app)?;
+    std::fs::write(&p, serde_json::to_string_pretty(&schedule).unwrap())
+        .map_err(|e| e.to_string())?;
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let exe_display = exe.to_string_lossy().to_string();
+    let plist = dirs_home().join("Library/LaunchAgents/dev.partiverse.slimit.scan.plist");
+    let uid_output = std::process::Command::new("id")
+        .args(["-u"])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let uid = String::from_utf8_lossy(&uid_output.stdout)
+        .trim()
+        .to_string();
+    // 先卸载旧任务（不存在时报错忽略）。
+    let _ = std::process::Command::new("launchctl")
+        .args(["bootout", &format!("gui/{uid}/{LAUNCH_AGENT_LABEL}")])
+        .output();
+    if !schedule.enabled {
+        let _ = std::fs::remove_file(&plist);
+        return Ok("已关闭定时扫描".into());
+    }
+    let root = resolve_scan_root(&schedule.root)?;
+    let root_display = root.to_string_lossy().to_string();
+    let xml = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>{LAUNCH_AGENT_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{exe_display}</string>
+    <string>--scheduled-scan</string>
+    <string>{root_display}</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key><integer>{LAUNCH_AGENT_WEEKDAY}</integer>
+    <key>Hour</key><integer>{LAUNCH_AGENT_HOUR}</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+</dict>
+</plist>
+"#,
+    );
+    std::fs::create_dir_all(plist.parent().unwrap()).map_err(|e| e.to_string())?;
+    std::fs::write(&plist, xml).map_err(|e| e.to_string())?;
+    let out = std::process::Command::new("launchctl")
+        .args(["bootstrap", &format!("gui/{uid}"), &plist.to_string_lossy()])
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        // 已加载等情况：幂等 kickstart 验证
+        let _ = std::process::Command::new("launchctl")
+            .args([
+                "kickstart",
+                "-k",
+                &format!("gui/{uid}/{LAUNCH_AGENT_LABEL}"),
+            ])
+            .output();
+    }
+    Ok(format!(
+        "已开启：每周六 10:00 自动扫描 {}（仅通知，不自动清理）",
+        root.display()
+    ))
+}
+
+fn dirs_home() -> std::path::PathBuf {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(std::path::PathBuf::from)
+        .unwrap_or_default()
+}
+
+/// LaunchAgent 触发的无头扫描：扫 + 规则计划 + 系统通知摘要后退出。
+fn scheduled_scan_headless(root_str: &str) {
+    let root = match resolve_scan_root(root_str) {
+        Ok(r) => r,
+        Err(e) => {
+            notify("Slimit 定时扫描失败", &e);
+            return;
+        }
+    };
+    let result = match slimit_core::scan(&root) {
+        Ok(r) => r,
+        Err(e) => {
+            notify("Slimit 定时扫描失败", &e.to_string());
+            return;
+        }
+    };
+    let rules = match slimit_rules::embedded_rules() {
+        Ok(r) => r,
+        Err(e) => {
+            notify("Slimit 定时扫描失败", &e.to_string());
+            return;
+        }
+    };
+    let dirs: Vec<slimit_rules::DirSnapshot> = result
+        .dirs
+        .iter()
+        .map(|d| slimit_rules::DirSnapshot::new(&d.path, d.apparent, d.actual))
+        .collect();
+    let items = slimit_exec::plan_from_snapshots(&rules, &dirs);
+    let (count, bytes) = items.iter().fold((0u64, 0u64), |(n, b), i| {
+        (
+            n + i.executable as u64,
+            b + if i.executable { i.estimated_bytes } else { 0 },
+        )
+    });
+    let summary = format!(
+        "发现 {} 项可清理（{}）。打开 Slimit 查看详情。",
+        count,
+        fmt_bytes(bytes)
+    );
+    notify("Slimit 周度扫描完成", &summary);
+}
+
+fn fmt_bytes(b: u64) -> String {
+    let gib = b as f64 / 1073741824.0;
+    if gib >= 1.0 {
+        format!("{gib:.1} GiB")
+    } else {
+        format!("{:.0} MiB", b as f64 / 1048576.0)
+    }
+}
+
+fn notify(title: &str, body: &str) {
+    let _ = std::process::Command::new("osascript")
+        .arg("-e")
+        .arg(format!(
+            "display notification \"{body}\" with title \"{title}\"",
+            body = body.replace('"', "'"),
+            title = title
+        ))
+        .output();
+}
+
 /// 手动清理探测（2026-10-02）：用户在 UI 里点「加入计划」前先探一次——
 /// 返回存在性与真实占用（UI 展示用）；不存在返回错误。
 #[derive(Debug, serde::Serialize)]
@@ -428,6 +596,14 @@ fn open_fda_settings() -> Result<(), String> {
 }
 
 pub fn run() {
+    // 无头模式：LaunchAgent 周度扫描（设置页开关安装的定时任务会带此参数
+    // 调起本二进制）。扫完发系统通知后退出，不启动 GUI。
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(pos) = args.iter().position(|a| a == "--scheduled-scan") {
+        let root = args.get(pos + 1).cloned().unwrap_or_default();
+        scheduled_scan_headless(&root);
+        return;
+    }
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             scan_and_plan,
@@ -445,7 +621,9 @@ pub fn run() {
             open_fda_settings,
             probe_manual,
             check_fda,
-            purge_quarantine_item
+            purge_quarantine_item,
+            get_scan_schedule,
+            set_scan_schedule
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

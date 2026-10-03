@@ -210,3 +210,17 @@ export function checkFda(): Promise<boolean> {
 export function purgeQuarantineItem(id: string): Promise<Manifest> {
   return invoke("purge_quarantine_item", { id });
 }
+
+/** 定时扫描配置（LaunchAgent 周六 10:00，仅通知不自动清理）。 */
+export interface ScanSchedule {
+  enabled: boolean;
+  root: string;
+}
+
+export function getScanSchedule(): Promise<ScanSchedule> {
+  return invoke("get_scan_schedule");
+}
+
+export function setScanSchedule(schedule: ScanSchedule): Promise<string> {
+  return invoke("set_scan_schedule", { schedule });
+}
