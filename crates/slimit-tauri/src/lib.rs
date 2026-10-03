@@ -23,6 +23,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter, Manager};
 
 /// 事件序号：区分先后两次扫描，前端丢弃过期序号的进度事件。
+/// 与前端任务 id 对齐（前端 `++seqRef` 首个任务 id=1）：配合
+/// `fetch_add(1) + 1`（fetch_add 返回旧值）⇒ 首个扫描 seq=1、第二个 seq=2，
+/// 与前端逐一对应。**必须成对修改**：起点 0 + 取加后值；起点 1 + 取旧值
+/// 是同一结果，任一处单独改动都会导致错位 1（进度数字恒 0）。
 static SCAN_SEQ: AtomicU64 = AtomicU64::new(0);
 
 /// 进度事件最小发射间隔（毫秒）：防事件风暴冻屏（见 scan_and_plan 注释）。
@@ -85,7 +89,9 @@ fn scan_and_plan_blocking(
     // 进度事件序号必须与前端任务 id 一致（2026-10-02 修复「进度条不走」：
     // 此前后端自增序号从 0 起、前端任务 id 从 1 起，`t.id === p.seq` 永不
     // 匹配，进度数字永远停在 0）。由前端显式传 task_id，后端原样回传。
-    let seq = task_id.unwrap_or_else(|| SCAN_SEQ.fetch_add(1, Ordering::Relaxed));
+    // fetch_add 返回旧值：起点 0、首次调用返回 0，+1 ⇒ 首个 seq=1，与前端
+    // 首个任务 id 对齐（见 SCAN_SEQ 注释：起点与「旧值/加后值」必须成对）。
+    let seq = task_id.unwrap_or_else(|| SCAN_SEQ.fetch_add(1, Ordering::Relaxed) + 1);
     let root = resolve_scan_root(&root)?;
     // 测试钩子：`--scan-delay-ms N` 启动参数让每次进度回调停顿 N 毫秒，
     // 模拟慢盘（真机验证进度条中间态用；`open --args` 可传入 GUI 进程，
@@ -95,10 +101,6 @@ fn scan_and_plan_blocking(
         .and_then(|i| std::env::args().nth(i + 1))
         .and_then(|v| v.parse().ok())
         .unwrap_or(0);
-    eprintln!(
-        "[debug] scan delay_ms={delay_ms} args={:?}",
-        std::env::args().collect::<Vec<_>>()
-    );
     // 进度事件节流（2026-10-02 根因修复）：大目录扫描每目录批次 emit 一次，
     // 百万级文件 = 每秒数百事件，前端每事件 setState 全面板重渲染 → WKWebView
     // 主线程打满、UI 冻结（用户所见「光标一直转、不知道在不在扫」）。改为
@@ -586,6 +588,24 @@ mod tests {
         });
         let err = resolve_scan_root("~/code").unwrap_err();
         assert!(err.contains("无法展开"), "got: {err}");
+    }
+
+    /// 进度事件 seq 必须与前端任务 id 逐一对齐（rc9/rc10 两次「数字恒 0」
+    /// 的根因）。前端 `++seqRef` 首个任务 id=1；后端起点 0 + fetch_add(1)
+    /// 取加后值 ⇒ 首个 seq=1。此测试锁死该不变量。
+    #[test]
+    fn progress_seq_starts_at_one_and_increments() {
+        // 复刻 scan_and_plan 的取值逻辑：起点 0、fetch_add(1) 取加后值。
+        static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let next = || SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+        assert_eq!(
+            next(),
+            1,
+            "first scan seq must be 1 (frontend task id starts at 1)"
+        );
+        assert_eq!(next(), 2);
+        assert_eq!(next(), 3);
+        assert_eq!(SEQ.load(std::sync::atomic::Ordering::Relaxed), 3);
     }
 
     /// 真实主目录下端到端展开 + 真实扫描。GUI 自动化被系统焦点限制挡住时，

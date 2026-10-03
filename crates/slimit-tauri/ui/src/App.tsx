@@ -107,23 +107,28 @@ function CleanPanel() {
   // 进度事件前端缓冲（与后端节流双保险，2026-10-02）：事件只更新 ref，
   // 定时器每 200ms 批量刷进 state——百万文件扫描不再逐事件重渲染冻屏。
   const progressRef = useRef(new Map<number, ScanProgress>());
+  // 快扫（几秒内完成）时 200ms 定时器可能一次都没触发，缓冲数据永不进 state
+  // ——用户所见「数字一直是 0」的最后一环。flushProgress 供定时器与扫描
+  // 结束路径共用。
+  const flushProgress = useRef(() => {});
   useEffect(() => {
-    const un = listen<ScanProgress>("scan-progress", (e) => {
-      progressRef.current.set(e.payload.seq, e.payload);
-    });
-    const timer = setInterval(() => {
+    const flush = () => {
       if (progressRef.current.size === 0) return;
       const pending = progressRef.current;
       progressRef.current = new Map();
       setTasks((ts) =>
         ts.map((t) => {
           const p = pending.get(t.id);
-          return p
-            ? { ...t, filesDone: p.files_done, currentDir: p.current_dir }
-            : t;
+          if (!p) return t;
+          return { ...t, filesDone: p.files_done, currentDir: p.current_dir };
         }),
       );
-    }, 200);
+    };
+    flushProgress.current = flush;
+    const un = listen<ScanProgress>("scan-progress", (e) => {
+      progressRef.current.set(e.payload.seq, e.payload);
+    });
+    const timer = setInterval(flush, 200);
     return () => {
       un.then((f) => f());
       clearInterval(timer);
@@ -145,6 +150,9 @@ function CleanPanel() {
     setConfirming(false);
     scanAndPlan(path, 20, id)
       .then((result) => {
+        // 扫描已结束：把缓冲里的最后一批进度刷进 state，否则快扫场景
+        // 任务行永远停在 0 条。
+        flushProgress.current();
         setTasks((ts) =>
           ts.map((t) =>
             t.id === id
