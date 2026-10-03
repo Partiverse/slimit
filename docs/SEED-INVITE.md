@@ -1,13 +1,13 @@
 # 种子用户内测包（分发材料）
 
-> 2026-10-03 更新至 rc10（进度条真正可用 / 设置页 / 更名 Slimit / 界面精简；含 FAQ）。分发动作由用户执行；本文件是随附文案与操作清单。
+> 2026-10-03 更新至 rc11（定时自动扫描 / 构建产物识别扩展至 13 生态 / 新增 5 条缓存规则）。分发动作由用户执行；本文件是随附文案与操作清单。
 
 ## 分发物
 
 | 物料 | 位置 |
 |---|---|
-| 安装包 | GitHub Release `v0.1.0-rc10`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc10 |
-| SHA256 | `50bfe7909ac70a11ca1ba84606467d63607a2647e19b20138bf5a5a88a1acbe5` |
+| 安装包 | GitHub Release `v0.1.0-rc10`（pre-release）：https://github.com/Partiverse/slimit/releases/tag/v0.1.0-rc11 |
+| SHA256 | `2928f4d360deb43933969cdcc89bcfab8d70824bd27c8c5961fe24d05f5b11e9` |
 | 详细说明 | 仓库 `docs/BETA.md`（安装/已知限制/回报渠道） |
 | 产品介绍 | https://slimit.pages.dev |
 

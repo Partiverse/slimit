@@ -1,0 +1,30 @@
+apiVersion: slimit.rules/v1
+id: macos-project-cmake-build
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - CMakeLists.txt
+  rel_paths:
+    - build
+    - cmake-build-debug
+    - cmake-build-release
+  max_age_days: 14
+semantics:
+  title: "CMake 构建目录（项目内 build / cmake-build-*）"
+  what: "CMake/CMakeLists 项目的构建输出（含编译中间物与二进制），单项目常见 1–5GB；CLion 默认使用 cmake-build-debug/release 目录名"
+  producer: "cmake 配置 + 构建（cmake -B build 等生成）"
+  safe_to_delete_because: "纯构建产物：CMake 可从源码完全重新配置并构建；源码与 CMakeLists.txt 不在其中"
+  consequence: "下次构建需重新配置与编译（大型 C++ 项目首次可达 10–60 分钟）"
+  regenerate: "cmake -B build 重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "1–5GB（大型 C++ 项目）"
+  recovery: partial
+refs:
+  - https://cmake.org/cmake/help/latest/guide/user-interaction/

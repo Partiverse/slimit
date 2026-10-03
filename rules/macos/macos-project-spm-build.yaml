@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-spm-build
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - Package.swift
+  rel_paths:
+    - .build
+  max_age_days: 14
+semantics:
+  title: "SwiftPM 构建产物（项目内 .build/）"
+  what: "Swift Package Manager 的编译产物与依赖检出（.build/checkouts），随工具链版本累积"
+  producer: "swift build（构建时生成）"
+  safe_to_delete_because: "纯构建产物：swift build 可从 Package.swift 完全重建；源码与清单文件不在其中"
+  consequence: "下次 swift build 需重新编译并重新检出依赖（首次变慢，需网络）"
+  regenerate: "swift build 按需重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: partial
+refs:
+  - https://docs.swift.org/package-manager/

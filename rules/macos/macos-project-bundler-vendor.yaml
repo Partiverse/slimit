@@ -1,0 +1,29 @@
+apiVersion: slimit.rules/v1
+id: macos-project-bundler-vendor
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - Gemfile
+    - Gemfile.lock
+  rel_paths:
+    - vendor
+  max_age_days: 30
+semantics:
+  title: "Ruby 依赖目录（项目内 vendor/bundle）"
+  what: "Bundler 以 path 模式安装的 Ruby 依赖包（vendor/bundle），长期未动的项目常达数百 MB 到数 GB"
+  producer: "bundle install --path vendor/bundle（装依赖时生成）"
+  safe_to_delete_because: "可由 Gemfile + Gemfile.lock 完整重装（bundle install）；项目源码不在其中"
+  consequence: "该项目下次运行前需重新 bundle install（需网络）；项目本身完好"
+  regenerate: "bundle install 重装"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB（每项目）"
+  recovery: partial
+refs:
+  - https://bundler.io/docs.html

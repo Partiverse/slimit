@@ -1,0 +1,29 @@
+apiVersion: slimit.rules/v1
+id: macos-project-elixir-build
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - mix.exs
+  rel_paths:
+    - _build
+    - deps
+  max_age_days: 14
+semantics:
+  title: "Elixir 构建产物与依赖（项目内 _build/ deps/）"
+  what: "Mix 的编译产物（_build）与依赖检出（deps），随 Elixir/OTP 版本切换累积失效"
+  producer: "mix deps.get / mix compile（构建时生成）"
+  safe_to_delete_because: "两者都可由 mix.exs 完全重建（mix deps.get && mix compile）；源码与配置不在其中"
+  consequence: "下次开发前需 mix deps.get && mix compile（首次变慢，需网络）"
+  regenerate: "mix deps.get + mix compile 重建"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 14
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: partial
+refs:
+  - https://hexdocs.pm/mix/Mix.html

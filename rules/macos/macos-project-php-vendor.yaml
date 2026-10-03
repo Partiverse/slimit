@@ -1,0 +1,28 @@
+apiVersion: slimit.rules/v1
+id: macos-project-php-vendor
+os: macos
+scope: user
+paths: []
+project:
+  markers:
+    - composer.json
+  rel_paths:
+    - vendor
+  max_age_days: 30
+semantics:
+  title: "PHP 依赖目录（项目内 vendor/）"
+  what: "Composer 安装的 PHP 依赖包，按项目独立存在。长期未动的项目里 vendor 普遍数百 MB"
+  producer: "composer install（装依赖时生成）"
+  safe_to_delete_because: "可由 composer.json + composer.lock 完整重装（composer install）；项目源码与配置不在其中"
+  consequence: "该项目下次运行/开发前需重新 composer install（需网络）；项目本身完好"
+  regenerate: "composer install 重装"
+risk: yellow
+action:
+  kind: purge-dir
+  delete_contents_only: true
+  min_age_days: 30
+estimate:
+  typical_size: "数百 MB（每项目）"
+  recovery: partial
+refs:
+  - https://getcomposer.org/doc/01-basic-usage.md

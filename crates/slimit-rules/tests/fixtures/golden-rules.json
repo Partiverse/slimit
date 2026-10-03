@@ -4445,6 +4445,52 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-bundler-vendor",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "Gemfile",
+        "Gemfile.lock"
+      ],
+      "rel_paths": [
+        "vendor"
+      ],
+      "max_age_days": 30,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Ruby 依赖目录（项目内 vendor/bundle）",
+      "what": "Bundler 以 path 模式安装的 Ruby 依赖包（vendor/bundle），长期未动的项目常达数百 MB 到数 GB",
+      "producer": "bundle install --path vendor/bundle（装依赖时生成）",
+      "safe_to_delete_because": "可由 Gemfile + Gemfile.lock 完整重装（bundle install）；项目源码不在其中",
+      "consequence": "该项目下次运行前需重新 bundle install（需网络）；项目本身完好",
+      "regenerate": "bundle install 重装"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 30,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB（每项目）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://bundler.io/docs.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-project-cargo-target",
     "os": "macos",
     "scope": "user",
@@ -4486,6 +4532,99 @@
     },
     "refs": [
       "https://doc.rust-lang.org/cargo/guide/build-cache.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-cmake-build",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "CMakeLists.txt"
+      ],
+      "rel_paths": [
+        "build",
+        "cmake-build-debug",
+        "cmake-build-release"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "CMake 构建目录（项目内 build / cmake-build-*）",
+      "what": "CMake/CMakeLists 项目的构建输出（含编译中间物与二进制），单项目常见 1–5GB；CLion 默认使用 cmake-build-debug/release 目录名",
+      "producer": "cmake 配置 + 构建（cmake -B build 等生成）",
+      "safe_to_delete_because": "纯构建产物：CMake 可从源码完全重新配置并构建；源码与 CMakeLists.txt 不在其中",
+      "consequence": "下次构建需重新配置与编译（大型 C++ 项目首次可达 10–60 分钟）",
+      "regenerate": "cmake -B build 重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "1–5GB（大型 C++ 项目）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://cmake.org/cmake/help/latest/guide/user-interaction/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-elixir-build",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "mix.exs"
+      ],
+      "rel_paths": [
+        "_build",
+        "deps"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "Elixir 构建产物与依赖（项目内 _build/ deps/）",
+      "what": "Mix 的编译产物（_build）与依赖检出（deps），随 Elixir/OTP 版本切换累积失效",
+      "producer": "mix deps.get / mix compile（构建时生成）",
+      "safe_to_delete_because": "两者都可由 mix.exs 完全重建（mix deps.get && mix compile）；源码与配置不在其中",
+      "consequence": "下次开发前需 mix deps.get && mix compile（首次变慢，需网络）",
+      "regenerate": "mix deps.get + mix compile 重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://hexdocs.pm/mix/Mix.html"
     ]
   },
   {
@@ -4721,6 +4860,51 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-php-vendor",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "composer.json"
+      ],
+      "rel_paths": [
+        "vendor"
+      ],
+      "max_age_days": 30,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "PHP 依赖目录（项目内 vendor/）",
+      "what": "Composer 安装的 PHP 依赖包，按项目独立存在。长期未动的项目里 vendor 普遍数百 MB",
+      "producer": "composer install（装依赖时生成）",
+      "safe_to_delete_because": "可由 composer.json + composer.lock 完整重装（composer install）；项目源码与配置不在其中",
+      "consequence": "该项目下次运行/开发前需重新 composer install（需网络）；项目本身完好",
+      "regenerate": "composer install 重装"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 30,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB（每项目）",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://getcomposer.org/doc/01-basic-usage.md"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-project-python-venv",
     "os": "macos",
     "scope": "user",
@@ -4766,6 +4950,51 @@
     "refs": [
       "https://docs.python.org/3/library/venv.html",
       "https://pip.pypa.io/en/stable/topics/repeatable-installs/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-project-spm-build",
+    "os": "macos",
+    "scope": "user",
+    "paths": [],
+    "project": {
+      "markers": [
+        "Package.swift"
+      ],
+      "rel_paths": [
+        ".build"
+      ],
+      "max_age_days": 14,
+      "orphan": false
+    },
+    "match_": null,
+    "semantics": {
+      "title": "SwiftPM 构建产物（项目内 .build/）",
+      "what": "Swift Package Manager 的编译产物与依赖检出（.build/checkouts），随工具链版本累积",
+      "producer": "swift build（构建时生成）",
+      "safe_to_delete_because": "纯构建产物：swift build 可从 Package.swift 完全重建；源码与清单文件不在其中",
+      "consequence": "下次 swift build 需重新编译并重新检出依赖（首次变慢，需网络）",
+      "regenerate": "swift build 按需重建"
+    },
+    "risk": "yellow",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": 14,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "partial"
+    },
+    "refs": [
+      "https://docs.swift.org/package-manager/"
     ]
   },
   {
