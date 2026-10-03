@@ -198,6 +198,20 @@ pub fn embedded_rules() -> Result<Vec<Rule>, LoadError> {
     Ok(rules)
 }
 
+/// 当前编译目标对应的平台前缀（cfg 静态判定）。
+/// 扫描时只应执行当前平台的规则：linux 规则的 POSIX 路径（如
+/// `~/.gradle/caches`）在 macOS 上同样存在，若不过滤，macOS 用户会被
+/// 以 linux 规则的名义命中并执行（真机隔离区 14 条中 7 条 linux-* 的实锤）。
+pub fn current_os_prefix() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "macos-"
+    } else if cfg!(target_os = "windows") {
+        "win-"
+    } else {
+        "linux-"
+    }
+}
+
 pub fn expected_prefix(os: &str) -> Option<&'static str> {
     PREFIXES.iter().find(|(o, _)| *o == os).map(|(_, p)| *p)
 }

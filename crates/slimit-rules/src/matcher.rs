@@ -42,8 +42,15 @@ pub struct Match {
 /// project 规则另走项目感知分支：目录名 ∈ rel_paths 且父目录存在 marker。
 pub fn match_rules(rules: &[Rule], dirs: &[DirSnapshot]) -> Vec<Match> {
     let by_path: HashSet<&Path> = dirs.iter().map(|d| d.path.as_path()).collect();
+    // 平台过滤（2026-10-03 P0 修复）：只匹配当前平台的规则。此前 linux 规则
+    // 的 POSIX 路径（~/.gradle/caches 等）在 macOS 上同样存在，会在 mac 上
+    // 以 linux 规则的名义命中并执行（隔离区 14 条中 7 条 linux-* 的实锤）。
+    let current_prefix = crate::loader::current_os_prefix();
     let mut out = Vec::new();
     for rule in rules {
+        if !rule.id.starts_with(current_prefix) {
+            continue;
+        }
         // project 分支：对「目录名命中」的少数候选做 marker 存在性检查（lstat）。
         // 快照不含文件明细，marker 检查必须回源文件系统；候选数少，成本可忽略。
         if let Some(proj) = &rule.project {
@@ -408,6 +415,8 @@ mod tests {
 
     #[test]
     fn glob_paths_match_each_profile_dir() {
+        // 注：match_rules 会过滤非当前平台规则（id 前缀须为 macos-），
+        // glob 机制本身与平台无关，用 macos- 前缀测试。
         // Firefox Windows 风格：profile 目录带随机后缀，规则用 glob 命中
         // 每个已存在的 profile 子目录。依赖 HOME 展开 `~`，须持 env 锁。
         // 注：曾因"疑在 macOS 偶发挂起"被 #[ignore]，后排查证实为假阳性
@@ -417,10 +426,10 @@ mod tests {
         let _guard = EnvGuard::set(vec![("HOME", Some("/Users/test".into()))]);
         let dir = tempfile::tempdir().unwrap();
         let rules_dir = dir.path().join("rules");
-        std::fs::create_dir_all(rules_dir.join("windows")).unwrap();
+        std::fs::create_dir_all(rules_dir.join("macos")).unwrap();
         std::fs::write(
-            rules_dir.join("windows/test-glob.yaml"),
-            "apiVersion: slimit.rules/v1\nid: win-test-glob\nos: windows\npaths:\n  - \"~/slimit-profiles/*/cache2\"\nsemantics:\n  title: t\n  what: w\n  producer: p\n  consequence: c\nrisk: green\naction:\n  kind: purge-dir\nrefs:\n  - https://example.com\n",
+            rules_dir.join("macos/test-glob.yaml"),
+            "apiVersion: slimit.rules/v1\nid: macos-test-glob\nos: macos\npaths:\n  - \"~/slimit-profiles/*/cache2\"\nsemantics:\n  title: t\n  what: w\n  producer: p\n  consequence: c\nrisk: green\naction:\n  kind: purge-dir\nrefs:\n  - https://example.com\n",
         )
         .unwrap();
         let rules = load_rules(&rules_dir).unwrap();
@@ -444,6 +453,6 @@ mod tests {
         );
         let matches = match_rules(&rules, &[p1, p2, other]);
         assert_eq!(matches.len(), 2, "each profile cache2 dir must match");
-        assert!(matches.iter().all(|m| m.rule_id == "win-test-glob"));
+        assert!(matches.iter().all(|m| m.rule_id == "macos-test-glob"));
     }
 }

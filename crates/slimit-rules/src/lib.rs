@@ -13,5 +13,5 @@ mod embedded_rules_gen {
     include!(concat!(env!("OUT_DIR"), "/embedded_rules.rs"));
 }
 
-pub use loader::{embedded_rules, load_rules, Action, ActionKind, Risk, Rule};
+pub use loader::{current_os_prefix, embedded_rules, load_rules, Action, ActionKind, Risk, Rule};
 pub use matcher::{match_rules, DirSnapshot, Match};
