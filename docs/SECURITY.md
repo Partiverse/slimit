@@ -75,7 +75,8 @@ Slimit 是一个有删除能力的工具，安全模型是产品的核心承诺�
 4. **command 必带 dry_run**：规则库内 command 规则无 dry_run 不入库（lint 强制）；MVP 中 command 类规则不自动执行。
 5. **规则库可信输入**：编译期嵌入 + 加载时逐条 lint（kebab-case id、red 必填 red_flags、refs 非空、project 规则单段名防路径注入、`orphan` 反向匹配同受单段名限制）+ id 全局唯一；嵌入版与目录版一致性有测试锁定。
 6. **密钥与隐私**：扫描只读文件元数据（getattrlistbulk 的 dev/ino/size/blocks），不读取文件内容；无网络上传路径（云端解释是显式开关项，`test_ai` 仅探测 `/models` 鉴权，不发送用户数据）。
-7. **IPC 输入零信任**：`apply_plan` 的 `PlanItem` 经 `authorize_items` 重校验——rule 项按规则库重推 executable；**user-manual 项服务端重写全部自证字段**（risk 强制 Yellow、executable 强制 true、rule_id 归一 `user-manual`、durability 重置），并强制通过 `is_protected_path` 系统路径保护名单（前缀保护：/System /private /usr /bin /sbin /etc /var /dev 整棵子树，含 /etc /var /tmp 的符号链接目标；自身保护：/ /Volumes /Applications /Library /opt、HOME 本身与 Desktop/Documents/Downloads/Music/Movies/Pictures/Public/Library/Applications 一级目录挡自身、子路径放行——`~/Downloads/setup.dmg` 允许，`~/Downloads` 整体挡住）。canonicalize 归一 symlink 与 `..` 绕过；canonicalize 失败（不存在）按保护处理，安全方向单调。`restore_item` 的 id 经 UUID 格式校验；隔离区外零写入。
+7. **预授权自动清理（L3，设计稿未实装）**：用户在设置页显式 opt-in 后，定时任务可自动执行「规则库 `risk=green` 且 `action=purge-dir` 命中项」的隔离迁移。边界：授权范围封闭于 green+purge-dir（yellow/red/project/user-manual 永不自动执行）；一切仍走隔离区+审计（origin=`auto-schedule`）；AI 不参与决策；opt-in 状态持久化且默认关闭。完整设计见 docs/L3-AUTOCLEAN-DESIGN.md。**实装前置：本条经用户确认后**才允许写代码。
+8. **IPC 输入零信任**：`apply_plan` 的 `PlanItem` 经 `authorize_items` 重校验——rule 项按规则库重推 executable；**user-manual 项服务端重写全部自证字段**（risk 强制 Yellow、executable 强制 true、rule_id 归一 `user-manual`、durability 重置），并强制通过 `is_protected_path` 系统路径保护名单（前缀保护：/System /private /usr /bin /sbin /etc /var /dev 整棵子树，含 /etc /var /tmp 的符号链接目标；自身保护：/ /Volumes /Applications /Library /opt、HOME 本身与 Desktop/Documents/Downloads/Music/Movies/Pictures/Public/Library/Applications 一级目录挡自身、子路径放行——`~/Downloads/setup.dmg` 允许，`~/Downloads` 整体挡住）。canonicalize 归一 symlink 与 `..` 绕过；canonicalize 失败（不存在）按保护处理，安全方向单调。`restore_item` 的 id 经 UUID 格式校验；隔离区外零写入。
 
 ## 待办
 
