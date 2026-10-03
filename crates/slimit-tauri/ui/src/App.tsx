@@ -417,9 +417,13 @@ function CleanPanel() {
           <tbody>
             {tasks.map((t) => {
               const elapsed = ((Date.now() - t.startedAt) / 1000).toFixed(0);
+              // 定宽速率：「0.0」补到「999.9」同宽（tabular-nums 等宽），
+              // 配合 tasks 表 fixed 布局彻底消除扫描中列宽抖动。
               const rate =
                 t.status === "running" && elapsed !== "0"
-                  ? ` · ${(t.filesDone / Number(elapsed) / 1000).toFixed(1)} 万条/秒`
+                  ? ` · ${(t.filesDone / Number(elapsed) / 1000)
+                      .toFixed(1)
+                      .padStart(5, " ")} 万条/秒`
                   : "";
               const dirName = t.currentDir.split("/").filter(Boolean).pop() ?? "";
               return (

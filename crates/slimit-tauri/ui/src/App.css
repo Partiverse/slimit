@@ -324,9 +324,39 @@ tr.task-selected:hover {
   background: hsl(var(--accent));
 }
 
+/* 扫描任务表：固定列宽（table-layout: fixed）+ 等宽数字。
+   2026-10-02 用户报告「速率出现后列表栏宽度来回跳动」：自动布局下
+   「1,000 条」「10,000 条」「正在扫 d06/d1234」等文本长度逐帧变化，
+   浏览器重算列宽 → 整表抖动。固定布局把抖动源头（内容宽度）移出
+   布局计算，数字用 tabular-nums 保证等宽。 */
+table.tasks {
+  table-layout: fixed;
+}
+
 table.tasks td,
 table.tasks th {
   height: 36px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table.tasks th:nth-child(1),
+table.tasks td:nth-child(1) {
+  width: 46%;
+}
+
+table.tasks th:nth-child(2),
+table.tasks td:nth-child(2) {
+  width: 38%;
+  font-variant-numeric: tabular-nums;
+}
+
+table.tasks th:nth-child(3),
+table.tasks td:nth-child(3) {
+  width: 16%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 td.path {
@@ -421,6 +451,8 @@ td.tip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .progress-bar {
