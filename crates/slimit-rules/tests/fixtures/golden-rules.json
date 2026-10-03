@@ -2295,6 +2295,46 @@
   },
   {
     "apiVersion": "slimit.rules/v1",
+    "id": "macos-baidunetdisk-advice",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Containers/com.baidu.BaiduNetdiskMac"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "百度网盘容器（下载文件与缓存）",
+      "what": "百度网盘 macOS 沙盒容器：下载的文件、同步目录与缓存混在一起。开了自动备份/同步的机器常达数十 GB",
+      "producer": "百度网盘（下载/同步时写入）",
+      "safe_to_delete_because": "不建议工具代删：容器内混有用户下载的文件（可能仅存于此，云端可能已过期或未上传）与缓存。请在网盘设置中确认同步/备份范围，或使用应用内清理",
+      "consequence": "工具不代删；仅存于本地的下载文件删除后若云端已过期将永久丢失",
+      "regenerate": "缓存随使用重新产生；下载文件不会自动恢复"
+    },
+    "risk": "yellow",
+    "red_flags": [
+      "容器内混有仅存于本地的用户下载文件，代删可能造成永久丢失"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数 GB 到数十 GB（同步/备份用户）",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://pan.baidu.com/"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
     "id": "macos-bazel-cache",
     "os": "macos",
     "scope": "user",
@@ -2330,6 +2370,44 @@
     "refs": [
       "https://bazel.build/run/build",
       "https://bazel.build/external/overview"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-blender-cache",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Library/Caches/Blender"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "Blender 缓存（~/Library/Caches/Blender）",
+      "what": "Blender 的临时缓存：撤销历史、会话备份、临时渲染文件等，重度使用可累积数 GB",
+      "producer": "Blender（运行时生成）",
+      "safe_to_delete_because": "缓存目录删除安全，下次启动自动重建（Blender 官方目录布局文档）；配置、插件与工程文件在 ~/Library/Application Support/Blender，不受影响",
+      "consequence": "首次启动 Blender 稍慢；未保存的会话恢复数据丢失",
+      "regenerate": "下次启动自动重建"
+    },
+    "risk": "green",
+    "red_flags": [],
+    "action": {
+      "kind": "purge-dir",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": true,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "数百 MB 到数 GB",
+      "recovery": "full"
+    },
+    "refs": [
+      "https://docs.blender.org/manual/en/latest/advanced/blender-directory-layout.html"
     ]
   },
   {
@@ -5697,6 +5775,47 @@
     },
     "refs": [
       "https://docs.unity3d.com/Manual/upm-cache.html"
+    ]
+  },
+  {
+    "apiVersion": "slimit.rules/v1",
+    "id": "macos-unity-hub-editors",
+    "os": "macos",
+    "scope": "user",
+    "paths": [
+      "~/Applications/Unity/Hub/Editor",
+      "/Applications/Unity/Hub/Editor"
+    ],
+    "project": null,
+    "match_": null,
+    "semantics": {
+      "title": "Unity Hub 编辑器多版本（每个版本 5–10GB+）",
+      "what": "Unity Hub 安装的各版本编辑器（每个版本一个子目录，单个 5–10GB 以上）。保留多个旧版本是 Unity 开发机的常见大空间来源",
+      "producer": "Unity Hub（安装编辑器版本时生成）",
+      "safe_to_delete_because": "旧版本可在 Unity Hub 的 Installs 页随时重装；但工具无法判断哪个版本仍在使用，因此只提示不代删",
+      "consequence": "工具不代删；请先在 Unity Hub 的 Installs 页确认保留哪个版本，其余版本可在 Hub 内 Uninstall（Hub 偶发删除不彻底，可按本目录手动删除对应版本子文件夹）",
+      "regenerate": "Unity Hub Installs 页可重装任意版本"
+    },
+    "risk": "yellow",
+    "red_flags": [
+      "工具无法判断哪个版本是当前项目使用的首选引擎，代删可能破坏正在开发的 Unity 项目"
+    ],
+    "action": {
+      "kind": "advise",
+      "command": null,
+      "dry_run": null,
+      "delete_contents_only": null,
+      "irreversible": null,
+      "requires_root": null,
+      "min_age_days": null,
+      "keep_newest": null
+    },
+    "estimate": {
+      "typical_size": "每版本 5–10GB，多版本累计数十 GB",
+      "recovery": "none"
+    },
+    "refs": [
+      "https://docs.unity3d.com/hub/manual/"
     ]
   },
   {

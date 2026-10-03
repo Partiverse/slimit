@@ -1,0 +1,22 @@
+apiVersion: slimit.rules/v1
+id: macos-blender-cache
+os: macos
+scope: user
+paths:
+  - "~/Library/Caches/Blender"
+semantics:
+  title: "Blender 缓存（~/Library/Caches/Blender）"
+  what: "Blender 的临时缓存：撤销历史、会话备份、临时渲染文件等，重度使用可累积数 GB"
+  producer: "Blender（运行时生成）"
+  safe_to_delete_because: "缓存目录删除安全，下次启动自动重建（Blender 官方目录布局文档）；配置、插件与工程文件在 ~/Library/Application Support/Blender，不受影响"
+  consequence: "首次启动 Blender 稍慢；未保存的会话恢复数据丢失"
+  regenerate: "下次启动自动重建"
+risk: green
+action:
+  kind: purge-dir
+  delete_contents_only: true
+estimate:
+  typical_size: "数百 MB 到数 GB"
+  recovery: full
+refs:
+  - https://docs.blender.org/manual/en/latest/advanced/blender-directory-layout.html

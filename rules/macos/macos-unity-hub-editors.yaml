@@ -1,0 +1,24 @@
+apiVersion: slimit.rules/v1
+id: macos-unity-hub-editors
+os: macos
+scope: user
+paths:
+  - "~/Applications/Unity/Hub/Editor"
+  - "/Applications/Unity/Hub/Editor"
+semantics:
+  title: "Unity Hub 编辑器多版本（每个版本 5–10GB+）"
+  what: "Unity Hub 安装的各版本编辑器（每个版本一个子目录，单个 5–10GB 以上）。保留多个旧版本是 Unity 开发机的常见大空间来源"
+  producer: "Unity Hub（安装编辑器版本时生成）"
+  safe_to_delete_because: "旧版本可在 Unity Hub 的 Installs 页随时重装；但工具无法判断哪个版本仍在使用，因此只提示不代删"
+  consequence: "工具不代删；请先在 Unity Hub 的 Installs 页确认保留哪个版本，其余版本可在 Hub 内 Uninstall（Hub 偶发删除不彻底，可按本目录手动删除对应版本子文件夹）"
+  regenerate: "Unity Hub Installs 页可重装任意版本"
+risk: yellow
+red_flags:
+  - "工具无法判断哪个版本是当前项目使用的首选引擎，代删可能破坏正在开发的 Unity 项目"
+action:
+  kind: advise
+estimate:
+  typical_size: "每版本 5–10GB，多版本累计数十 GB"
+  recovery: none
+refs:
+  - https://docs.unity3d.com/hub/manual/
