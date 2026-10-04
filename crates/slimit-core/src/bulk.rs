@@ -175,6 +175,20 @@ pub(crate) fn scan(
     files = shared.files.into_inner().unwrap();
     errors = shared.errors.into_inner().unwrap();
 
+    // 完整性二次校验（2026-10-03 P0 缓解）：getattrlistbulk 在 APFS 大目录上
+    // 存在间歇性丢失目录子树的系统级缺陷（真机实测：walker 处理 475,346 目录、
+    // 快照仅 441,370；丢失子树无任何错误返回）。用 read_dir 全量走查补录缺失
+    // 文件——read_dir 单遍无属性读取，代价约为 bulk 扫描的 15–20%。
+    // SLIMIT_TREE_VERIFY=0 关闭（默认开启，正确性优先）。
+    if std::env::var_os("SLIMIT_TREE_VERIFY")
+        .map(|v| v == "0")
+        .unwrap_or(false)
+    {
+        // 显式关闭：跳过校验
+    } else {
+        verify_and_fill(root, root_dev, &mut files, &mut errors);
+    }
+
     if std::env::var_os("SLIMIT_DEBUG").is_some() {
         let c = &shared.counters;
         eprintln!(
@@ -435,6 +449,79 @@ fn fallback_scan_dir(dir: &Path, local: &mut Local) {
                 shared: false,
             });
         }
+    }
+}
+
+/// 完整性二次校验：read_dir 全量走查，补录 bulk 枚举丢失的文件。
+/// 以「已记录路径的哈希集合」为基准，磁盘上存在但未记录的文件按 lstat
+/// 语义补录（FileEntry）；空目录不补（无空间意义，与既有语义一致：
+/// dirs 由文件 parent 链推导）。
+fn verify_and_fill(
+    root: &Path,
+    root_dev: u64,
+    files: &mut Vec<FileEntry>,
+    errors: &mut Vec<String>,
+) {
+    let started = Instant::now();
+    use std::collections::HashSet;
+    use std::hash::BuildHasher;
+    // 单个 builder 克隆（同一组 key）：recorded 与 walk 两处哈希必须一致，
+    // 否则同路径不同哈希 → 去重失效 → 全量重复补录。
+    let builder = std::collections::hash_map::RandomState::new();
+    let hash = |p: &Path| -> u64 { builder.hash_one(p) };
+    let mut recorded: HashSet<u64> = HashSet::with_capacity(files.len() * 2);
+    for f in files.iter() {
+        recorded.insert(hash(&f.path));
+    }
+
+    let mut stack: Vec<PathBuf> = vec![root.to_path_buf()];
+    let mut added = 0usize;
+    let mut verify_errors = 0usize;
+    while let Some(dir) = stack.pop() {
+        let rd = match std::fs::read_dir(&dir) {
+            Ok(rd) => rd,
+            Err(e) => {
+                // 无 FDA 下 ~/Library 深处的 EPERM 属预期，只计前几条。
+                if verify_errors < 8 {
+                    errors.push(format!("verify readdir {}: {e}", dir.display()));
+                }
+                verify_errors += 1;
+                continue;
+            }
+        };
+        for entry in rd.flatten() {
+            let path = entry.path();
+            let Ok(md) = entry.metadata() else {
+                continue;
+            };
+            // 不跨文件系统边界（与 bulk 主路径语义一致）。
+            if md.dev() != root_dev {
+                continue;
+            }
+            if md.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            // 文件（含 symlink）：未记录才补录。
+            if recorded.insert(hash(&path)) {
+                files.push(FileEntry {
+                    path,
+                    dev: md.dev(),
+                    ino: md.ino(),
+                    apparent: md.len(),
+                    actual: md.blocks() * 512,
+                    shared: false,
+                });
+                added += 1;
+            }
+        }
+    }
+    let _ = added;
+    if std::env::var_os("SLIMIT_DEBUG").is_some() {
+        eprintln!(
+            "verify_and_fill elapsed: {:?}  added: {added}",
+            started.elapsed()
+        );
     }
 }
 
