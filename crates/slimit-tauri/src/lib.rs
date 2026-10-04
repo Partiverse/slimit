@@ -607,7 +607,7 @@ fn launch_gui() {
 
 /// GUI 启动时消费定时扫描结果：读取并删除 pending 文件。
 #[tauri::command]
-fn take_pending_results() -> Result<Option<ScanPlanResponse>, String> {
+fn take_pending_results(app: AppHandle) -> Result<Option<ScanPlanResponse>, String> {
     let Some(path) = pending_results_path() else {
         return Ok(None);
     };
@@ -615,7 +615,23 @@ fn take_pending_results() -> Result<Option<ScanPlanResponse>, String> {
         Ok(text) => {
             let _ = std::fs::remove_file(&path);
             match serde_json::from_str::<ScanPlanResponse>(&text) {
-                Ok(r) => Ok(Some(r)),
+                Ok(r) => {
+                    // A3：通知改走用户通知框架（osascript 在 LaunchAgent 上下文
+                    // 静默失败，插件走 UNUserNotificationCenter 身份正确）。
+                    use tauri_plugin_notification::NotificationExt;
+                    let count = r.plan.iter().filter(|p| p.executable).count();
+                    app.notification()
+                        .builder()
+                        .title("Slimit 定时扫描完成")
+                        .body(format!(
+                            "发现 {} 项可清理（{}），已在清理页加载",
+                            count,
+                            fmt_bytes(r.summary.actual)
+                        ))
+                        .show()
+                        .map_err(|e| e.to_string())?;
+                    Ok(Some(r))
+                }
                 Err(_) => Ok(None),
             }
         }
@@ -747,6 +763,7 @@ pub fn run() {
         return;
     }
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             scan_and_plan,
             explain,

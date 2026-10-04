@@ -59,6 +59,9 @@ xattr -dr com.apple.quarantine /Applications/Slimit.app
 **Q4：有实时监控吗？**
 v0.1 刻意不做（技术决策见 docs/COMPLETION-REPORT.md §2：macOS 实时归因需要系统特权框架、Windows 需管理员权限，门槛和隐私代价都太高）。Slimit 是**按需扫描**模式：你想清的时候扫一次。定时自动扫描在路线图里评估中。
 
+**Q5：为什么有些空文件夹扫描不到？**
+扫描结果中的文件夹由「其下有文件」推导而来：完全空的目录（以及整条链上都没有文件的目录）不会出现在列表里——它们不占空间，清理也没有意义。此为设计语义，见 docs/HANDOFF.md。
+
 ## 回报渠道
 
 问题请记录到仓库 issue 或直接反馈：复现步骤 + 「隔离区」面板截图 + `audit/audit.jsonl` 尾部几行。

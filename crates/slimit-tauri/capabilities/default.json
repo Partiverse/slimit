@@ -2,12 +2,15 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "SlimIt 前端所需能力（最小集）。**2026-10-02 补建**：此前项目没有任何 capability 文件——Tauri v2 下无 capability 即拒绝全部前端 API，`listen(\"scan-progress\")` 静默失败、进度事件永远到不了界面（用户实测「速率一直是 0」的真凶之一）。",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:event:default",
     "core:window:allow-set-focus",
     "core:window:allow-show",
-    "core:window:allow-unminimize"
+    "core:window:allow-unminimize",
+    "notification:default"
   ]
 }

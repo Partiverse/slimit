@@ -111,6 +111,8 @@ struct Shared<'a> {
     errors: Mutex<Vec<String>>,
     counters: Counters,
     progress: Option<&'a (dyn Fn(crate::types::ScanProgress) + Send + Sync)>,
+    /// 单目录枚举超时（A1 看门狗）：None = 不限（旧行为）。
+    dir_timeout: Option<std::time::Duration>,
 }
 
 struct QueueState {
@@ -119,6 +121,7 @@ struct QueueState {
     in_flight: usize,
 }
 
+#[derive(Default)]
 struct Local {
     files: Vec<FileEntry>,
     errors: Vec<String>,
@@ -133,6 +136,17 @@ pub(crate) fn scan(
     let root_md =
         std::fs::symlink_metadata(root).map_err(|_| ScanError::RootMissing(root.to_path_buf()))?;
     let root_dev = root_md.dev();
+
+    // A1 看门狗（docs/DEV-BLUEPRINT.md A1）：单目录枚举超过该时长即放弃
+    // 该子树并记告警——iCloud 文件提供器不响应会让任何枚举 syscall 无限期
+    // 阻塞（getattrlistbulk 与 readdir 同样中招），不设超时整扫描挂死。
+    // 默认 30s；SLIMIT_DIR_TIMEOUT_MS 覆盖，设 0 关闭。
+    let dir_timeout_ms: u64 = std::env::var("SLIMIT_DIR_TIMEOUT_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(30_000);
+    let dir_timeout =
+        (dir_timeout_ms > 0).then(|| std::time::Duration::from_millis(dir_timeout_ms));
 
     let mut files = Vec::new();
     let mut errors = Vec::new();
@@ -155,6 +169,7 @@ pub(crate) fn scan(
         errors: Mutex::new(Vec::new()),
         counters: Counters::new(),
         progress,
+        dir_timeout,
     };
 
     let workers = std::env::var("SLIMIT_JOBS")
@@ -234,7 +249,14 @@ fn worker(root_dev: u64, shared: &Shared) {
         };
 
         let before = local.files.len();
-        process_dir(&dir, root_dev, &shared.counters, &mut local, &mut buf);
+        process_dir(
+            &dir,
+            root_dev,
+            &shared.counters,
+            &mut local,
+            &mut buf,
+            shared.dir_timeout,
+        );
         let done = shared
             .counters
             .files_done
@@ -273,8 +295,55 @@ fn process_dir(
     counters: &Counters,
     local: &mut Local,
     buf: &mut Vec<u8>,
+    dir_timeout: Option<std::time::Duration>,
 ) {
     counters.dirs.fetch_add(1, Ordering::Relaxed);
+    match dir_timeout {
+        Some(t) => {
+            // A1 看门狗路径：目录枚举移入独立线程，recv_timeout 兜底。
+            // 超时后子线程继续阻塞在内核（iCloud 提供器恢复后自然结束，
+            // 其结果经 channel 无人接收而被丢弃）——子树按告警跳过。
+            let (tx, rx) = std::sync::mpsc::channel();
+            let d = dir.to_path_buf();
+            let spawned = std::thread::Builder::new()
+                .name(format!("slimit-bulk:{}", d.display()))
+                .spawn(move || {
+                    let counters_t = Counters::new();
+                    let mut local_t = Local::default();
+                    let mut buf_t = vec![0u8; BUF_SIZE];
+                    open_and_bulk(&d, root_dev, &counters_t, &mut local_t, &mut buf_t);
+                    let _ = tx.send(local_t);
+                })
+                .is_ok();
+            match rx.recv_timeout(t) {
+                Ok(mut local_t) => {
+                    local.files.append(&mut local_t.files);
+                    local.errors.append(&mut local_t.errors);
+                    local.children.append(&mut local_t.children);
+                }
+                Err(_) => {
+                    // 超时：子树按告警跳过（错误列表有界记录）。
+                    local
+                        .errors
+                        .push(format!("dir timeout ({}s): {}", t.as_secs(), dir.display()));
+                }
+            }
+            let _ = spawned;
+        }
+        None => open_and_bulk(dir, root_dev, counters, local, buf),
+    }
+}
+
+/// 枚举单个目录：open（EINTR 重试）→ getattrlistbulk（EINTR 重试）→ 失败走
+/// fallback（read_dir，std 内部对 EINTR 更鲁棒）。
+/// 真机实证（docs/HANDOFF.md）：OneDrive 子树曾因 open EINTR 无重试整目录丢失。
+fn open_and_bulk(
+    dir: &Path,
+    root_dev: u64,
+    counters: &Counters,
+    local: &mut Local,
+    buf: &mut Vec<u8>,
+) {
     let Ok(cpath) = CString::new(dir.as_os_str().as_bytes()) else {
         local
             .errors
@@ -282,33 +351,51 @@ fn process_dir(
         return;
     };
     // SAFETY: cpath 是合法 NUL 结尾字符串；fd 在所有路径上恰好关闭一次。
-    let fd = unsafe {
-        libc::open(
-            cpath.as_ptr(),
-            libc::O_RDONLY | libc::O_CLOEXEC | libc::O_DIRECTORY,
-        )
-    };
-    if fd < 0 {
+    let mut open_attempts = 0usize;
+    let fd = loop {
+        let fd = unsafe {
+            libc::open(
+                cpath.as_ptr(),
+                libc::O_RDONLY | libc::O_CLOEXEC | libc::O_DIRECTORY,
+            )
+        };
+        if fd >= 0 {
+            break fd;
+        }
+        // EINTR 重试（OneDrive 实测丢 2 子树的根因）；其余错误立即走 fallback。
+        if last_errno() == libc::EINTR && open_attempts < 8 {
+            open_attempts += 1;
+            continue;
+        }
         local.errors.push(format!(
             "open {}: {errno_str}",
             dir.display(),
             errno_str = errno_str()
         ));
+        fallback_scan_dir(dir, local);
         return;
-    }
+    };
 
     let result = bulk_scan_dir(fd, dir, root_dev, local, counters, buf);
     if let Err(err) = result {
         counters.fallback_dirs.fetch_add(1, Ordering::Relaxed);
-        // 记录首个失败原因，便于诊断布局/权限问题（有界防爆量）。
-        if local.errors.len() < 64 {
-            local.errors.push(format!(
-                "bulk {}: errno {err} ({errno_str})",
-                dir.display(),
-                errno_str = errno_str()
-            ));
+        if err == libc::EINTR {
+            // bulk 阶段 EINTR：read_dir 逐条回退对 EINTR 更鲁棒，整目录重试一次。
+            let mut retry_local = Local::default();
+            fallback_scan_dir(dir, &mut retry_local);
+            local.files.append(&mut retry_local.files);
+            local.children.append(&mut retry_local.children);
+        } else {
+            // 记录首个失败原因，便于诊断布局/权限问题（有界防爆量）。
+            if local.errors.len() < 64 {
+                local.errors.push(format!(
+                    "bulk {}: errno {err} ({errno_str})",
+                    dir.display(),
+                    errno_str = errno_str()
+                ));
+            }
+            fallback_scan_dir(dir, local);
         }
-        fallback_scan_dir(dir, local);
     }
 
     // SAFETY: fd 由上方 open 成功返回。
