@@ -41,6 +41,34 @@ W8 已完成：落地页上线 https://slimit.pages.dev（Cloudflare Pages，项
 
 **开放问题升级：P0 walker 正确性 bug 确定性复现（2026-10-03 深夜）**：core CLI `target/release/slimit /Users/nebulaboratories --json --top 5000`（输出含全量 dirs 422,734 条）**稳定复现**：`~/.android/` 下磁盘上存在的 `build-cache`（本会话创建的 L3 fixture，非 symlink，mtime 2020）**完全不在快照中**，而同层 `avd/`、`cache/`、`adbkey` 等都在——丢失不是字母序连续段，疑似与**扫描前新创建的目录**相关（avd/cache 为旧目录均在，build-cache 为扫描前 43 分钟新建——新建目录为何丢失需精读 bulk.rs 的 getattrlistbulk 批次处理）。**影响**：任何大目录扫描都可能整体丢失子目录（规则识别与空间透镜都会少算）——P0。修复需精读 crates/slimit-core/src/bulk.rs（474 行）的批次边界与目录展开逻辑，并补「父子完整性」回归测试。**2026-10-04 更新**：build-cache 丢失当日 3 轮扫描（serial / parallel / ~/.android 小规模连扫）均未复现，fixture 3/3 进快照；定性改判见下「walker 深查收口」条。
 
+## Kubuntu/Linux 接手指南（2026-10-04，下一开发环境）
+
+> 下一阶段开发在 Kubuntu 的 zcode 进行。本节是环境差异与任务分工的交接锚点。
+
+### 环境与构建
+
+- 代码全部已推送（remote origin = github.com/Partiverse/slimit；**注意**：macOS 侧一度被切到 gh-proxy.com 代理——若 Kubuntu 也需代理，自行配置 remote 与凭据）。
+- Linux 构建：`cargo build/test` 全 workspace 可直接跑（macOS 专属 bulk.rs 被 cfg 隔离，Linux 走 `scan.rs::walk_ignore` 回退路径，EINTR 由 std 内部处理）；Tauri GUI 需 `libwebkit2gtk-4.1-dev`、`libgtk-3-dev` 等系统包（Tauri v2 Linux 先决）。
+- 前端：ui/ 目录 `npm install && npm run build`，与平台无关。
+
+### 任务分工（按平台可行性）
+
+**Kubuntu 可直接做**：
+1. **B5 Linux walker 强化 + 规则启用**（§7 B5）：walk_ignore 已可用；`rules/linux/` 51 条规则启用——matcher 平台过滤 `current_os_prefix()` 在 Linux 编译时返回 `linux-`，linux- 前缀规则自动放行（机制已就绪，无需改代码）。
+2. **walk_ignore 移植 A1 看门狗**：Linux 的 std read_dir 对 EINTR 由 std 内部处理，但网络挂载（NFS/Samba/云盘）的目录级阻塞同样可能——评估 per-dir 超时移植。
+3. L3 设计确认（SECURITY 不变量第 7 条）与实装收尾（代码已就绪，仅剩验证）。
+4. B2 重复文件检测、V2-ROADMAP 其余主线、交互打磨（zcode 操作 GUI 需 X11/Wayland 自动化工具）。
+
+**仅 macOS 可做**（需切回 Mac）：
+1. rc13 发布决策（rc12 是最新已发布版；之后的代码增量——L1 定时扫描/L2 自动带出/A1 看门狗/A2 EINTR/通知插件化——均在等打包）。
+2. 通知横幅视觉确认（首次授权弹窗）、A1 看门狗的 iCloud 阻塞场景验证。
+
+### 交接状态快照（2026-10-04）
+
+- 规则库 198 条（macos 113 + linux 51 + windows 34）；测试 57 全绿；HEAD 干净已推送。
+- 开放问题三项（本文件上方）：getattrlistbulk 间歇丢条目（macOS 系统级，verify 缓解）、iCloud 阻塞（A1 看门狗缓解，Linux 同类风险记 B5）、通知同步缺陷（插件化后待视觉确认）。
+- 交互打磨与 notarization：用户明示暂缓/暂停。
+
 **开放问题：walker 对 home 大扫描的目录覆盖缺口（待查，2026-10-03）**：L3 真机验证发现 home 无头扫描（root=/Users/nebulaboratories，约 5-8 分钟完成）中 `~/.android/build-cache`（green 规则，fixture 于扫描前创建、非 symlink、mtime 2020）**完全未进 audit**（连失败记录都没有 ⇒ 未进快照/未命中），而同层的 `.gradle/.m2/.cache` 均正常命中。可疑方向：①TCC 停顿导致部分子树被 walker 跳过（无 FDA 扫 home 的已知行为，但 .android 非 TCC 保护目录）；②getattrlistbulk 并行枚举的批次边界丢失目录批次；③扫描与 L3 apply 之间 dirs 快照截断。复现路径：`target/release/slimit-tauri --scheduled-scan /Users/nebulaboratories`（需 schedule.auto_clean）+ 检查 dirs 快照是否含 `.android/build-cache`。**影响评估**：home 全盘扫描场景的规则覆盖不完整；小目录扫描（如 ~/code）未见此问题。**2026-10-04 已查收口**：见下「walker 深查收口」条——差口主体＝空目录设计语义，实丢向量另有其二（open EINTR 无重试丢子树），并新增更高优先级 P0（iCloud 文件提供器阻塞任意枚举 syscall）。
 
 **walker 深查收口（2026-10-04，同日同树 serial vs parallel 全量对照）**：单线程（`SLIMIT_JOBS=1`）与默认 8 线程各完整扫 home 一轮：serial stderr「bulk walk elapsed: 839.61s dirs: 470,603 bulk_calls: 912,041 fallback_dirs: 0 threads: 1」、parallel「317.74s dirs: 470,577 bulk_calls: 911,942 threads: 8」，dirs 快照 436,532 / 436,513，file_count 2,802,873 / 2,787,518（jq 实测）。**三条结论**：①**34k 目录差口主体改判**——两快照共同缺失目录 34,781 个，其中 33,999 个无任何后代文件＝「空目录不进 dirs 快照」的设计语义（bulk.rs:455-458 注释「空目录不补」，dirs 由文件 parent 链推导），其余 782 个逐一验证均为扫描前后/中 churn（.gradle/caches 762 个 birth 晚于 serial 结束、.mimosa baseline 扫描中段 clone 保留、.zcode/cli 6 个为本 workflow session；GT 交叉验证为部分覆盖：python scandir walk 被云目录挂死前已走 300,000 dirs / 1,857,045 files，BSD find 三次 pass 并集 296,189 dirs）：**2026-10-03「walker 475,346 vs 快照 441,370 差 33,976＝枚举丢失」的定性主体不成立**，当年差口与今日同型（≈34k）。②**.android/build-cache 丢失未复现 + 缓解有效**——两轮完成扫描（含扫描前创建的 20MB fixture stale/g.bin）加 ~/.android 小规模 5 连扫，build-cache 3/3、5/5 全部进快照，无法归因 SLIMIT_JOBS；但 getattrlistbulk 间歇性静默丢条目仍实锤：两轮 verify_and_fill（f7a769a 缓解）各补录 ~10.2k 文件（8 线程 10,263 / 单线程 10,176，量级相同 ⇒ 与并发无关）。③**新 P0（优先级高于原枚举缺陷）：iCloud Drive 文件提供器可让任意目录枚举 syscall 无限期阻塞**——Mobile Documents/ulysses3 容器在提供器不响应期，getattrlistbulk 单线程两次挂死 15+ 分钟（sample 100% in getattrlistbulk，lsof 指向 .ulysses 包）只能 kill；python os.scandir（readdir/getdirentries 路径，PEP 475 自动重试 EINTR）同样卡死 25+ 分钟（sample 100% in __getdirentries64）；任何并发度下 in_flight 终止条件无法满足、整扫描挂死；提供器状态分钟级波动（同子树恢复后 93.43ms 走完 dirs=1,088）。**次要丢失向量：open() EINTR 无重试**（bulk.rs:291-297，open<0 即放弃子树）——parallel 轮实丢 2 个 OneDrive 目录（os error 4，磁盘各含 7 项），verify_and_fill 全额补录 6/6 文件；BSD find 亦有 fts_read EINTR 三次 pass 直接终止。**serial vs parallel 覆盖率无实质差异**：dirs 仅差 28/9 条（全为扫描间生灭的运行时临时目录），files 差 25,387/10,032（wordfolio target 等构建 churn）。
